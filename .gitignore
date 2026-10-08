@@ -5,3 +5,11 @@ __pycache__/
 .zerotoken/
 cases/
 local-cases/
+graduate-pathfinder-cases/
+private-cases/
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
