@@ -322,6 +322,29 @@ def assess_kaoyan_candidate(profile: dict, candidate: dict, evidence_audit: dict
         catalog_known = False
     if not catalog_known:
         reasons.append("current_catalog_unknown")
+    claims = evidence_audit.get("claims", [])
+    if isinstance(catalog, dict) and _text(catalog.get("claim_id")):
+        catalog_claims = [claim for claim in claims if isinstance(claim, dict)
+                          and isinstance(claim.get("record"), dict)
+                          and claim["record"].get("claim_id") == catalog["claim_id"]]
+        if not catalog_claims:
+            reasons.append("current_catalog_audit_claim_missing")
+        elif any(claim["record"] != catalog or any(
+                type(claim["record"].get(key)) is not type(value) for key, value in catalog.items())
+                 for claim in catalog_claims):
+            reasons.append("current_catalog_audit_payload_mismatch")
+        elif any(claim.get("valid") is not True or claim.get("effective_status") != "confirmed"
+                 or claim.get("stale") or claim.get("conflict_groups") for claim in catalog_claims):
+            reasons.append("current_catalog_audit_claim_unusable")
+    try:
+        if any(isinstance(claim, dict) and isinstance(claim.get("record"), dict)
+               and claim["record"].get("field") == "program_availability"
+               and claim["record"].get("value") is False
+               and _official(claim["record"], profile.get("admission_year"), _now(profile), candidate_id)
+               for claim in claims):
+            reasons.append("current_catalog_conflicting_official_availability")
+    except (ValueError, TypeError, AttributeError):
+        reasons.append("current_catalog_audit_claim_unusable")
     if gates["eligibility"] != "pass":
         reasons.append("critical_gates_unknown")
     fields = summary.get("critical_fields", {})
@@ -382,9 +405,9 @@ def assess_kaoyan_candidate(profile: dict, candidate: dict, evidence_audit: dict
 def build_kaoyan_shortlist(results: dict[str, dict]) -> dict:
     """Select by fit after sensitivity checks, preserving unresolved choices.
 
-    Input is candidate-ID keyed assessment output. The highest-fit match or
-    conservative target's sensitivity uses v0.1 stability/winner_set. Fragile
-    winners are intersected with eligible targets; missing/insufficient checks
+    Input is candidate-ID keyed assessment output. All highest-fit match or
+    conservative targets' sensitivity uses v0.1 stability/winner_set. Their
+    winner sets are merged and intersected with eligible targets; missing checks
     require a user decision. A fit tie never uses ID order as a winner rule.
     """
     if not isinstance(results, dict):
@@ -409,17 +432,21 @@ def build_kaoyan_shortlist(results: dict[str, dict]) -> dict:
         tied = [cid for cid in eligible if results[cid]["fit_score"] == results[top]["fit_score"]]
         sensitivity = results[top].get("sensitivity")
         stability = sensitivity.get("stability") if isinstance(sensitivity, dict) else None
-        if stability == "fragile":
-            winners = sensitivity.get("winner_set", [])
-            if not isinstance(winners, list) or not all(_text(cid) for cid in winners):
-                winners = []
+        tied_checks = [results[cid].get("sensitivity") for cid in tied]
+        winners = set()
+        for check in tied_checks:
+            candidate_winners = check.get("winner_set", []) if isinstance(check, dict) else []
+            if isinstance(candidate_winners, list) and all(_text(cid) for cid in candidate_winners):
+                winners.update(candidate_winners)
+        if any(isinstance(check, dict) and check.get("stability") == "fragile" for check in tied_checks):
             choices = [cid for cid in eligible if cid in tied or cid in winners]
             # An incomplete fragile set cannot justify a single apparent winner.
             if len(choices) < 2:
                 choices = eligible
             shortlist.update(decision_set=choices, requires_user_decision=True, reasons=["fragile_top_choice"])
         elif len(tied) > 1:
-            shortlist.update(decision_set=tied, requires_user_decision=True, reasons=["equal_fit_top_choices"])
+            choices = [cid for cid in eligible if cid in tied or cid in winners]
+            shortlist.update(decision_set=choices, requires_user_decision=True, reasons=["equal_fit_top_choices"])
         elif stability == "stable" and sensitivity.get("winner_set") == [top] and (
                 "baseline_order" not in sensitivity or
                 isinstance(sensitivity["baseline_order"], list) and sensitivity["baseline_order"][:1] == [top]):

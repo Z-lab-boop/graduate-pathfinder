@@ -265,6 +265,52 @@ class KaoyanAssessmentTests(unittest.TestCase):
             c[field] = value
             self.assertEqual(self.assess(p, c, a)["risk_band"], "monitor")
 
+    def test_catalog_same_id_conflicting_audit_value_is_monitor(self):
+        p, c, a = assessment_inputs()
+        records = [deepcopy(claim["record"]) for claim in a["claims"]]
+        records[2]["value"] = False
+        a = audit_evidence(records, datetime.fromisoformat(p["audit_at"]))
+        result = self.assess(p, c, a)
+        self.assertEqual(result["risk_band"], "monitor")
+        self.assertIn("current_catalog_audit_payload_mismatch", result["reasons"])
+        self.assertIn("program_availability", result["source_refs"])
+
+    def test_catalog_matching_id_requires_identical_audited_payload(self):
+        for field, value in (("candidate_id", "other"), ("field", "degree_type"),
+                             ("source_url", "https://example.invalid/different"),
+                             ("applicable_admission_year", 2025), ("status", "secondary_only"),
+                             ("value", 1), ("applicable_admission_year", 2026.0)):
+            with self.subTest(field=field):
+                p, c, a = assessment_inputs()
+                a["claims"][2]["record"][field] = value
+                result = self.assess(p, c, a)
+                self.assertEqual(result["risk_band"], "monitor")
+                self.assertIn("current_catalog_audit_payload_mismatch", result["reasons"])
+
+    def test_other_current_official_catalog_false_blocks_positive_catalog(self):
+        p, c, a = assessment_inputs()
+        records = [deepcopy(claim["record"]) for claim in a["claims"]]
+        negative = deepcopy(records[2])
+        negative.update(claim_id="catalog-negative", value=False)
+        records.append(negative)
+        a = audit_evidence(records, datetime.fromisoformat(p["audit_at"]))
+        result = self.assess(p, c, a)
+        self.assertEqual(result["risk_band"], "monitor")
+        self.assertIn("current_catalog_conflicting_official_availability", result["reasons"])
+        self.assertIn("catalog-negative", result["source_refs"])
+
+    def test_each_tied_top_sensitivity_contributes_to_complete_decision_set(self):
+        for first_stability in ("stable", "fragile"):
+            results = {cid: {"candidate_id": cid, "risk_band": "match", "fit_score": fit}
+                       for cid, fit in (("a", 90), ("b", 90), ("c", 80))}
+            results["a"]["sensitivity"] = {"stability": first_stability, "winner_set": ["a", "b"]}
+            results["b"]["sensitivity"] = {"stability": "fragile", "winner_set": ["b", "c"]}
+            shortlist = self.shortlist(results)
+            self.assertIsNone(shortlist["primary"])
+            self.assertTrue(shortlist["requires_user_decision"])
+            self.assertEqual(shortlist["decision_set"], ["a", "b", "c"])
+            self.assertNotIn("c", shortlist["alternatives"])
+
 
 class SubjectTests(unittest.TestCase):
     def test_exact_normalized_codes_match(self):
