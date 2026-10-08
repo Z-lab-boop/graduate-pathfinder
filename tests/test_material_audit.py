@@ -276,6 +276,18 @@ class GeneratedTextRedactionTests(unittest.TestCase):
                 self.assertNotIn("合成姓名", json.dumps(findings, ensure_ascii=False))
                 self.assertEqual(redact_text(text), (text, []))
 
+    def test_combined_markdown_emphasis_signatures_are_private_and_idempotent(self):
+        for label in ("***Signature:*** ", "- ***签名：*** ", "___Signature:___ ",
+                      "- ___签名：___ "):
+            with self.subTest(label=label):
+                text, findings = redact_text(label + "Synthetic Name\nFollowing body text")
+                self.assertEqual(text, label + "[REDACTED_SIGNATURE]\nFollowing body text")
+                self.assertEqual(findings, [{"type": "signature", "count": 1,
+                                            "review_required": True, "possible_over_redaction": True}])
+                self.assertNotIn("Synthetic Name", text)
+                self.assertNotIn("Synthetic Name", json.dumps(findings))
+                self.assertEqual(redact_text(text), (text, []))
+
 
 if __name__ == "__main__":
     unittest.main()

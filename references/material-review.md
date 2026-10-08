@@ -140,7 +140,8 @@ student numbers, and labelled signature lines. Stable tokens are
 `type`, `count`, `review_required`, and `possible_over_redaction`; never original
 matches, surrounding snippets or offsets. Signature/student patterns preserve
 the context label; signature redaction stops at the newline. Generated Markdown
-list prefixes and emphasis around signature labels are recognized and preserved.
+list prefixes and one-, two-, or three-character star/underscore emphasis around
+signature labels are recognized and preserved.
 
 Every match carries review flags because broad patterns may redact public
 institutional contacts or other identifier-like text. Review the generated output
