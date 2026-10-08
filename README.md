@@ -30,11 +30,18 @@
 macOS/Linux 示例（在仓库根目录执行）：
 
 ```bash
-mkdir -p "$HOME/.codex/skills"
-test ! -e "$HOME/.codex/skills/graduate-pathfinder"
-ln -s "$(pwd)" "$HOME/.codex/skills/graduate-pathfinder"
-python3 "$HOME/.codex/skills/.system/skill-creator/scripts/quick_validate.py" \
-  "$HOME/.codex/skills/graduate-pathfinder"
+set -eu
+codex_root="${CODEX_HOME:-$HOME/.codex}"
+skill_parent="$codex_root/skills"
+skill_target="$skill_parent/graduate-pathfinder"
+mkdir -p "$skill_parent"
+if [ -e "$skill_target" ] || [ -L "$skill_target" ]; then
+  printf '%s\n' "Refusing to overwrite existing skill target: $skill_target" >&2
+  exit 1
+else
+  ln -s "$(pwd)" "$skill_target"
+  python3 "$skill_parent/.system/skill-creator/scripts/quick_validate.py" "$skill_target"
+fi
 ```
 
 也可将仓库完整复制到 `$CODEX_HOME/skills/graduate-pathfinder`。不要只复制 `SKILL.md`；流程依赖 `references/`、`scripts/` 和 `agents/`。
