@@ -131,6 +131,14 @@ def audit_materials(manifest: list[dict], claims: list[dict], requirements: list
         ids = list(dict.fromkeys(row["document_id"] for row in selected))
         item = {key: deepcopy(req[key]) for key in
                 ("requirement_id", "target_id", "item_type", "necessity", "source_claim_ids")}
+        item["policy_binding"] = {key: deepcopy(req[key]) for key in
+                                   ("requirement_id", "target_id", "item_type", "necessity", "conditions")}
+        for key in ("applies_when",):
+            if key in req:
+                item["policy_binding"][key] = deepcopy(req[key])
+        item["conditions"] = deepcopy(req["conditions"])
+        if "applies_when" in req:
+            item["applies_when"] = deepcopy(req["applies_when"])
         item.update(document_ids=ids, status="materially_incomplete", missing_conditions=[],
                     review_required=False, blocking=False)
         applies = True

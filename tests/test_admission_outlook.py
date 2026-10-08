@@ -29,7 +29,10 @@ def packet(position=90, history_tier="T1", gate="pass", signature=True):
     records = [source(field, field, value) for field, value in
                (("eligibility", "pass"), ("deadline", "2027-06-15"),
                 ("program_availability", True), ("degree_type", "academic"))]
-    records += [source("letter-policy", "recommendation_policy", {"signature": True}),
+    letter_policy = {"requirement_id": "letter", "target_id": TARGET,
+                     "item_type": "recommendation", "necessity": "required",
+                     "conditions": {"signature": True}}
+    records += [source("letter-policy", "material_requirement_policy", letter_policy),
                 source("attendance", "historical_count",
                        {**SCOPE, "stage": "confirmed_attended", "count": 80}, 2026, tier=history_tier),
                 source("admitted", "historical_count",
@@ -60,7 +63,12 @@ def packet(position=90, history_tier="T1", gate="pass", signature=True):
 
 class AdmissionOutlookTests(unittest.TestCase):
     def test_strong_packet_returns_five_independent_results_and_context(self):
-        result = assess_admission_outlook(packet())
+        payload = packet()
+        self.assertEqual(payload["material_audit"]["items_by_target"][TARGET][0]["policy_binding"],
+                         {"requirement_id": "letter", "target_id": TARGET,
+                          "item_type": "recommendation", "necessity": "required",
+                          "conditions": {"signature": True}})
+        result = assess_admission_outlook(payload)
         self.assertEqual(set(result), {"eligibility", "packet_readiness", "competitive_position",
                                       "program_fit", "evidence_confidence", "historical_context",
                                       "uncertainties", "band_change_conditions"})
@@ -208,6 +216,36 @@ class AdmissionOutlookTests(unittest.TestCase):
         self.assertEqual(result["band_change_conditions"], [
             {"kind": "material_condition", "field": "signature", "requirement_id": "letter",
              "claim_ids": ["letter-policy"]}])
+
+    def test_recommendation_cannot_borrow_eligibility_policy_claim(self):
+        payload = packet()
+        manifest = [{"document_id": DOC, "document_class": "recommendation",
+                     "extraction_state": "reviewed"}]
+        claims = [{"claim_id": "signed", "field": "signature", "value": True,
+                   "state": "document_verified", "source_document_ids": [DOC], "scope": "document"}]
+        requirements = [{"requirement_id": "letter", "target_id": TARGET,
+                         "item_type": "recommendation", "necessity": "required",
+                         "conditions": {"signature": True}, "source_claim_ids": ["eligibility"]}]
+        payload["material_audit"] = audit_materials(manifest, claims, requirements)
+        result = assess_admission_outlook(payload)
+        self.assertEqual(result["competitive_position"], "evidence_insufficient")
+        self.assertIn("requirement_policy_unbound:letter", result["uncertainties"])
+        policy_conditions = [c for c in result["band_change_conditions"]
+                             if c["kind"] == "requirement_policy"]
+        self.assertEqual(policy_conditions[0]["claim_ids"], ["eligibility"])
+
+    def test_current_year_audited_gpa_conflict_withholds_position(self):
+        payload = packet()
+        records = [copy.deepcopy(c["record"]) for c in payload["evidence_audit"]["claims"]]
+        records += [source("gpa-transcript", "gpa", 3.4, conflict_group="gpa-current"),
+                    source("gpa-resume", "gpa", 3.8, conflict_group="gpa-current")]
+        payload["evidence_audit"] = audit_evidence(records, NOW)
+        result = assess_admission_outlook(payload)
+        self.assertEqual(result["competitive_position"], "evidence_insufficient")
+        self.assertIn("critical_applicant_conflict:gpa", result["uncertainties"])
+        conflicts = [c for c in result["band_change_conditions"]
+                     if c["kind"] == "applicant_conflict" and c["field"] == "gpa"]
+        self.assertEqual(conflicts[0]["claim_ids"], ["gpa-transcript", "gpa-resume"])
 
     def test_unknown_eligibility_returns_gate_without_erasing_competitive_position(self):
         result = assess_admission_outlook(packet(gate="unknown"))

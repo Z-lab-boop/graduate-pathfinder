@@ -157,6 +157,22 @@ is the weakest decision-critical source/comparability/coverage assessment.
             concern("critical_applicant_conflict:" + field, blocks=True)
             condition("applicant_conflict", field, [c["claim_id"] for c in conflict.get("claims", [])])
 
+    audited_claims = [c for c in audit.get("claims", []) if isinstance(c, dict)
+                      and isinstance(c.get("record"), dict)
+                      and c["record"].get("candidate_id") == candidate_id
+                      and c["record"].get("applicable_admission_year") == year]
+    for field in sorted(critical):
+        field_claims = [c for c in audited_claims if c["record"].get("field") == field]
+        conflicted = [c for c in field_claims
+                      if c.get("effective_status") == "conflicted" or c.get("conflict_groups")]
+        if conflicted:
+            group_ids = {group for c in conflicted for group in c.get("conflict_groups", [])}
+            related = [c for c in field_claims if c in conflicted or group_ids.intersection(c.get("conflict_groups", []))]
+            claim_ids = list(dict.fromkeys(c["record"].get("claim_id") for c in related
+                                           if isinstance(c["record"].get("claim_id"), str)))
+            concern("critical_applicant_conflict:" + field, "D", blocks=True)
+            condition("applicant_conflict", field, claim_ids)
+
     summary = audit.get("candidate_summary", {}).get(candidate_id, {})
     for name, confidence in (("target_evidence_confidence", summary.get("confidence", "D")),
                              ("candidate_scoring_confidence", scoring.get("evidence_confidence", "D"))):
@@ -174,13 +190,36 @@ is the weakest decision-critical source/comparability/coverage assessment.
         if not usable:
             concern("current_target_evidence_unusable:" + field, confidence, blocks=True)
             condition("current_target_evidence", field, current)
-    policy_refs = list(dict.fromkeys(ref for item in items if item.get("necessity") != "not_applicable"
-                                    for ref in item.get("source_claim_ids", [])))
-    for ref in policy_refs:
-        usable, confidence = evidence_support([ref], year)
-        if not usable:
-            concern("current_target_evidence_unusable:" + ref, confidence, blocks=True)
-            condition("current_target_evidence", ref, [ref])
+    for item in items:
+        refs = item.get("source_claim_ids", [])
+        refs_valid = isinstance(refs, list) and all(isinstance(ref, str) and ref for ref in refs)
+        if not refs_valid:
+            refs = []
+        binding = item.get("policy_binding")
+        expected_binding = {key: deepcopy(item[key]) for key in
+                            ("requirement_id", "target_id", "item_type", "necessity") if key in item}
+        if isinstance(item.get("conditions"), dict):
+            expected_binding["conditions"] = deepcopy(item["conditions"])
+        if "applies_when" in item:
+            expected_binding["applies_when"] = deepcopy(item["applies_when"])
+        semantic_binding_valid = (isinstance(binding, dict) and binding == expected_binding
+                                  and item.get("target_id") == candidate_id and refs_valid and bool(refs))
+        for ref in refs:
+            usable, confidence = evidence_support([ref], year)
+            claims = [c for c in audit.get("claims", []) if isinstance(c, dict)
+                      and isinstance(c.get("record"), dict)
+                      and c["record"].get("claim_id") == ref]
+            if not usable:
+                concern("current_target_evidence_unusable:" + ref, confidence, blocks=True)
+                condition("current_target_evidence", ref, [ref])
+            if (len(claims) != 1 or
+                    claims[0]["record"].get("field") != "material_requirement_policy" or
+                    claims[0]["record"].get("value") != expected_binding):
+                semantic_binding_valid = False
+        if not semantic_binding_valid:
+            requirement_id = item.get("requirement_id", "unknown")
+            concern("requirement_policy_unbound:" + requirement_id, "D", blocks=True)
+            condition("requirement_policy", requirement_id, refs)
 
     selected_scope = payload.get("target_scope", {})
     try:
