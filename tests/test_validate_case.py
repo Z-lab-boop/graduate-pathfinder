@@ -94,6 +94,56 @@ class CaseValidationTests(unittest.TestCase):
             (directory / "candidates.json").write_text("{}")
             self.assertEqual(len(validate_case(directory)), 2)
 
+    def test_json_ingestion_rejects_nonfinite_numbers_with_file_and_field(self):
+        for token in ("NaN", "Infinity", "-Infinity", "1e400", "-1e400"):
+            for template, location in (("TOKEN", "$"),
+                                       ('[{"value": {"nested": [TOKEN]}}]', '$[0]["value"]["nested"][0]')):
+                with self.subTest(token=token, location=location), tempfile.TemporaryDirectory() as temp:
+                    target = Path(temp) / "evidence.json"
+                    target.write_text(template.replace("TOKEN", token), encoding="utf-8")
+                    with self.assertRaises(ValueError) as raised:
+                        load_json(target)
+                    self.assertIn("evidence.json", str(raised.exception))
+                    self.assertIn(location, str(raised.exception))
+                    self.assertIn("finite", str(raised.exception))
+
+    def test_nonfinite_evidence_value_is_rejected_before_audit(self):
+        with tempfile.TemporaryDirectory() as temp:
+            directory = Path(temp); self.write_case(directory)
+            item = evidence(); item["value"] = float("nan")
+            (directory / "evidence.json").write_text(json.dumps([item]), encoding="utf-8")
+            errors = validate_case(directory)
+            self.assertTrue(any("evidence.json" in error and '$[0]["value"]' in error
+                                and "finite" in error for error in errors), errors)
+
+    def test_json_ingestion_preserves_finite_values_and_nonfinite_text(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / "case.json"
+            payload = {"value": [1.5, 10**400, None, True, "NaN", "Infinity", "1e400"]}
+            target.write_text(json.dumps(payload), encoding="utf-8")
+            self.assertEqual(load_json(target), payload)
+
+    def test_candidate_and_evidence_reject_invalid_or_unresolved_offsets(self):
+        for timestamp in ("2027-05-02T10:00:00+08:60", "2027-05-02T10:00:00+08:99",
+                          "2027-05-02T10:00:00-08:60", "2027-05-02T10:00:00+24:00",
+                          "2027-05-02T10:00:00-00:00",
+                          "0001-01-01T00:00:00+08:00", "9999-12-31T23:59:59-08:00"):
+            for validator, factory, field in ((validate_candidate, candidate, "deadline"),
+                                              (validate_evidence, evidence, "retrieved_at")):
+                with self.subTest(timestamp=timestamp, field=field):
+                    item = factory(); item[field] = timestamp
+                    self.assertTrue(any(field in error for error in validator(item)))
+
+    def test_candidate_and_evidence_accept_resolved_offsets_and_fractional_seconds(self):
+        for timestamp in ("2027-05-02T10:00:00Z", "2027-05-02T10:00:00+00:00",
+                          "2027-05-02T10:00:00+23:59", "2027-05-02T10:00:00-23:59",
+                          "2027-05-02T10:00:00.125+08:00"):
+            for validator, factory, field in ((validate_candidate, candidate, "deadline"),
+                                              (validate_evidence, evidence, "retrieved_at")):
+                with self.subTest(timestamp=timestamp, field=field):
+                    item = factory(); item[field] = timestamp
+                    self.assertEqual(validator(item), [])
+
     def test_huge_completeness_integer_returns_error_and_continues_aggregation(self):
         with tempfile.TemporaryDirectory() as temp:
             directory = Path(temp); self.write_case(directory)

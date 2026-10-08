@@ -18,6 +18,64 @@ from scripts.validate_case import validate_case
 
 
 class V01IntegrationTests(unittest.TestCase):
+    def wire_audit(self, candidates, audit, profile):
+        audited_claims = {item["record"]["claim_id"]: item for item in audit["claims"]}
+        scoring = copy.deepcopy(candidates)
+        now = datetime.fromisoformat(profile["audit_at"])
+        for item in scoring:
+            item["evidence_confidence"] = audit["candidate_summary"][item["candidate_id"]]["confidence"]
+            # Every critical field is applicable in this synthetic case. A high
+            # confidence label alone cannot substitute for a feasibility gate.
+            self.assertEqual({gate["gate_id"] for gate in item["gates"]},
+                             {"eligibility", "deadline", "program_availability", "degree_type"})
+            for gate in item["gates"]:
+                self.assertTrue(gate["critical"])
+                bases = item["gate_bases"][gate["gate_id"]]
+                supporting = [audited_claims[claim_id] for claim_id in bases]
+                self.assertTrue(supporting)
+                for claim in supporting:
+                    self.assertEqual(claim["record"]["candidate_id"], item["candidate_id"])
+                    self.assertEqual(claim["record"]["field"], gate["gate_id"])
+                unresolved = [claim for claim in supporting if claim["effective_status"] != "confirmed"]
+                gate["evidence_status"] = unresolved[0]["effective_status"] if unresolved else "confirmed"
+                gate["status"] = "unknown"
+                if unresolved:
+                    continue
+                self.assertEqual(len(supporting), 1)
+                value = supporting[0]["record"]["value"]
+                if gate["gate_id"] == "eligibility":
+                    gate["status"] = value or "unknown"
+                elif gate["gate_id"] == "deadline":
+                    if item["deadline"] is not None:
+                        self.assertEqual(item["deadline"], value)
+                        self.assertTrue(item["deadline_feasibility_basis"].startswith("Synthetic "))
+                        gate["status"] = "pass" if datetime.fromisoformat(value) > now else "fail"
+                elif gate["gate_id"] == "program_availability":
+                    gate["status"] = "pass" if value is True else ("fail" if value is False else "unknown")
+                elif gate["gate_id"] == "degree_type" and value is not None:
+                    gate["status"] = "pass" if value == item["degree_type"] else "fail"
+        return scoring
+
+    def test_stale_critical_deadline_forces_unknown_gate_and_monitor(self):
+        fixture = Path(__file__).parent / "fixtures" / "baoyan_case"
+        profile = load_json(fixture / "profile.json")
+        candidates = load_json(fixture / "candidates.json")
+        evidence = load_json(fixture / "evidence.json")
+        audit = audit_evidence(evidence, datetime.fromisoformat(profile["audit_at"]))
+        stale_id = next(key for key, summary in audit["candidate_summary"].items()
+                        if "deadline" in summary["stale_official_fields"])
+        scoring = self.wire_audit(candidates, audit, profile)
+        portfolio = rank_candidates(scoring, profile["preferences"]["criterion_weights"])
+        result = portfolio[stale_id]
+        self.assertEqual(result["portfolio_group"], "monitor")
+        self.assertEqual(result["eligibility"], "unknown")
+        self.assertIsNone(result["rank"])
+        self.assertIn("deadline", result["gate_evaluation"]["unknown_critical_gates"])
+        deadline_gate = next(gate for gate in result["gate_evaluation"]["gates"]
+                             if gate["gate_id"] == "deadline")
+        self.assertEqual(deadline_gate["effective_status"], "unknown")
+        self.assertEqual(deadline_gate["evidence_status"], "stale")
+
     def test_synthetic_evidence_drives_conservative_portfolio_and_calendar(self):
         fixture = Path(__file__).parent / "fixtures" / "baoyan_case"
         # Copy into a user-case boundary; fixtures intentionally live in the skill.
@@ -33,7 +91,7 @@ class V01IntegrationTests(unittest.TestCase):
 
         ids = {item["candidate_id"] for item in candidates}
         self.assertEqual(ids, {"core-synthetic", "reach-synthetic", "excluded-synthetic",
-                               "unknown-synthetic", "conflicted-synthetic"})
+                               "unknown-synthetic", "conflicted-synthetic", "stale-synthetic"})
         self.assertEqual(len(candidates), len(ids))
         claims = {item["claim_id"]: item for item in evidence}
         self.assertEqual(len(claims), len(evidence))
@@ -52,9 +110,9 @@ class V01IntegrationTests(unittest.TestCase):
         self.assertEqual(audit["errors"], [])
         self.assertEqual({key: value["confidence"]
                           for key, value in audit["candidate_summary"].items()}, {
-            "core-synthetic": "A", "reach-synthetic": "B", "excluded-synthetic": "A",
-            "unknown-synthetic": "D", "conflicted-synthetic": "D"})
-        self.assertEqual(audit["candidate_summary"]["reach-synthetic"]["stale_official_fields"],
+            "core-synthetic": "A", "reach-synthetic": "A", "excluded-synthetic": "A",
+            "unknown-synthetic": "D", "conflicted-synthetic": "D", "stale-synthetic": "B"})
+        self.assertEqual(audit["candidate_summary"]["stale-synthetic"]["stale_official_fields"],
                          ["deadline"])
         self.assertEqual(set(audit["conflicts"]), {"conflicted-synthetic-deadline-2027"})
         self.assertEqual(audit["conflicts"]["conflicted-synthetic-deadline-2027"]["values"],
@@ -62,18 +120,7 @@ class V01IntegrationTests(unittest.TestCase):
 
         # Wire audit results into scores, including gate evidence states; input
         # confidence labels cannot bypass fresh audit findings.
-        audited_claims = {item["record"]["claim_id"]: item for item in audit["claims"]}
-        scoring = copy.deepcopy(candidates)
-        for item in scoring:
-            item["evidence_confidence"] = audit["candidate_summary"][item["candidate_id"]]["confidence"]
-            for gate in item["gates"]:
-                bases = item["gate_bases"][gate["gate_id"]]
-                self.assertEqual(len(bases), 1)
-                claim = audited_claims[bases[0]]
-                self.assertEqual(claim["record"]["candidate_id"], item["candidate_id"])
-                self.assertEqual(claim["record"]["field"], "eligibility")
-                self.assertEqual(gate["status"], claim["record"]["value"] or "unknown")
-                gate["evidence_status"] = claim["effective_status"]
+        scoring = self.wire_audit(candidates, audit, profile)
         weights = profile["preferences"]["criterion_weights"]
         portfolio = rank_candidates(scoring, weights)
         self.assertEqual(portfolio["core-synthetic"]["portfolio_group"], "core")
@@ -81,6 +128,9 @@ class V01IntegrationTests(unittest.TestCase):
         self.assertEqual(portfolio["excluded-synthetic"]["portfolio_group"], "excluded")
         self.assertEqual(portfolio["unknown-synthetic"]["portfolio_group"], "monitor")
         self.assertEqual(portfolio["conflicted-synthetic"]["portfolio_group"], "monitor")
+        self.assertEqual(portfolio["stale-synthetic"]["portfolio_group"], "monitor")
+        self.assertEqual(portfolio["reach-synthetic"]["gate_evaluation"]["unknown_critical_gates"], [])
+        self.assertIn("deadline", portfolio["conflicted-synthetic"]["gate_evaluation"]["unknown_critical_gates"])
         self.assertNotIn("admission_probability", json.dumps(portfolio))
         sensitivity = analyze_sensitivity(scoring, weights)
         self.assertEqual(sensitivity["baseline_order"], ["core-synthetic", "reach-synthetic"])
@@ -89,7 +139,7 @@ class V01IntegrationTests(unittest.TestCase):
 
         events = profile["synthetic_events"]
         for item in candidates:
-            if item["candidate_id"] in {"reach-synthetic", "conflicted-synthetic"}:
+            if item["candidate_id"] in {"stale-synthetic", "conflicted-synthetic"}:
                 self.assertIsNone(item["deadline"])
         for event in events:
             self.assertIn(event["candidate_id"], ids)
@@ -103,6 +153,7 @@ class V01IntegrationTests(unittest.TestCase):
         self.assertIn("BEGIN:VCALENDAR", calendar_text)
         self.assertEqual(calendar_text.count("BEGIN:VEVENT"), 2)
         self.assertNotIn("conflicted-synthetic", calendar_text)
+        self.assertNotIn("stale-synthetic", calendar_text)
         self.assertEqual(calendar_text, render_ics(list(reversed(events)), "Synthetic baoyan case"))
 
 

@@ -1,14 +1,30 @@
 """UTF-8 JSON reads and atomic writes for local case artifacts."""
 import json
+import math
 import os
 import tempfile
 from pathlib import Path
 
 
 def load_json(path: Path) -> dict:
-    """Read JSON; callers validate the object or array shape they require."""
-    with Path(path).open(encoding="utf-8") as stream:
-        return json.load(stream)
+    """Read finite JSON; callers validate the object or array shape they require."""
+    path = Path(path)
+    with path.open(encoding="utf-8") as stream:
+        payload = json.load(stream)
+    # Python's decoder accepts NaN/Infinity and overflows numbers such as 1e400.
+    # Inspect the decoded tree before returning it so errors retain field paths.
+    def check_finite(value, location):
+        if isinstance(value, float) and not math.isfinite(value):
+            raise ValueError(f"{path}: {location}: number must be finite")
+        if isinstance(value, dict):
+            for key, item in value.items():
+                check_finite(item, f"{location}[{json.dumps(key, ensure_ascii=False)}]")
+        elif isinstance(value, list):
+            for index, item in enumerate(value):
+                check_finite(item, f"{location}[{index}]")
+
+    check_finite(payload, "$")
+    return payload
 
 
 def atomic_write_json(path: Path, payload: dict) -> None:

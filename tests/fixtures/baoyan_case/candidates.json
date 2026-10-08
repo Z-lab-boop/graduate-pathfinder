@@ -27,11 +27,38 @@
         "status": "pass",
         "critical": true,
         "evidence_status": "confirmed"
+      },
+      {
+        "gate_id": "deadline",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
+      },
+      {
+        "gate_id": "program_availability",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
+      },
+      {
+        "gate_id": "degree_type",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
       }
     ],
     "gate_bases": {
       "eligibility": [
         "core-synthetic-eligibility"
+      ],
+      "deadline": [
+        "core-synthetic-deadline"
+      ],
+      "program_availability": [
+        "core-synthetic-program_availability"
+      ],
+      "degree_type": [
+        "core-synthetic-degree_type"
       ]
     },
     "dimensions": {
@@ -44,7 +71,8 @@
     },
     "completeness_basis": "All 2 selected scoring dimensions provided: 2/2. Critical evidence confidence and gate uncertainty are audited separately.",
     "deadline_notes": "Synthetic exact timestamp only.",
-    "user_notes": "Entire target is fictional. Confidence A is an intentionally optimistic pre-audit placeholder; replace using audit output before ranking."
+    "user_notes": "Entire target is fictional. Confidence A is an intentionally optimistic pre-audit placeholder; replace using audit output before ranking.",
+    "deadline_feasibility_basis": "Synthetic open deadline and ready-materials premise at the fixed audit time; no actual application or preparation claim."
   },
   {
     "candidate_id": "reach-synthetic",
@@ -57,7 +85,7 @@
     "degree_type": "academic-master",
     "research_track": "Synthetic transparent systems",
     "round": "summer-camp",
-    "deadline": null,
+    "deadline": "2027-06-17T17:00:00+08:00",
     "status": "discovered",
     "eligibility": "pass",
     "evidence_confidence": "A",
@@ -74,11 +102,38 @@
         "status": "pass",
         "critical": true,
         "evidence_status": "confirmed"
+      },
+      {
+        "gate_id": "deadline",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
+      },
+      {
+        "gate_id": "program_availability",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
+      },
+      {
+        "gate_id": "degree_type",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
       }
     ],
     "gate_bases": {
       "eligibility": [
         "reach-synthetic-eligibility"
+      ],
+      "deadline": [
+        "reach-synthetic-deadline"
+      ],
+      "program_availability": [
+        "reach-synthetic-program_availability"
+      ],
+      "degree_type": [
+        "reach-synthetic-degree_type"
       ]
     },
     "dimensions": {
@@ -90,8 +145,9 @@
       "research_fit": "Hand-selected synthetic 0-100 research-interest scale: 75; no real institution assessment."
     },
     "completeness_basis": "All 2 selected scoring dimensions provided: 2/2. Critical evidence confidence and gate uncertainty are audited separately.",
-    "deadline_notes": "Deadline requires refresh or conflict resolution; omitted from calendar.",
-    "user_notes": "Entire target is fictional. Confidence A is an intentionally optimistic pre-audit placeholder; replace using audit output before ranking."
+    "deadline_notes": "Synthetic exact timestamp verified at the fixed audit date.",
+    "user_notes": "Entire target is fictional. Confidence A is an intentionally optimistic pre-audit placeholder; replace using audit output before ranking.",
+    "deadline_feasibility_basis": "Synthetic open deadline and ready-materials premise at the fixed audit time; no actual application or preparation claim."
   },
   {
     "candidate_id": "excluded-synthetic",
@@ -121,11 +177,38 @@
         "status": "fail",
         "critical": true,
         "evidence_status": "confirmed"
+      },
+      {
+        "gate_id": "deadline",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
+      },
+      {
+        "gate_id": "program_availability",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
+      },
+      {
+        "gate_id": "degree_type",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
       }
     ],
     "gate_bases": {
       "eligibility": [
         "excluded-synthetic-eligibility"
+      ],
+      "deadline": [
+        "excluded-synthetic-deadline"
+      ],
+      "program_availability": [
+        "excluded-synthetic-program_availability"
+      ],
+      "degree_type": [
+        "excluded-synthetic-degree_type"
       ]
     },
     "dimensions": {
@@ -138,7 +221,8 @@
     },
     "completeness_basis": "All 2 selected scoring dimensions provided: 2/2. Critical evidence confidence and gate uncertainty are audited separately.",
     "deadline_notes": "Synthetic exact timestamp only.",
-    "user_notes": "Entire target is fictional. Confidence A is an intentionally optimistic pre-audit placeholder; replace using audit output before ranking."
+    "user_notes": "Entire target is fictional. Confidence A is an intentionally optimistic pre-audit placeholder; replace using audit output before ranking.",
+    "deadline_feasibility_basis": "Synthetic open deadline and ready-materials premise at the fixed audit time; no actual application or preparation claim."
   },
   {
     "candidate_id": "unknown-synthetic",
@@ -168,11 +252,38 @@
         "status": "unknown",
         "critical": true,
         "evidence_status": "missing"
+      },
+      {
+        "gate_id": "deadline",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
+      },
+      {
+        "gate_id": "program_availability",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
+      },
+      {
+        "gate_id": "degree_type",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
       }
     ],
     "gate_bases": {
       "eligibility": [
         "unknown-synthetic-eligibility"
+      ],
+      "deadline": [
+        "unknown-synthetic-deadline"
+      ],
+      "program_availability": [
+        "unknown-synthetic-program_availability"
+      ],
+      "degree_type": [
+        "unknown-synthetic-degree_type"
       ]
     },
     "dimensions": {
@@ -185,7 +296,8 @@
     },
     "completeness_basis": "All 2 selected scoring dimensions provided: 2/2. Critical evidence confidence and gate uncertainty are audited separately.",
     "deadline_notes": "Synthetic exact timestamp only.",
-    "user_notes": "Entire target is fictional. Confidence A is an intentionally optimistic pre-audit placeholder; replace using audit output before ranking."
+    "user_notes": "Entire target is fictional. Confidence A is an intentionally optimistic pre-audit placeholder; replace using audit output before ranking.",
+    "deadline_feasibility_basis": "Synthetic open deadline and ready-materials premise at the fixed audit time; no actual application or preparation claim."
   },
   {
     "candidate_id": "conflicted-synthetic",
@@ -216,11 +328,39 @@
         "status": "pass",
         "critical": true,
         "evidence_status": "confirmed"
+      },
+      {
+        "gate_id": "deadline",
+        "status": "unknown",
+        "critical": true,
+        "evidence_status": "conflicted"
+      },
+      {
+        "gate_id": "program_availability",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
+      },
+      {
+        "gate_id": "degree_type",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
       }
     ],
     "gate_bases": {
       "eligibility": [
         "conflicted-synthetic-eligibility"
+      ],
+      "deadline": [
+        "conflicted-synthetic-deadline",
+        "conflicted-synthetic-deadline-alternate"
+      ],
+      "program_availability": [
+        "conflicted-synthetic-program_availability"
+      ],
+      "degree_type": [
+        "conflicted-synthetic-degree_type"
       ]
     },
     "dimensions": {
@@ -233,6 +373,82 @@
     },
     "completeness_basis": "All 2 selected scoring dimensions provided: 2/2. Critical evidence confidence and gate uncertainty are audited separately.",
     "deadline_notes": "Deadline requires refresh or conflict resolution; omitted from calendar.",
-    "user_notes": "Entire target is fictional. Confidence A is an intentionally optimistic pre-audit placeholder; replace using audit output before ranking."
+    "user_notes": "Entire target is fictional. Confidence A is an intentionally optimistic pre-audit placeholder; replace using audit output before ranking.",
+    "deadline_feasibility_basis": "Synthetic unresolved deadline: feasibility remains unknown until official evidence is refreshed or conflicts resolved."
+  },
+  {
+    "candidate_id": "stale-synthetic",
+    "pathway": "baoyan",
+    "admission_year": 2027,
+    "institution": "Fictional Dewstone Institute",
+    "unit": "Fictional Computing Unit",
+    "program_code": null,
+    "program_name": "Synthetic Computing",
+    "degree_type": "academic-master",
+    "research_track": "Synthetic transparent systems",
+    "round": "summer-camp",
+    "deadline": null,
+    "status": "discovered",
+    "eligibility": "pass",
+    "evidence_confidence": "A",
+    "data_completeness": 1,
+    "sources": [
+      "stale-synthetic-eligibility",
+      "stale-synthetic-deadline",
+      "stale-synthetic-program_availability",
+      "stale-synthetic-degree_type"
+    ],
+    "gates": [
+      {
+        "gate_id": "eligibility",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
+      },
+      {
+        "gate_id": "deadline",
+        "status": "unknown",
+        "critical": true,
+        "evidence_status": "stale"
+      },
+      {
+        "gate_id": "program_availability",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
+      },
+      {
+        "gate_id": "degree_type",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
+      }
+    ],
+    "gate_bases": {
+      "eligibility": [
+        "stale-synthetic-eligibility"
+      ],
+      "deadline": [
+        "stale-synthetic-deadline"
+      ],
+      "program_availability": [
+        "stale-synthetic-program_availability"
+      ],
+      "degree_type": [
+        "stale-synthetic-degree_type"
+      ]
+    },
+    "dimensions": {
+      "competitive_position": 40,
+      "research_fit": 75
+    },
+    "dimension_bases": {
+      "competitive_position": "Hand-selected synthetic 0-100 decision scale: 40; not a predicted admission outcome.",
+      "research_fit": "Hand-selected synthetic 0-100 research-interest scale: 75; no real institution assessment."
+    },
+    "completeness_basis": "All 2 selected scoring dimensions provided: 2/2. Critical evidence confidence and gate uncertainty are audited separately.",
+    "deadline_notes": "Deadline requires refresh or conflict resolution; omitted from calendar.",
+    "user_notes": "Entire target is fictional. Confidence A is an intentionally optimistic pre-audit placeholder; replace using audit output before ranking.",
+    "deadline_feasibility_basis": "Synthetic unresolved deadline: feasibility remains unknown until official evidence is refreshed or conflicts resolved."
   }
 ]

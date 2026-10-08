@@ -7,6 +7,7 @@
 - [ ] 同一合成学校的两个院系或批次：分别建立院校—院系—专业—方向—学位—轮次—入学年身份，不以学校名合并。
 - [ ] 社区消息与本年官方公告相抵触：遵循官方源优先，保留冲突记录和 conflict_group，未经范围核验不能悄悄覆盖。
 - [ ] 往年公告、本年检索：记录适用年份缺口，不能因检索日期新就视为 confirmed；关键未知进入 monitor。
+- [ ] 六目标自动集成情景：保留独立 fresh reach，分别覆盖 core、excluded、unknown、conflicted 与 stale；四类适用关键要求全部接入门槛，stale 截止的置信度 B 不可代替截止可行性，deadline 门保持 unknown 且目标进入 monitor。
 - [ ] 经确认的关键不满足项进入 excluded；资格确认后才按显式维度、覆盖率和置信度构建 reach/core/safety；证据缺失进入 monitor。
 - [ ] 合成候选原始 eligibility=pass、关键门槛 confirmed fail：已分析 CSV 的 eligibility 取 ranked[candidate_id]["eligibility"]，交付 fail/excluded；未分析时保留原始 eligibility 并注明尚未门槛重算，评分/覆盖率/分组留空。
 - [ ] 缺评分维度：不补零、不从学校名气推算；用户给定尺度、权重与依据才做排序。

@@ -1,6 +1,6 @@
 """Validate normalized admission cases without interpreting missing evidence."""
 import argparse
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 import math
 import re
 from pathlib import Path
@@ -41,13 +41,21 @@ def _year(record, errors):
 
 
 def _timestamp(value):
-    if not isinstance(value, str) or not re.fullmatch(
-            r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})", value):
+    match = re.fullmatch(
+        r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?P<offset>Z|[+-]\d{2}:\d{2})",
+        value) if isinstance(value, str) else None
+    if match is None:
+        return False
+    offset = match["offset"]
+    if offset != "Z" and (offset == "-00:00" or int(offset[1:3]) > 23 or int(offset[4:6]) > 59):
         return False
     try:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-        return parsed.utcoffset() is not None
-    except ValueError:
+        if parsed.utcoffset() is None:
+            return False
+        parsed.astimezone(timezone.utc)
+        return True
+    except (ValueError, OverflowError):
         return False
 
 
