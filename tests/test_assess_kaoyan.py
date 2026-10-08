@@ -34,6 +34,7 @@ def inputs():
               "source_ref": "line", "population": "ordinary applicants",
               "program_code": "085400", "subject_minimums": {"101": 40, "201": 40},
               "institution": "Synthetic U", "unit": "Synthetic Unit",
+              "subject_codes": codes,
               }
     record["evidence"] = evidence(deepcopy(record), claim_id="line")
     candidate = {"candidate_id": "synthetic", "pathway": "kaoyan", "admission_year": 2026,
@@ -214,6 +215,8 @@ class ScenarioTests(unittest.TestCase):
         p["score_scenario"]["subject_codes"] = ["101", "204", "301", "408"]
         c["thresholds"][0]["subject_minimums"] = {"101": 40, "204": 40}
         c["thresholds"][0]["evidence"]["value"]["subject_minimums"] = {"101": 40, "204": 40}
+        c["thresholds"][0]["subject_codes"] = ["101", "204", "301", "408"]
+        c["thresholds"][0]["evidence"]["value"]["subject_codes"] = ["101", "204", "301", "408"]
         p["score_scenario"]["subjects"]["204"] = [45, 55]
         self.assertEqual(compare_score_scenario(p, c)["status"], "above")
 
@@ -223,6 +226,78 @@ class ScenarioTests(unittest.TestCase):
         c["thresholds"][0]["evidence"]["value"]["subject_minimums"] = {"204": 40}
         p["score_scenario"]["subjects"]["204"] = [50, 60]
         self.assertEqual(compare_score_scenario(p, c)["status"], "insufficient_evidence")
+
+    def test_source_full_combination_cannot_be_filtered_from_total_only_line(self):
+        for minimums in ({}, {"101": 40}):
+            p, c = inputs()
+            line = c["thresholds"][0]
+            line["subject_minimums"] = minimums
+            line["evidence"]["value"]["subject_minimums"] = minimums
+            line["evidence"]["value"]["subject_codes"] = ["101", "204", "302", "408"]
+            self.assertEqual(compare_score_scenario(p, c)["status"], "insufficient_evidence")
+
+    def test_missing_or_incompatible_threshold_full_combination_is_insufficient(self):
+        for codes in (None, [], ["101", "204", "302", "408"]):
+            p, c = inputs()
+            line = c["thresholds"][0]
+            line["subject_minimums"] = {}
+            line["evidence"]["value"]["subject_minimums"] = {}
+            if codes is None:
+                del line["subject_codes"]
+                del line["evidence"]["value"]["subject_codes"]
+            else:
+                line["subject_codes"] = codes
+                line["evidence"]["value"]["subject_codes"] = codes
+            self.assertEqual(compare_score_scenario(p, c)["status"], "insufficient_evidence")
+
+    def test_historical_threshold_requires_that_years_source_backed_combination(self):
+        p, c = inputs()
+        p["score_scenario"]["year"] = 2025
+        line = c["thresholds"][0]
+        line["year"] = line["evidence"]["applicable_admission_year"] = 2025
+        line["evidence"]["value"]["year"] = 2025
+        self.assertEqual(compare_score_scenario(p, c)["status"], "above")
+        line["subject_codes"] = line["evidence"]["value"]["subject_codes"] = ["101", "204", "302", "408"]
+        self.assertEqual(compare_score_scenario(p, c)["status"], "insufficient_evidence")
+        line["subject_codes"] = line["evidence"]["value"]["subject_codes"] = ["101", "201", "301", "408"]
+        line["evidence"]["applicable_admission_year"] = 2026
+        self.assertEqual(compare_score_scenario(p, c)["status"], "insufficient_evidence")
+
+    def test_optional_identity_restrictions_match_without_upgrading_scope(self):
+        for scope, field in (("national", "institution"), ("national", "unit"),
+                             ("institution", "unit"), ("institution", "program_code"),
+                             ("unit", "program_code")):
+            p, c = inputs()
+            p["score_scenario"]["scope"] = scope
+            line = c["thresholds"][0]
+            line["scope"] = scope
+            line["area"] = c["area"] = "A"
+            line["category"] = c["category"] = "synthetic engineering"
+            line["evidence"]["value"] = {k: deepcopy(v) for k, v in line.items() if k != "evidence"}
+            self.assertEqual(compare_score_scenario(p, c)["status"], "above")
+            line[field] = "different target"
+            line["evidence"]["value"][field] = "different target"
+            result = compare_score_scenario(p, c)
+            self.assertEqual(result["status"], "insufficient_evidence")
+            self.assertEqual(result["excluded_thresholds"][0]["threshold"]["scope"], scope)
+
+    def test_national_area_and_category_must_be_known_and_match(self):
+        for field in ("area", "category"):
+            for mutation in ("missing_line", "missing_target", "mismatch"):
+                p, c = inputs()
+                p["score_scenario"]["scope"] = "national"
+                line = c["thresholds"][0]
+                line["scope"] = "national"
+                line["area"] = c["area"] = "A"
+                line["category"] = c["category"] = "synthetic engineering"
+                if mutation == "missing_line":
+                    del line[field]
+                elif mutation == "missing_target":
+                    del c[field]
+                else:
+                    c[field] = "different applicability"
+                line["evidence"]["value"] = {k: deepcopy(v) for k, v in line.items() if k != "evidence"}
+                self.assertEqual(compare_score_scenario(p, c)["status"], "insufficient_evidence")
 
     def test_malformed_threshold_extensions_are_rejected_cleanly(self):
         for change in ({"scope": []}, {"total": 10 ** 1000}):

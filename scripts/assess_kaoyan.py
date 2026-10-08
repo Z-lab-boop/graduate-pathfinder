@@ -193,20 +193,27 @@ def compare_score_scenario(profile: dict, candidate: dict) -> dict:
             reasons.append("population_definition_required")
         if threshold["descriptive_only"] and threshold.get("statistic") != scenario.get("statistic"):
             reasons.append("statistic_mismatch")
+        if _codes(threshold.get("subject_codes")) != scenario_codes:
+            reasons.append("source_backed_full_subject_applicability_required")
         if any(unicodedata.normalize("NFKC", code).strip() not in scenario_codes
                for code in threshold.get("subject_minimums", {})):
             reasons.append("threshold_subject_combination_mismatch")
         for field in IDENTITY_FIELDS[threshold["scope"]]:
             if not _text(threshold.get(field)) or threshold[field] != candidate.get(field):
                 reasons.append(field + "_mismatch_or_missing")
-        for field in ("research_track", "degree_type", "round", "area", "category"):
-            if field in threshold and threshold[field] != candidate.get(field):
+        if threshold["scope"] == "national":
+            for field in ("area", "category"):
+                if not _text(threshold.get(field)) or not _text(candidate.get(field)):
+                    reasons.append("national_" + field + "_applicability_required")
+        for field in ("institution", "unit", "program_code", "research_track", "degree_type", "round", "area", "category"):
+            if threshold.get(field) is not None and (
+                    not _text(threshold[field]) or threshold[field] != candidate.get(field)):
                 reasons.append(field + "_mismatch")
         ev = threshold.get("evidence")
         if (not _official(ev, threshold["year"], now, candidate.get("candidate_id"))
                 or ev.get("claim_id") != threshold["source_ref"]):
             reasons.append("current_official_threshold_evidence_required")
-        payload_fields = {"year", "scope", "total", "population", "statistic", "subject_minimums",
+        payload_fields = {"year", "scope", "total", "population", "statistic", "subject_minimums", "subject_codes",
                           "institution", "unit", "program_code", "research_track", "degree_type",
                           "round", "area", "category"}
         expected_value = {k: v for k, v in raw.items() if k in payload_fields}

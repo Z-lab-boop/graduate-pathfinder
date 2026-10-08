@@ -27,13 +27,13 @@ profile.preferences.willing_to_switch_subjects 必须为字面布尔 true 才能
 
 ## 阈值扩展
 
-candidate.thresholds 为数组，每条必需 year（正整数）、scope（上表值）、total（有限非负数）、source_ref（非空 claim_id）。可选 subject_minimums 为代码到有限非负最低分的映射，population 为明确人群字符串，statistic 为描述性统计名。代码归一化后重复的单科键拒绝，原始键和值保留在输出，不覆盖用户数据。
+candidate.thresholds 为数组，每条必需 year（正整数）、scope（上表值）、total（有限非负数）、source_ref（非空 claim_id）。实际比较另需 subject_codes：该年阈值适用的完整有序科目代码序列，须由该年阈值来源明确支持；它使用科目组合相同的归一化规则，必须与分数情景的完整序列匹配。总分线没有单科最低分也必须确认完整组合，不能从当前候选科目反推历史线适用科目。缺失、空组合、不兼容或来源未建立适用性均为 insufficient_evidence。可选 subject_minimums 为代码到有限非负最低分的映射，population 为明确人群字符串，statistic 为描述性统计名。代码归一化后重复的单科键拒绝，原始键和值保留在输出，不覆盖用户数据。
 
-identity 字段可含 institution/unit/program_code/research_track/degree_type/round/area/category。comparison 按 scope 要求：institution 需学校一致；unit 需学校及院系一致；program 需再加专业代码；direction 需再加 research_track；admitted_distribution 至少学校、院系、专业一致。其他已给定身份限定同样必须匹配 candidate；national 的地区、学科类别及计划限定须在 population 与 area/category 明示。所有比較都要求 population 非空且与请求完全一致。
+identity 字段可含 institution/unit/program_code/research_track/degree_type/round/area/category。comparison 按 scope 要求：institution 需学校一致；unit 需学校及院系一致；program 需再加专业代码；direction 需再加 research_track；admitted_distribution 至少学校、院系、专业一致。无论 scope 为何，所有已填写的上述身份限定都必须为非空字符串并匹配 candidate；未限定的可选字段可省略或为 null。国家线带有专业或院系限定仍保持 national，不提升成专业线，但该限定必须匹配目标。national 必须有非空 area 与 category，candidate 同样必须明示这两项并完全一致；地区、类别或计划未知不得仅凭 population 文本比较。所有比较都要求 population 非空且与请求完全一致。
 
 classify_threshold 只校验形状，返回原记录深拷贝及 is_program_specific/descriptive_only。is_program_specific 仅 program/direction 为 true，不靠字段名猜测层级。它不校验来源真实性，不声称分类记录可用于决策。
 
-实际比较时，每条 threshold.evidence 为 v0.1 证据记录，claim_id 等于 source_ref，candidate_id 匹配目标，applicable_admission_year 等于 threshold.year，且满足上述 current official 规则。evidence.value 必须完整支持阈值事实对象：year/scope/total/population/statistic/subject_minimums 与已给身份限定；这些键双方一致，不能丢弃来源中的单科最低分或人群限定。source_ref/evidence 外壳及其他备注不参与值比较。
+实际比较时，每条 threshold.evidence 为 v0.1 证据记录，claim_id 等于 source_ref，candidate_id 匹配目标，applicable_admission_year 等于 threshold.year，且满足上述 current official 规则。evidence.value 必须完整支持阈值事实对象：year/scope/total/population/statistic/subject_minimums/subject_codes 与已给身份限定；这些键双方一致，不能过滤来源中的完整科目组合、单科最低分、人群或地区类别限定。历史阈值的组合须由 applicable_admission_year 等于该历史年份的来源支持；当前年度科目证据只能确认当前目标组合，不能代替历史阈值的年度适用性证据。source_ref/evidence 外壳及其他备注不参与值比较。
 
 ## 分数情景扩展和输出
 
