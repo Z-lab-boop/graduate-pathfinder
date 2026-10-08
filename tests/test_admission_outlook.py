@@ -234,6 +234,16 @@ class AdmissionOutlookTests(unittest.TestCase):
                              if c["kind"] == "requirement_policy"]
         self.assertEqual(policy_conditions[0]["claim_ids"], ["eligibility"])
 
+    def test_policy_binding_uses_typed_equality_for_boolean_conditions(self):
+        payload = packet()
+        records = [copy.deepcopy(c["record"]) for c in payload["evidence_audit"]["claims"]]
+        policy = next(record for record in records if record["claim_id"] == "letter-policy")
+        policy["value"]["conditions"]["signature"] = 1
+        payload["evidence_audit"] = audit_evidence(records, NOW)
+        result = assess_admission_outlook(payload)
+        self.assertEqual(result["competitive_position"], "evidence_insufficient")
+        self.assertIn("requirement_policy_unbound:letter", result["uncertainties"])
+
     def test_current_year_audited_gpa_conflict_withholds_position(self):
         payload = packet()
         records = [copy.deepcopy(c["record"]) for c in payload["evidence_audit"]["claims"]]

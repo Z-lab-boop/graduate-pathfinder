@@ -42,6 +42,17 @@ def _score(value, name):
     return float(value)
 
 
+def _typed_equal(left, right):
+    """Compare JSON-like values without Python's bool/int equivalence."""
+    if type(left) is not type(right):
+        return False
+    if isinstance(left, dict):
+        return left.keys() == right.keys() and all(_typed_equal(left[key], right[key]) for key in left)
+    if isinstance(left, list):
+        return len(left) == len(right) and all(_typed_equal(a, b) for a, b in zip(left, right))
+    return left == right
+
+
 def assess_admission_outlook(payload: dict) -> dict:
     """Return the exact eight-field contract; missing evidence is conservative.
 
@@ -202,7 +213,7 @@ is the weakest decision-critical source/comparability/coverage assessment.
             expected_binding["conditions"] = deepcopy(item["conditions"])
         if "applies_when" in item:
             expected_binding["applies_when"] = deepcopy(item["applies_when"])
-        semantic_binding_valid = (isinstance(binding, dict) and binding == expected_binding
+        semantic_binding_valid = (isinstance(binding, dict) and _typed_equal(binding, expected_binding)
                                   and item.get("target_id") == candidate_id and refs_valid and bool(refs))
         for ref in refs:
             usable, confidence = evidence_support([ref], year)
@@ -214,7 +225,7 @@ is the weakest decision-critical source/comparability/coverage assessment.
                 condition("current_target_evidence", ref, [ref])
             if (len(claims) != 1 or
                     claims[0]["record"].get("field") != "material_requirement_policy" or
-                    claims[0]["record"].get("value") != expected_binding):
+                    not _typed_equal(claims[0]["record"].get("value"), expected_binding)):
                 semantic_binding_valid = False
         if not semantic_binding_valid:
             requirement_id = item.get("requirement_id", "unknown")
