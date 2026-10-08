@@ -56,6 +56,23 @@ class MaterialAuditTests(unittest.TestCase):
         self.assertEqual(item["status"], "repairable")
         self.assertIn("date", item["missing_conditions"])
 
+    def test_signed_recommendation_with_whitespace_date_is_repairable(self):
+        for value in ("   ", "\t\n", "\u3000"):
+            with self.subTest(value=value):
+                self.claims[1]["value"] = value
+                item = self.item()
+                self.assertEqual(item["status"], "repairable")
+                self.assertIn("date", item["missing_conditions"])
+                self.assertEqual(self.claims[1]["value"], value)
+
+    def test_presence_preserves_false_zero_and_nonblank_typed_values(self):
+        req = requirement(conditions={"signature": "present"})
+        for value in (False, 0, "  observed  "):
+            with self.subTest(value=value):
+                self.claims[0]["value"] = value
+                self.assertEqual(self.item(requirements=[req])["status"], "complete")
+                self.assertEqual(self.claims[0]["value"], value)
+
     def test_optional_missing_item_is_visible_but_not_blocking(self):
         item = self.item(manifest=[], requirements=[requirement(necessity="optional")], claims=[])
         self.assertEqual(item["status"], "materially_incomplete")
@@ -246,6 +263,18 @@ class GeneratedTextRedactionTests(unittest.TestCase):
     def test_signature_redaction_is_idempotent_with_spaces_in_label(self):
         text, _ = redact_text("Signature:   Synthetic Name\n签名：  合成姓名")
         self.assertEqual(redact_text(text), (text, []))
+
+    def test_markdown_wrapped_signatures_are_private_line_limited_and_idempotent(self):
+        for label in ("- 签名：", "**Signature:** ", "- **Signature:** ",
+                      "1. __签名__：", "* Signature: ", "_Signature_: "):
+            with self.subTest(label=label):
+                original = label + "合成姓名\nFollowing body text"
+                text, findings = redact_text(original)
+                self.assertEqual(text, label + "[REDACTED_SIGNATURE]\nFollowing body text")
+                self.assertEqual(findings, [{"type": "signature", "count": 1,
+                                            "review_required": True, "possible_over_redaction": True}])
+                self.assertNotIn("合成姓名", json.dumps(findings, ensure_ascii=False))
+                self.assertEqual(redact_text(text), (text, []))
 
 
 if __name__ == "__main__":

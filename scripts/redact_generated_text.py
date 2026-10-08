@@ -6,7 +6,11 @@ Broad matches may include public contacts: review every redacted output.
 import re
 
 PATTERNS = (
-    ("signature", re.compile(r"(?im)^(?P<label>[ \t]*(?:(?:推荐人|申请人|导师)?签名|签字|signature|signed[ \t]+by)[ \t]*[:：=][ \t]*)(?![ \t]*\[REDACTED_)(?P<value>[^\r\n]+)")),
+    ("signature", re.compile(
+        r"(?im)^(?P<label>[ \t]*(?:(?:[-+*]|\d+[.)])[ \t]+)?"
+        r"(?:\*\*|__|\*|_)?(?:(?:推荐人|申请人|导师)?签名|签字|signature|signed[ \t]+by)"
+        r"(?:\*\*|__|\*|_)?[ \t]*[:：=](?:\*\*|__|\*|_)?[ \t]*)"
+        r"(?![*_ \t]*\[REDACTED_)(?P<value>[^\r\n]+)")),
     ("student_number", re.compile(r"(?i)(?P<label>(?:学号|学生编号|student[ \t]*(?:id|number|no\.?))[ \t]*[:：=][ \t]*)(?!\[REDACTED_)(?P<value>[A-Z0-9][A-Z0-9_-]{3,31})(?![A-Z0-9_-])")),
     ("identity", re.compile(r"(?<![A-Za-z0-9])\d{17}[\dXx](?![A-Za-z0-9])")),
     ("phone", re.compile(r"(?<![A-Za-z0-9])(?:\+?86[ \t-]*)?1[3-9]\d{9}(?![A-Za-z0-9])")),

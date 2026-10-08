@@ -57,8 +57,10 @@ conflicting policy must be clarified before assigning an affirmative requirement
 the audit validates the record shape but cannot verify URLs from IDs alone.
 
 `conditions` maps canonical applicant claim fields to typed expected values.
-The reserved value `"present"` requires a nonempty value, allowing false and zero
-to be present facts. Boolean true differs from numeric 1. Other expected values
+The reserved value `"present"` requires a nonempty value; whitespace-only strings
+are absent, while false and zero remain present facts. String stripping applies
+only to presence checks and never modifies input values or typed equality.
+Boolean true differs from numeric 1. Other expected values
 use exact typed equality; there are no silent numeric/date conversions. A
 `date: "present"` condition checks presence only; target-specific validity or date
 windows must be represented by separately reviewed fields/conditions.
@@ -137,7 +139,8 @@ student numbers, and labelled signature lines. Stable tokens are
 `[REDACTED_STUDENT_NUMBER]`, and `[REDACTED_SIGNATURE]`. Findings contain only
 `type`, `count`, `review_required`, and `possible_over_redaction`; never original
 matches, surrounding snippets or offsets. Signature/student patterns preserve
-the context label; signature redaction stops at the newline.
+the context label; signature redaction stops at the newline. Generated Markdown
+list prefixes and emphasis around signature labels are recognized and preserved.
 
 Every match carries review flags because broad patterns may redact public
 institutional contacts or other identifier-like text. Review the generated output

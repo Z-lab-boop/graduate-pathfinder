@@ -31,6 +31,8 @@ def _same(left, right):
 
 
 def _present(value):
+    if isinstance(value, str):
+        return bool(value.strip())
     return value is not None and value != "" and value != [] and value != {}
 
 
