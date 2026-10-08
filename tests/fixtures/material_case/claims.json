@@ -1,0 +1,46 @@
+[
+  {
+    "claim_id": "resume-gpa",
+    "field": "gpa",
+    "value": 3.8,
+    "state": "user_asserted",
+    "source_document_ids": [
+      "sha256:134feb3308c0e86b37a04f59b1d4a1854657c7905d510b54db6a2e2bb0ef133c"
+    ],
+    "scope": "applicant",
+    "notes": "Invented synthetic observation; no real applicant or authenticity certification."
+  },
+  {
+    "claim_id": "transcript-gpa",
+    "field": "gpa",
+    "value": 3.4,
+    "state": "document_verified",
+    "source_document_ids": [
+      "sha256:b70f59e95d7d4962acd9fb75132264786a6d2eec852abd45ac14c3ebbe7d05d3"
+    ],
+    "scope": "applicant",
+    "notes": "Invented synthetic observation; no real applicant or authenticity certification."
+  },
+  {
+    "claim_id": "letter-signature",
+    "field": "signature",
+    "value": false,
+    "state": "document_verified",
+    "source_document_ids": [
+      "sha256:353f504aa6b5942bc3d24e91205993af1f4efc5e5e00fd2d6e557670479181f5"
+    ],
+    "scope": "document",
+    "notes": "Invented synthetic observation; no real applicant or authenticity certification."
+  },
+  {
+    "claim_id": "letter-date",
+    "field": "date",
+    "value": "2027-04-28",
+    "state": "document_verified",
+    "source_document_ids": [
+      "sha256:353f504aa6b5942bc3d24e91205993af1f4efc5e5e00fd2d6e557670479181f5"
+    ],
+    "scope": "document",
+    "notes": "Invented synthetic observation; no real applicant or authenticity certification."
+  }
+]

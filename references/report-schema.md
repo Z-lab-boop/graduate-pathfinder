@@ -1,6 +1,6 @@
 # 分路径报告契约
 
-仅执行当前路径部分：保研 v0.1 用下节，考研 v0.2 用 [考研报告](#考研-v02-报告)。不混合两类分组或把同名 reach 解释成同一计算规则。
+仅执行当前路径部分：保研 v0.1 用下节，考研 v0.2 用 [考研报告](#考研-v02-报告)。材料复核或展望另执行 [v0.3 契约](#材料复核与展望-v03-报告)，不改写原路径格式。不混合两类分组或把同名 reach 解释成同一计算规则。
 
 ## 保研 v0.1 报告
 
@@ -61,3 +61,21 @@ candidate_id,institution,unit,program_code,program_name,research_track,degree_ty
 ```
 
 subject_match/score_scenario/risk_band/置信度等分析字段取 kaoyan-assessments.json 完整返回值；eligibility 取 gate_evaluation.eligibility，若科目 fail 导致提前 excluded、无 gate_evaluation，则写 fail 并以 subject_match 理由说明；未分析留空且报告注明未执行。其余身份/目录/原阈值取候选记录，缺失不补零。基础候选 status 不由分析自动推进。shortlist 固定字段另存 kaoyan-shortlist.json，不将 decision_set 缩成一名赢家。保存完整 evidence-audit.json；报告/表格不能替代其原始 claims。
+
+## 材料复核与展望 v0.3 报告
+
+材料复核/展望交付必须含以下五个文件。仅历史查询时也保留未执行部分及原因，不为填表编造申请者、资格或分数。文件存技能目录外的本地案例；考研科目/阈值结论仍取 v0.2 输出。原 v0.1/v0.2 报告与 CSV 契约保持适用，不新增或替换其固定列。
+
+| 文件 | 必需内容 |
+| --- | --- |
+| `material-audit.md` | 分目标/逐要求的 requirement_id、必要性、来源 claim IDs、选定 document IDs、状态、blocking、缺条件、review_required；单列矛盾的各 claim ID/state/value 与同口径依据、未读页/OCR 不确定及待补件。完整不认证真实性，不代表已提交。原绝对路径不进入展示文本。 |
+| `applicant-claims.json` | 六类状态的规范化数组：claim_id、field、value、state、source_document_ids、notes；签名/日期等文档观察带 scope=document。所有 ID 绑定本地清单；同口径冲突全保留，不选胜出值。只存必要学术字段，联系方式、身份证/学号、签名内容、家庭地址不写 value/notes。缺值保留 missing/null，不补零。 |
+| `historical-cycle.json` | 明确当前年及选定历史七字段 scope；原归一化 events/counts、重建 timeline、calculate_stage_metrics 完整 scopes/metrics/rejected，包括未选 scope 的 scope_mismatch；日期两端/时区/精度、来源 URL/实际检索日/层级/claim IDs、排除与去重方法。只含 aggregate，不含名单行或身份。无证据保留空数组及缺口，不伪造零人。 |
+| `admission-outlook.md` | 当前目标与入学年、分析时间、明确历史年/轮次；资格 eligibility、材料 packet_readiness、竞争 competitive_position、适配 program_fit（score/reasons）、证据 evidence_confidence 五项独立结果。列完整历史 scope、阶段与分子/分母/描述性比率或拒算原因、uncertainties、缺失证据及 band_change_conditions 的最小可核验事实、各引用来源。未执行字段写“未执行/证据不足”及原因。 |
+| `privacy-review.md` | 是否使用合成案例、原件未改写、生成文本脱敏 finding type/count/review_required/possible_over_redaction；人工复核状态（pending/completed）、误脱敏及遗漏检查范围、公开分享尚待条件。不得存匹配原文、片段、offset、签名图、来源绝对路径或真实身份。不得因正则通过宣称完全匿名。 |
+
+本地输入另保留 materials-manifest.json、material-requirements.json、完整 evidence-audit.json；可保存 material-audit.json/admission-outlook.json 原函数返回值供复核。它们不是公开发布材料，原件、路径和必要私人观察严格留本地且受案例级 `.gitignore` 保护。检查已有文件，保留用户修改/旧版后再更新。
+
+每份展望报告必须明确写：“历史阶段比例只描述对应历史范围，不代表个人录取概率；竞争档位是透明的序数判断，不保证录取。资格、材料、竞争位置、适配和置信度分别解释，材料可见不认证真实性。本次交材料仅为本地复核，未进行外部提交。”竞争档位使用 strong/competitive/borderline/weak/evidence_insufficient；与保研 reach/core/safety 或考研风险分组分别呈现。band_change_conditions 是可能改变判断的待核验事实，不承诺补件后录取改善。
+
+对生成 Markdown、CSV 展示文本及准备分享的 JSON 文本先执行 redact_text；原始文档从不经过改写。结构化学术字段不能被粗暴脱敏破坏类型，应从采集阶段省去敏感字段，并检查规范化值/notes/source metadata；仍有敏感内容则交付脱敏副本且保留本地证据关系。脱敏 findings 仅存数量/类型/复核标志。公开结果去掉路径、真实标识及可识别组合，人工复核未做如实写 pending；合成测试和自动检查不能代替该复核。

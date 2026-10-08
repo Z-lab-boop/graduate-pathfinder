@@ -1,0 +1,511 @@
+{
+  "synthetic": true,
+  "audit_at": "2027-05-03T10:00:00+08:00",
+  "selected_scope": {
+    "admission_year": 2026,
+    "institution": "Fictional Meridian University",
+    "unit": "Fictional Computing School",
+    "program_code": "081200",
+    "degree_type": "academic-master",
+    "research_track": "Fictional Systems",
+    "admission_round": "summer-camp"
+  },
+  "counts": [
+    {
+      "admission_year": 2026,
+      "institution": "Fictional Meridian University",
+      "unit": "Fictional Computing School",
+      "program_code": "081200",
+      "degree_type": "academic-master",
+      "research_track": "Fictional Systems",
+      "admission_round": "summer-camp",
+      "stage": "final_admitted",
+      "count": 20,
+      "claim_ids": [
+        "summer-final"
+      ],
+      "source_url": "https://example.invalid/history/summer-final",
+      "retrieval_date": "2027-05-02",
+      "evidence_tier": "A",
+      "method_notes": "Synthetic official aggregate; final admissions only."
+    },
+    {
+      "admission_year": 2026,
+      "institution": "Fictional Meridian University",
+      "unit": "Fictional Computing School",
+      "program_code": "081200",
+      "degree_type": "academic-master",
+      "research_track": "Fictional Systems",
+      "admission_round": "summer-camp",
+      "stage": "listed_shortlist",
+      "count": 120,
+      "claim_ids": [
+        "summer-list"
+      ],
+      "source_url": "https://example.invalid/history/summer-list",
+      "retrieval_date": "2027-05-02",
+      "evidence_tier": "A",
+      "method_notes": "Synthetic public-list aggregate: 122 rows less 2 headers = 120 listed entries; attendance unconfirmed. No row identities retained."
+    },
+    {
+      "admission_year": 2026,
+      "institution": "Fictional Meridian University",
+      "unit": "Fictional Computing School",
+      "program_code": "081200",
+      "degree_type": "academic-master",
+      "research_track": "Fictional Systems",
+      "admission_round": "pre-recommendation",
+      "stage": "confirmed_attended",
+      "count": 80,
+      "claim_ids": [
+        "autumn-attendance"
+      ],
+      "source_url": "https://example.invalid/history/autumn-attendance",
+      "retrieval_date": "2027-05-02",
+      "evidence_tier": "A",
+      "method_notes": "Synthetic official attended aggregate for a distinct round."
+    },
+    {
+      "admission_year": 2026,
+      "institution": "Fictional Meridian University",
+      "unit": "Fictional Computing School",
+      "program_code": "081200",
+      "degree_type": "academic-master",
+      "research_track": "Fictional Systems",
+      "admission_round": "pre-recommendation",
+      "stage": "final_admitted",
+      "count": 20,
+      "claim_ids": [
+        "autumn-final"
+      ],
+      "source_url": "https://example.invalid/history/autumn-final",
+      "retrieval_date": "2027-05-02",
+      "evidence_tier": "A",
+      "method_notes": "Synthetic official final-admitted aggregate for that same distinct round."
+    }
+  ],
+  "events": [
+    {
+      "admission_year": 2026,
+      "institution": "Fictional Meridian University",
+      "unit": "Fictional Computing School",
+      "program_code": "081200",
+      "degree_type": "academic-master",
+      "research_track": "Fictional Systems",
+      "admission_round": "summer-camp",
+      "event_type": "assessment",
+      "start": "2026-06-20",
+      "end": "2026-06-21",
+      "timezone": "Asia/Shanghai",
+      "claim_ids": [
+        "event-assessment"
+      ],
+      "source_url": "https://example.invalid/history/events",
+      "retrieval_date": "2027-05-02",
+      "evidence_tier": "A",
+      "method_notes": "Synthetic date-only calendar values; no invented clock time."
+    },
+    {
+      "admission_year": 2026,
+      "institution": "Fictional Meridian University",
+      "unit": "Fictional Computing School",
+      "program_code": "081200",
+      "degree_type": "academic-master",
+      "research_track": "Fictional Systems",
+      "admission_round": "summer-camp",
+      "event_type": "application_deadline",
+      "start": "2026-06-01",
+      "end": null,
+      "timezone": "Asia/Shanghai",
+      "claim_ids": [
+        "event-application_deadline"
+      ],
+      "source_url": "https://example.invalid/history/events",
+      "retrieval_date": "2027-05-02",
+      "evidence_tier": "A",
+      "method_notes": "Synthetic date-only calendar values; no invented clock time."
+    },
+    {
+      "admission_year": 2026,
+      "institution": "Fictional Meridian University",
+      "unit": "Fictional Computing School",
+      "program_code": "081200",
+      "degree_type": "academic-master",
+      "research_track": "Fictional Systems",
+      "admission_round": "summer-camp",
+      "event_type": "result_pending",
+      "start": null,
+      "end": null,
+      "timezone": "Asia/Shanghai",
+      "claim_ids": [
+        "event-result_pending"
+      ],
+      "source_url": "https://example.invalid/history/events",
+      "retrieval_date": "2027-05-02",
+      "evidence_tier": "A",
+      "method_notes": "Synthetic date-only calendar values; no invented clock time."
+    }
+  ],
+  "evidence": [
+    {
+      "claim_id": "event-application_deadline",
+      "candidate_id": "fictional-material-target",
+      "field": "historical_event",
+      "value": {
+        "admission_year": 2026,
+        "institution": "Fictional Meridian University",
+        "unit": "Fictional Computing School",
+        "program_code": "081200",
+        "degree_type": "academic-master",
+        "research_track": "Fictional Systems",
+        "admission_round": "summer-camp",
+        "event_type": "application_deadline",
+        "start": "2026-06-01",
+        "end": null,
+        "timezone": "Asia/Shanghai"
+      },
+      "source_url": "https://example.invalid/history/events",
+      "source_title": "Synthetic historical event application_deadline",
+      "publisher": "Fictional Meridian University",
+      "published_at": "2026-05-01",
+      "retrieved_at": "2027-05-02T10:00:00+08:00",
+      "applicable_admission_year": 2026,
+      "tier": "T1",
+      "status": "confirmed",
+      "scope": "round",
+      "short_evidence": "Synthetic event; pending means no known date.",
+      "conflict_group": null
+    },
+    {
+      "claim_id": "event-assessment",
+      "candidate_id": "fictional-material-target",
+      "field": "historical_event",
+      "value": {
+        "admission_year": 2026,
+        "institution": "Fictional Meridian University",
+        "unit": "Fictional Computing School",
+        "program_code": "081200",
+        "degree_type": "academic-master",
+        "research_track": "Fictional Systems",
+        "admission_round": "summer-camp",
+        "event_type": "assessment",
+        "start": "2026-06-20",
+        "end": "2026-06-21",
+        "timezone": "Asia/Shanghai"
+      },
+      "source_url": "https://example.invalid/history/events",
+      "source_title": "Synthetic historical event assessment",
+      "publisher": "Fictional Meridian University",
+      "published_at": "2026-05-01",
+      "retrieved_at": "2027-05-02T10:00:00+08:00",
+      "applicable_admission_year": 2026,
+      "tier": "T1",
+      "status": "confirmed",
+      "scope": "round",
+      "short_evidence": "Synthetic event; pending means no known date.",
+      "conflict_group": null
+    },
+    {
+      "claim_id": "event-result_pending",
+      "candidate_id": "fictional-material-target",
+      "field": "historical_event",
+      "value": {
+        "admission_year": 2026,
+        "institution": "Fictional Meridian University",
+        "unit": "Fictional Computing School",
+        "program_code": "081200",
+        "degree_type": "academic-master",
+        "research_track": "Fictional Systems",
+        "admission_round": "summer-camp",
+        "event_type": "result_pending",
+        "start": null,
+        "end": null,
+        "timezone": "Asia/Shanghai"
+      },
+      "source_url": "https://example.invalid/history/events",
+      "source_title": "Synthetic historical event result_pending",
+      "publisher": "Fictional Meridian University",
+      "published_at": "2026-05-01",
+      "retrieved_at": "2027-05-02T10:00:00+08:00",
+      "applicable_admission_year": 2026,
+      "tier": "T1",
+      "status": "missing",
+      "scope": "round",
+      "short_evidence": "Synthetic event; pending means no known date.",
+      "conflict_group": null
+    },
+    {
+      "claim_id": "eligibility",
+      "candidate_id": "fictional-material-target",
+      "field": "eligibility",
+      "value": "pass",
+      "source_url": "https://example.invalid/notices/eligibility",
+      "source_title": "Synthetic official notice eligibility",
+      "publisher": "Fictional Meridian University",
+      "published_at": "2027-05-01",
+      "retrieved_at": "2027-05-02T10:00:00+08:00",
+      "applicable_admission_year": 2027,
+      "tier": "T1",
+      "status": "confirmed",
+      "scope": "program",
+      "short_evidence": "Synthetic invented policy or aggregate; no real admission evidence.",
+      "conflict_group": null
+    },
+    {
+      "claim_id": "deadline",
+      "candidate_id": "fictional-material-target",
+      "field": "deadline",
+      "value": "2027-06-15T17:00:00+08:00",
+      "source_url": "https://example.invalid/notices/deadline",
+      "source_title": "Synthetic official notice deadline",
+      "publisher": "Fictional Meridian University",
+      "published_at": "2027-05-01",
+      "retrieved_at": "2027-05-02T10:00:00+08:00",
+      "applicable_admission_year": 2027,
+      "tier": "T1",
+      "status": "confirmed",
+      "scope": "program",
+      "short_evidence": "Synthetic invented policy or aggregate; no real admission evidence.",
+      "conflict_group": null
+    },
+    {
+      "claim_id": "program_availability",
+      "candidate_id": "fictional-material-target",
+      "field": "program_availability",
+      "value": true,
+      "source_url": "https://example.invalid/notices/program_availability",
+      "source_title": "Synthetic official notice program_availability",
+      "publisher": "Fictional Meridian University",
+      "published_at": "2027-05-01",
+      "retrieved_at": "2027-05-02T10:00:00+08:00",
+      "applicable_admission_year": 2027,
+      "tier": "T1",
+      "status": "confirmed",
+      "scope": "program",
+      "short_evidence": "Synthetic invented policy or aggregate; no real admission evidence.",
+      "conflict_group": null
+    },
+    {
+      "claim_id": "degree_type",
+      "candidate_id": "fictional-material-target",
+      "field": "degree_type",
+      "value": "academic-master",
+      "source_url": "https://example.invalid/notices/degree_type",
+      "source_title": "Synthetic official notice degree_type",
+      "publisher": "Fictional Meridian University",
+      "published_at": "2027-05-01",
+      "retrieved_at": "2027-05-02T10:00:00+08:00",
+      "applicable_admission_year": 2027,
+      "tier": "T1",
+      "status": "confirmed",
+      "scope": "program",
+      "short_evidence": "Synthetic invented policy or aggregate; no real admission evidence.",
+      "conflict_group": null
+    },
+    {
+      "claim_id": "transcript-policy",
+      "candidate_id": "fictional-material-target",
+      "field": "material_requirement_policy",
+      "value": {
+        "requirement_id": "transcript-1",
+        "target_id": "fictional-material-target",
+        "item_type": "transcript",
+        "necessity": "required",
+        "conditions": {}
+      },
+      "source_url": "https://example.invalid/notices/transcript-policy",
+      "source_title": "Synthetic official notice transcript-policy",
+      "publisher": "Fictional Meridian University",
+      "published_at": "2027-05-01",
+      "retrieved_at": "2027-05-02T10:00:00+08:00",
+      "applicable_admission_year": 2027,
+      "tier": "T1",
+      "status": "confirmed",
+      "scope": "program",
+      "short_evidence": "Synthetic invented policy or aggregate; no real admission evidence.",
+      "conflict_group": null
+    },
+    {
+      "claim_id": "letter-policy",
+      "candidate_id": "fictional-material-target",
+      "field": "material_requirement_policy",
+      "value": {
+        "requirement_id": "recommendation-1",
+        "target_id": "fictional-material-target",
+        "item_type": "recommendation",
+        "necessity": "required",
+        "conditions": {
+          "signature": true,
+          "date": "present"
+        }
+      },
+      "source_url": "https://example.invalid/notices/letter-policy",
+      "source_title": "Synthetic official notice letter-policy",
+      "publisher": "Fictional Meridian University",
+      "published_at": "2027-05-01",
+      "retrieved_at": "2027-05-02T10:00:00+08:00",
+      "applicable_admission_year": 2027,
+      "tier": "T1",
+      "status": "confirmed",
+      "scope": "program",
+      "short_evidence": "Synthetic invented policy or aggregate; no real admission evidence.",
+      "conflict_group": null
+    },
+    {
+      "claim_id": "summer-final",
+      "candidate_id": "fictional-material-target",
+      "field": "historical_count",
+      "value": {
+        "admission_year": 2026,
+        "institution": "Fictional Meridian University",
+        "unit": "Fictional Computing School",
+        "program_code": "081200",
+        "degree_type": "academic-master",
+        "research_track": "Fictional Systems",
+        "admission_round": "summer-camp",
+        "stage": "final_admitted",
+        "count": 20
+      },
+      "source_url": "https://example.invalid/notices/summer-final",
+      "source_title": "Synthetic official notice summer-final",
+      "publisher": "Fictional Meridian University",
+      "published_at": "2026-05-01",
+      "retrieved_at": "2027-05-02T10:00:00+08:00",
+      "applicable_admission_year": 2026,
+      "tier": "T1",
+      "status": "confirmed",
+      "scope": "program",
+      "short_evidence": "Synthetic invented policy or aggregate; no real admission evidence.",
+      "conflict_group": null
+    },
+    {
+      "claim_id": "summer-list",
+      "candidate_id": "fictional-material-target",
+      "field": "historical_count",
+      "value": {
+        "admission_year": 2026,
+        "institution": "Fictional Meridian University",
+        "unit": "Fictional Computing School",
+        "program_code": "081200",
+        "degree_type": "academic-master",
+        "research_track": "Fictional Systems",
+        "admission_round": "summer-camp",
+        "stage": "listed_shortlist",
+        "count": 120
+      },
+      "source_url": "https://example.invalid/notices/summer-list",
+      "source_title": "Synthetic official notice summer-list",
+      "publisher": "Fictional Meridian University",
+      "published_at": "2026-05-01",
+      "retrieved_at": "2027-05-02T10:00:00+08:00",
+      "applicable_admission_year": 2026,
+      "tier": "T1",
+      "status": "confirmed",
+      "scope": "program",
+      "short_evidence": "Synthetic invented policy or aggregate; no real admission evidence.",
+      "conflict_group": null
+    },
+    {
+      "claim_id": "autumn-attendance",
+      "candidate_id": "fictional-material-target",
+      "field": "historical_count",
+      "value": {
+        "admission_year": 2026,
+        "institution": "Fictional Meridian University",
+        "unit": "Fictional Computing School",
+        "program_code": "081200",
+        "degree_type": "academic-master",
+        "research_track": "Fictional Systems",
+        "admission_round": "pre-recommendation",
+        "stage": "confirmed_attended",
+        "count": 80
+      },
+      "source_url": "https://example.invalid/notices/autumn-attendance",
+      "source_title": "Synthetic official notice autumn-attendance",
+      "publisher": "Fictional Meridian University",
+      "published_at": "2026-05-01",
+      "retrieved_at": "2027-05-02T10:00:00+08:00",
+      "applicable_admission_year": 2026,
+      "tier": "T1",
+      "status": "confirmed",
+      "scope": "program",
+      "short_evidence": "Synthetic invented policy or aggregate; no real admission evidence.",
+      "conflict_group": null
+    },
+    {
+      "claim_id": "autumn-final",
+      "candidate_id": "fictional-material-target",
+      "field": "historical_count",
+      "value": {
+        "admission_year": 2026,
+        "institution": "Fictional Meridian University",
+        "unit": "Fictional Computing School",
+        "program_code": "081200",
+        "degree_type": "academic-master",
+        "research_track": "Fictional Systems",
+        "admission_round": "pre-recommendation",
+        "stage": "final_admitted",
+        "count": 20
+      },
+      "source_url": "https://example.invalid/notices/autumn-final",
+      "source_title": "Synthetic official notice autumn-final",
+      "publisher": "Fictional Meridian University",
+      "published_at": "2026-05-01",
+      "retrieved_at": "2027-05-02T10:00:00+08:00",
+      "applicable_admission_year": 2026,
+      "tier": "T1",
+      "status": "confirmed",
+      "scope": "program",
+      "short_evidence": "Synthetic invented policy or aggregate; no real admission evidence.",
+      "conflict_group": null
+    }
+  ],
+  "candidate": {
+    "candidate_id": "fictional-material-target",
+    "institution": "Fictional Meridian University",
+    "admission_year": 2027,
+    "gates": [
+      {
+        "gate_id": "eligibility",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
+      },
+      {
+        "gate_id": "deadline",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
+      },
+      {
+        "gate_id": "program_availability",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
+      },
+      {
+        "gate_id": "degree_type",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
+      }
+    ],
+    "dimensions": {
+      "competitive_position": 90,
+      "research_fit": 95
+    },
+    "evidence_confidence": "A",
+    "data_completeness": 1
+  },
+  "weights": {
+    "competitive_position": 1,
+    "research_fit": 1
+  },
+  "fit_result": {
+    "score": 95,
+    "reasons": [
+      "Invented research alignment for the fictional systems track."
+    ]
+  },
+  "synthetic_sensitive_text": "Synthetic negative-test strings only; no real person:\nPhone: 13800138000\nEmail: synthetic.student@example.com\nIdentity candidate: 000000000000000000\n学号: SYNTHETIC2027001\nSignature: Fictional Signer\n"
+}

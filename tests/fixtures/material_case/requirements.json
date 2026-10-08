@@ -1,0 +1,31 @@
+[
+  {
+    "requirement_id": "transcript-1",
+    "target_id": "fictional-material-target",
+    "item_type": "transcript",
+    "necessity": "required",
+    "conditions": {},
+    "source_claim_ids": [
+      "transcript-policy"
+    ],
+    "document_ids": [
+      "sha256:b70f59e95d7d4962acd9fb75132264786a6d2eec852abd45ac14c3ebbe7d05d3"
+    ]
+  },
+  {
+    "requirement_id": "recommendation-1",
+    "target_id": "fictional-material-target",
+    "item_type": "recommendation",
+    "necessity": "required",
+    "conditions": {
+      "signature": true,
+      "date": "present"
+    },
+    "source_claim_ids": [
+      "letter-policy"
+    ],
+    "document_ids": [
+      "sha256:353f504aa6b5942bc3d24e91205993af1f4efc5e5e00fd2d6e557670479181f5"
+    ]
+  }
+]

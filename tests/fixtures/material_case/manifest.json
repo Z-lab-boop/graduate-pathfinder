@@ -1,0 +1,23 @@
+[
+  {
+    "filename": "synthetic-resume.txt",
+    "synthetic_source": "Synthetic resume: GPA 3.8/4.0\n",
+    "document_id": "sha256:134feb3308c0e86b37a04f59b1d4a1854657c7905d510b54db6a2e2bb0ef133c",
+    "document_class": "resume",
+    "extraction_state": "reviewed"
+  },
+  {
+    "filename": "synthetic-transcript.txt",
+    "synthetic_source": "Synthetic transcript: GPA 3.4/4.0\n",
+    "document_id": "sha256:b70f59e95d7d4962acd9fb75132264786a6d2eec852abd45ac14c3ebbe7d05d3",
+    "document_class": "transcript",
+    "extraction_state": "reviewed"
+  },
+  {
+    "filename": "synthetic-letter.txt",
+    "synthetic_source": "Synthetic recommendation draft: unsigned\n",
+    "document_id": "sha256:353f504aa6b5942bc3d24e91205993af1f4efc5e5e00fd2d6e557670479181f5",
+    "document_class": "recommendation",
+    "extraction_state": "reviewed"
+  }
+]
