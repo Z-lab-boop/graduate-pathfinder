@@ -319,6 +319,73 @@ class AdmissionOutlookTests(unittest.TestCase):
         payload["evidence_audit"] = audit_evidence(records, NOW)
         self.assertEqual(assess_admission_outlook(payload)["competitive_position"], "strong")
 
+    def test_historical_binding_rejects_boolean_or_float_evidence_counts(self):
+        for invalid_count in (True, False, 1.0):
+            with self.subTest(invalid_count=invalid_count):
+                payload = packet()
+                records = [copy.deepcopy(c["record"]) for c in payload["evidence_audit"]["claims"]]
+                counts = [{**SCOPE, "stage": stage, "count": count, "claim_ids": [claim_id]}
+                          for stage, count, claim_id in
+                          (("confirmed_attended", 1, "attendance"), ("final_admitted", 0, "admitted"))]
+                for record in records:
+                    if record["field"] == "historical_count":
+                        count = 1 if record["claim_id"] == "attendance" else 0
+                        record["value"]["count"] = count
+                # True == 1 and False == 0 in Python; both must fail payload binding.
+                modified_id = "admitted" if invalid_count is False else "attendance"
+                next(record for record in records if record["claim_id"] == modified_id)["value"]["count"] = invalid_count
+                payload["historical_metrics"] = calculate_stage_metrics(counts)
+                payload["evidence_audit"] = audit_evidence(records, NOW)
+                self.assertTrue(all(claim["valid"] for claim in payload["evidence_audit"]["claims"]))
+                result = assess_admission_outlook(payload)
+                self.assertEqual(result["competitive_position"], "evidence_insufficient")
+                self.assertIn("historical_evidence_payload_mismatch", result["uncertainties"])
+
+    def test_same_or_future_cycle_cannot_establish_historical_comparability(self):
+        for cycle in (2027, 2028):
+            with self.subTest(cycle=cycle):
+                payload = packet()
+                scope = {**SCOPE, "admission_year": cycle}
+                records = [copy.deepcopy(c["record"]) for c in payload["evidence_audit"]["claims"]]
+                for record in records:
+                    if record["field"] == "historical_count":
+                        record["applicable_admission_year"] = cycle
+                        record["value"]["admission_year"] = cycle
+                counts = [{**scope, "stage": stage, "count": count, "claim_ids": [claim_id]}
+                          for stage, count, claim_id in
+                          (("confirmed_attended", 80, "attendance"), ("final_admitted", 20, "admitted"))]
+                payload["target_scope"] = scope
+                payload["historical_metrics"] = calculate_stage_metrics(counts)
+                payload["evidence_audit"] = audit_evidence(records, NOW)
+                result = assess_admission_outlook(payload)
+                self.assertEqual(result["competitive_position"], "evidence_insufficient")
+                self.assertIn("historical_cycle_not_prior", result["uncertainties"])
+                self.assertIn({"kind": "historical_cohort", "field": "prior_admission_year",
+                               "current_admission_year": 2027, "historical_admission_year": cycle,
+                               "claim_ids": []}, result["band_change_conditions"])
+
+    def test_missing_fit_remains_null_while_explicit_zero_is_valid(self):
+        for mode in ("absent_result", "absent_score", "null_score", "null_result"):
+            with self.subTest(mode=mode):
+                payload = packet()
+                if mode == "absent_result":
+                    payload.pop("fit_result")
+                elif mode == "absent_score":
+                    payload["fit_result"].pop("score")
+                elif mode == "null_score":
+                    payload["fit_result"]["score"] = None
+                else:
+                    payload["fit_result"] = None
+                result = assess_admission_outlook(payload)
+                self.assertIsNone(result["program_fit"]["score"])
+                self.assertIn("program_fit_missing", result["uncertainties"])
+                self.assertEqual(result["competitive_position"], "strong")
+        payload = packet()
+        payload["fit_result"]["score"] = 0
+        result = assess_admission_outlook(payload)
+        self.assertEqual(result["program_fit"]["score"], 0.0)
+        self.assertNotIn("program_fit_missing", result["uncertainties"])
+
     def test_no_probability_keys_or_private_extras_escape_and_inputs_are_immutable(self):
         payload = packet()
         payload["historical_metrics"]["scopes"][0]["personal_probability"] = 0.9

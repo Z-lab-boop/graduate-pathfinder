@@ -48,6 +48,24 @@ class HistoricalMetricsTests(unittest.TestCase):
         # Scope groups follow first appearance; actual instants order within each group.
         self.assertEqual(result[0]["event_type"], "earlier")
 
+    def test_timeline_rejects_offset_component_overflow_in_either_boundary(self):
+        for offset in ("+08:99", "-08:60", "+24:00", "+08:30:60", "+0899", "-0860",
+                       "+2400", "+083060", "+08:99:00.5"):
+            for boundary in ("start", "end"):
+                with self.subTest(offset=offset, boundary=boundary), self.assertRaises(ValueError):
+                    reconstruct_timeline([record(event_type="camp", **{
+                        boundary: "2025-07-01T09:00:00" + offset})])
+
+    def test_timeline_preserves_supported_iso_precision_offsets_and_ordering(self):
+        timestamps = ["2025-07-01T09:00:00+08:00", "2025-07-01T09:00+08",
+                      "2025-07-01T090000+0800", "2025-07-01T09:00:00+08:00:30.5",
+                      "2025-07-01T090000+080030.5", "2025-07-01T09:00:00.5",
+                      "2025-07-01T00:00:00Z", "2025-07-01"]
+        result = reconstruct_timeline([record(event_type=str(index), start=value)
+                                       for index, value in enumerate(timestamps)])
+        self.assertEqual([row["event_type"] for row in result], ["7", "6", "3", "4", "0", "1", "2", "5"])
+        self.assertEqual({row["start"] for row in result}, set(timestamps))
+
     def test_same_scope_ratio_preserves_evidence_and_aggregate_counts(self):
         result = calculate_stage_metrics([
             record(stage="confirmed_attended", count=80, claim_ids=["attendance"]),

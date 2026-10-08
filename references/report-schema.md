@@ -70,8 +70,8 @@ subject_match/score_scenario/risk_band/置信度等分析字段取 kaoyan-assess
 | --- | --- |
 | `material-audit.md` | 分目标/逐要求的 requirement_id、必要性、来源 claim IDs、选定 document IDs、状态、blocking、缺条件、review_required；单列矛盾的各 claim ID/state/value 与同口径依据、未读页/OCR 不确定及待补件。完整不认证真实性，不代表已提交。原绝对路径不进入展示文本。 |
 | `applicant-claims.json` | 六类状态的规范化数组：claim_id、field、value、state、source_document_ids、notes；签名/日期等文档观察带 scope=document。所有 ID 绑定本地清单；同口径冲突全保留，不选胜出值。只存必要学术字段，联系方式、身份证/学号、签名内容、家庭地址不写 value/notes。缺值保留 missing/null，不补零。 |
-| `historical-cycle.json` | 明确当前年及选定历史七字段 scope；原归一化 events/counts、重建 timeline、calculate_stage_metrics 完整 scopes/metrics/rejected，包括未选 scope 的 scope_mismatch；日期两端/时区/精度、来源 URL/实际检索日/层级/claim IDs、排除与去重方法。只含 aggregate，不含名单行或身份。无证据保留空数组及缺口，不伪造零人。 |
-| `admission-outlook.md` | 当前目标与入学年、分析时间、明确历史年/轮次；资格 eligibility、材料 packet_readiness、竞争 competitive_position、适配 program_fit（score/reasons）、证据 evidence_confidence 五项独立结果。列完整历史 scope、阶段与分子/分母/描述性比率或拒算原因、uncertainties、缺失证据及 band_change_conditions 的最小可核验事实、各引用来源。未执行字段写“未执行/证据不足”及原因。 |
+| `historical-cycle.json` | 明确当前年及选定历史七字段 scope；用于当前展望的历史入学年必须严格早于当前目标入学年。保留原归一化 events/counts、重建 timeline、calculate_stage_metrics 完整 scopes/metrics/rejected，包括未选 scope 的 scope_mismatch；日期两端/时区/精度、来源 URL/实际检索日/层级/claim IDs、排除与去重方法。只含 aggregate，不含名单行或身份。无证据保留空数组及缺口，不伪造零人。 |
+| `admission-outlook.md` | 当前目标与入学年、分析时间、明确历史年/轮次；资格 eligibility、材料 packet_readiness、竞争 competitive_position、适配 program_fit（score/reasons）、证据 evidence_confidence 五项独立结果。缺少适配评分时 `program_fit.score` 为 null 并说明未评估，不能补零；真实 0 分仍保留。列完整历史 scope、阶段与分子/分母/描述性比率或拒算原因、uncertainties、缺失证据及 band_change_conditions 的最小可核验事实、各引用来源。未执行字段写“未执行/证据不足”及原因。 |
 | `privacy-review.md` | 是否使用合成案例、原件未改写、生成文本脱敏 finding type/count/review_required/possible_over_redaction；人工复核状态（pending/completed）、误脱敏及遗漏检查范围、公开分享尚待条件。不得存匹配原文、片段、offset、签名图、来源绝对路径或真实身份。不得因正则通过宣称完全匿名。 |
 
 本地输入另保留 materials-manifest.json、material-requirements.json、完整 evidence-audit.json；可保存 material-audit.json/admission-outlook.json 原函数返回值供复核。它们不是公开发布材料，原件、路径和必要私人观察严格留本地且受案例级 `.gitignore` 保护。检查已有文件，保留用户修改/旧版后再更新。

@@ -4,7 +4,7 @@ Payload: candidate_id, admission_year (current cycle), target_scope (the explici
 selected historical cohort's complete SCOPE_FIELDS), eligibility_result from
 evaluate_gates, material_audit from audit_materials, candidate_scoring from
 score_candidate, historical_metrics from calculate_stage_metrics, fit_result
-{score: 0..100, reasons: [str]}, and the full audit_evidence report.
+{score: 0..100 or null when missing, reasons: [str]}, and the full audit_evidence report.
 critical_applicant_fields optionally adds decision-critical canonical fields.
 
 Bands use only grouping_inputs.competitive_position: >=80 strong, >=60
@@ -71,6 +71,8 @@ is the weakest decision-critical source/comparability/coverage assessment.
     historical = payload.get("historical_metrics", {})
     eligibility_result = payload.get("eligibility_result", {})
     fit = payload.get("fit_result", {})
+    if fit is None:
+        fit = {}
     if not all(isinstance(value, dict) for value in (scoring, material, audit, historical, eligibility_result, fit)):
         raise ValueError("upstream results must be objects")
     if scoring.get("candidate_id", candidate_id) != candidate_id:
@@ -252,6 +254,12 @@ is the weakest decision-critical source/comparability/coverage assessment.
         scopes.extend(reconstructed["scopes"])
     comparable = False
     for group in scopes:
+        historical_year = group["scope"]["admission_year"]
+        prior_cycle = type(year) is int and historical_year < year
+        if not prior_cycle:
+            concern("historical_cycle_not_prior", "D", blocks=True)
+            condition("historical_cohort", "prior_admission_year",
+                      current_admission_year=year, historical_admission_year=historical_year)
         expected_counts = {}
         for row in group["counts"]:
             for ref in row.get("claim_ids", []):
@@ -265,12 +273,12 @@ is the weakest decision-critical source/comparability/coverage assessment.
                 expected_rows = expected_counts.get(ref, [])
                 if (len(claims) != 1 or len(expected_rows) != 1
                         or claims[0]["record"].get("field") != "historical_count"
-                        or claims[0]["record"].get("value") != {
+                        or not _typed_equal(claims[0]["record"].get("value"), {
                             **group["scope"], "stage": expected_rows[0]["stage"],
-                            "count": expected_rows[0]["count"]}):
+                            "count": expected_rows[0]["count"]})):
                     usable, confidence = False, "D"
                     concern("historical_evidence_payload_mismatch", "D")
-            comparable |= usable
+            comparable |= usable and prior_cycle
             if not usable:
                 concern("historical_evidence_unusable", confidence)
                 condition("historical_evidence", "scoped_stage_counts", metric["claim_ids"])
@@ -295,14 +303,18 @@ is the weakest decision-critical source/comparability/coverage assessment.
         band = "strong" if position >= 80 else "competitive" if position >= 60 else "borderline" if position >= 40 else "weak"
     if insufficient:
         band = "evidence_insufficient"
-    if "score" not in fit:
+    fit_score = fit.get("score")
+    if fit_score is None:
         concern("program_fit_missing")
+        condition("program_fit", "score")
+    else:
+        fit_score = _score(fit_score, "program_fit")
     reasons = fit.get("reasons", [])
     if not isinstance(reasons, list) or not all(isinstance(reason, str) for reason in reasons):
         raise ValueError("fit reasons must be an array of strings")
     return {"eligibility": eligibility, "packet_readiness": readiness,
             "competitive_position": band,
-            "program_fit": {"score": _score(fit.get("score", 0.0), "program_fit"), "reasons": deepcopy(reasons)},
+            "program_fit": {"score": fit_score, "reasons": deepcopy(reasons)},
             "evidence_confidence": max(confidence_levels),
             "historical_context": {"scopes": scopes,
                                    "rejected": [deepcopy(r) for group in scopes for r in group["rejected"]],

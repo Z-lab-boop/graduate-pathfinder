@@ -239,6 +239,42 @@ class GeneratedTextRedactionTests(unittest.TestCase):
         self.assertEqual(text.count("[REDACTED_STUDENT_NUMBER]"), 2)
         self.assertEqual(findings[0]["count"], 2)
 
+    def test_markdown_student_numbers_preserve_emphasis_and_are_idempotent(self):
+        for label in ("学号", "学生编号", "Student ID", "student number", "Student No."):
+            for label_emphasis in ("", "*", "**", "***", "_", "__", "___"):
+                for value_emphasis in ("", "*", "**", "***", "_", "__", "___"):
+                    with self.subTest(label=label, label_emphasis=label_emphasis,
+                                      value_emphasis=value_emphasis):
+                        prefix = label_emphasis + label + label_emphasis + "： " + value_emphasis
+                        original = prefix + "SYN_2026-0001" + value_emphasis + "；普通正文"
+                        text, findings = redact_text(original)
+                        self.assertEqual(text, prefix + "[REDACTED_STUDENT_NUMBER]" +
+                                         value_emphasis + "；普通正文")
+                        self.assertEqual(findings[0]["count"], 1)
+                        self.assertNotIn("SYN_2026-0001", json.dumps(findings))
+                        self.assertEqual(redact_text(text), (text, []))
+
+    def test_student_labels_can_emphasize_the_colon_without_erasing_prose(self):
+        original = "- **学号：** SYN20260001\n**Student ID:** __SYN20260002__\n普通正文"
+        text, findings = redact_text(original)
+        self.assertEqual(text, "- **学号：** [REDACTED_STUDENT_NUMBER]\n"
+                         "**Student ID:** __[REDACTED_STUDENT_NUMBER]__\n普通正文")
+        self.assertEqual(findings[0]["count"], 2)
+        self.assertEqual(redact_text(text), (text, []))
+
+    def test_emphasized_student_labels_work_without_separator_spaces(self):
+        original = "**学号**：SYN20260001\n__Student ID__=**SYN20260002**"
+        text, findings = redact_text(original)
+        self.assertEqual(text, "**学号**：[REDACTED_STUDENT_NUMBER]\n"
+                         "__Student ID__=**[REDACTED_STUDENT_NUMBER]**")
+        self.assertEqual(findings[0]["count"], 2)
+        self.assertEqual(redact_text(text), (text, []))
+
+    def test_student_redaction_preserves_unlabelled_and_nonidentity_prose(self):
+        original = ("订单 **SYN20260001**；学号填写说明；Student ID policies: available\n"
+                    "学号：尚未填写\nStudent number: see the instructions")
+        self.assertEqual(redact_text(original), (original, []))
+
     def test_signature_lines_hide_names_without_erasing_following_body(self):
         text, findings = redact_text("正文\n推荐人签名：合成姓名\n日期：2026-10-08\n后续正文\nSignature: Synthetic Name")
         self.assertNotIn("合成姓名", text)

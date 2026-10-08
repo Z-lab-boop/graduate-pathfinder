@@ -11,7 +11,13 @@ PATTERNS = (
         r"(?:\*{1,3}|_{1,3})?(?:(?:推荐人|申请人|导师)?签名|签字|signature|signed[ \t]+by)"
         r"(?:\*{1,3}|_{1,3})?[ \t]*[:：=](?:\*{1,3}|_{1,3})?[ \t]*)"
         r"(?![*_ \t]*\[REDACTED_)(?P<value>[^\r\n]+)")),
-    ("student_number", re.compile(r"(?i)(?P<label>(?:学号|学生编号|student[ \t]*(?:id|number|no\.?))[ \t]*[:：=][ \t]*)(?!\[REDACTED_)(?P<value>[A-Z0-9][A-Z0-9_-]{3,31})(?![A-Z0-9_-])")),
+    ("student_number", re.compile(
+        r"(?i)(?P<label>(?P<label_em>\*{1,3}|_{1,3})?"
+        r"(?:学号|学生编号|student[ \t]*(?:id|number|no\.?))"
+        r"(?(label_em)(?:(?P=label_em)[ \t]*[:：=]|[ \t]*[:：=](?P=label_em))|[ \t]*[:：=])"
+        r"[ \t]*(?P<value_em>\*{1,3}|_{1,3})?)"
+        r"(?!\[REDACTED_)(?P<value>[A-Z0-9][A-Z0-9_-]{3,31})"
+        r"(?P<suffix>(?(value_em)(?P=value_em)|))(?![A-Z0-9_-])")),
     ("identity", re.compile(r"(?<![A-Za-z0-9])\d{17}[\dXx](?![A-Za-z0-9])")),
     ("phone", re.compile(r"(?<![A-Za-z0-9])(?:\+?86[ \t-]*)?1[3-9]\d{9}(?![A-Za-z0-9])")),
     ("email", re.compile(r"(?<![A-Za-z0-9_.+%-])[A-Za-z0-9_.+%-]+@[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?\.[A-Za-z]{2,}(?![A-Za-z0-9_-])")),
@@ -29,7 +35,8 @@ def redact_text(text: str) -> tuple[str, list[dict]]:
     findings = []
     for kind, pattern in PATTERNS:
         token = "[REDACTED_" + kind.upper() + "]"
-        text, count = pattern.subn(lambda match: (match.groupdict().get("label") or "") + token, text)
+        text, count = pattern.subn(lambda match: (match.groupdict().get("label") or "") + token +
+                                  (match.groupdict().get("suffix") or ""), text)
         if count:
             findings.append({"type": kind, "count": count, "review_required": True,
                              "possible_over_redaction": True})

@@ -5,6 +5,7 @@ descriptive arithmetic, never an applicant's admission probability.
 """
 from copy import deepcopy
 from datetime import date, datetime, timezone
+import re
 
 
 SCOPE_FIELDS = (
@@ -58,6 +59,16 @@ def _parse_time(value):
             return date.fromisoformat(value)
         if "T" not in value:
             raise ValueError("timestamp requires T separator")
+        # fromisoformat normalizes overflowing offset minutes/seconds instead
+        # of rejecting them. Check the original components before parsing.
+        offset = re.search(r"[+-].*$", value.split("T", 1)[1])
+        if offset is not None:
+            components = re.fullmatch(
+                r"[+-](\d{2})(?::?(\d{2}))?(?::?(\d{2}))?(?:[.,]\d+)?", offset[0])
+            if (components is None or int(components[1]) > 23 or
+                    any(int(component) > 59 for component in components.groups()[1:]
+                        if component is not None)):
+                raise ValueError("invalid timezone offset components")
         return datetime.fromisoformat(value)
     except ValueError as error:
         raise ValueError("event dates must be ISO dates or timestamps") from error
