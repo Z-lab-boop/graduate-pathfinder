@@ -5,6 +5,10 @@ import math
 import unicodedata
 
 from .validate_case import validate_evidence
+from .rank_candidates import evaluate_gates
+from .audit_evidence import CRITICAL_FIELDS
+
+RISK_BANDS = {"reach", "match", "conservative", "monitor", "excluded"}
 
 THRESHOLD_SCOPES = {
     "national", "institution", "unit", "program", "direction", "admitted_distribution",
@@ -247,3 +251,185 @@ def compare_score_scenario(profile: dict, candidate: dict) -> dict:
     else:
         result["reasons"] = ["no_complete_compatible_threshold_comparison"]
     return result
+
+
+def assess_kaoyan_candidate(profile: dict, candidate: dict, evidence_audit: dict) -> dict:
+    """Build decision bands, never admission probabilities or guarantees.
+
+    Candidate extensions: current_catalog is a current official availability
+    evidence record; historical_volatility/retest_risk are low/medium/high (an
+    unknown value blocks banding); fit_score is a user decision score in 0..100.
+    evidence_audit must be a full v0.1 audit report to resolve current critical
+    claims; summary-only maps remain monitor with missing-provenance reasons.
+    A conservative band requires total lower margin >=20, fit >=60, A/B
+    confidence, low volatility, and non-high retest risk. These are explicit
+    decision rules, not empirically calibrated admissions cutoffs.
+    """
+    candidate_id = candidate.get("candidate_id")
+    if not _text(candidate_id):
+        raise ValueError("candidate_id must be a non-empty string")
+    subject_match = validate_subject_match(profile, candidate)
+    score_scenario = compare_score_scenario(profile, candidate)
+    summary_map = evidence_audit.get("candidate_summary", evidence_audit)
+    summary = summary_map.get(candidate_id, {}) if isinstance(summary_map, dict) else {}
+    if not isinstance(summary, dict):
+        summary = {}
+    confidence = summary.get("confidence")
+    declared = candidate.get("evidence_confidence")
+    if confidence in {"A", "B", "C", "D"} and declared in {"A", "B", "C", "D"}:
+        confidence = max(confidence, declared)
+    else:
+        confidence = "D"
+    result = {
+        "candidate_id": candidate_id, "risk_band": "monitor",
+        "subject_match": subject_match, "score_scenario": score_scenario,
+        "historical_volatility": candidate.get("historical_volatility"),
+        "retest_risk": candidate.get("retest_risk"), "fit_score": candidate.get("fit_score"),
+        "evidence_confidence": confidence, "data_completeness": candidate.get("data_completeness"),
+        "sensitivity": deepcopy(candidate.get("sensitivity")), "reasons": [], "source_refs": [],
+    }
+    refs = list(subject_match["source_refs"])
+    for comparison in score_scenario["comparisons"]:
+        refs.append(comparison["threshold"]["source_ref"])
+    for excluded in score_scenario["excluded_thresholds"]:
+        threshold = excluded["threshold"]
+        if isinstance(threshold, dict):
+            refs.append(threshold.get("source_ref"))
+    catalog = candidate.get("current_catalog")
+    if isinstance(catalog, dict):
+        refs.append(catalog.get("claim_id"))
+    for claim in evidence_audit.get("claims", []):
+        record = claim.get("record", {}) if isinstance(claim, dict) else {}
+        if isinstance(record, dict) and record.get("candidate_id") == candidate_id:
+            refs.append(record.get("claim_id"))
+    result["source_refs"] = sorted({ref for ref in refs if _text(ref)})
+    if subject_match["status"] == "fail":
+        result.update(risk_band="excluded", reasons=["confirmed_subject_mismatch"])
+        return result
+    gates = evaluate_gates(candidate.get("gates", []))
+    result["gate_evaluation"] = gates
+    if gates["eligibility"] == "fail":
+        result.update(risk_band="excluded", reasons=["confirmed_gate_failure"])
+        return result
+    reasons = result["reasons"]
+    if subject_match["status"] != "pass":
+        reasons.append("current_subjects_unknown")
+    try:
+        catalog_known = (_official(catalog, profile.get("admission_year"), _now(profile), candidate_id)
+                         and catalog.get("field") == "program_availability"
+                         and catalog.get("value") is True)
+    except (ValueError, TypeError, AttributeError):
+        catalog_known = False
+    if not catalog_known:
+        reasons.append("current_catalog_unknown")
+    if gates["eligibility"] != "pass":
+        reasons.append("critical_gates_unknown")
+    fields = summary.get("critical_fields", {})
+    fields_known = isinstance(fields, dict) and all(
+        isinstance(fields.get(field), dict) and fields[field].get("fresh_official_record_indexes")
+        and fields[field].get("missing") is False and fields[field].get("conflicted") is False
+        for field in CRITICAL_FIELDS)
+    if "claims" not in evidence_audit:
+        reasons.append("current_critical_source_provenance_missing")
+        fields_known = False
+    if "claims" in evidence_audit and fields_known:
+        try:
+            claims = evidence_audit["claims"]
+            fields_known = all(any(
+                isinstance(claim, dict) and isinstance(claim.get("record"), dict)
+                and claim["record"].get("field") == field
+                and claim["record"].get("value") is not None
+                and claim.get("effective_status") == "confirmed"
+                and not claim.get("stale") and not claim.get("conflict_groups")
+                and _official(claim["record"], profile.get("admission_year"), _now(profile), candidate_id)
+                for claim in claims) for field in CRITICAL_FIELDS)
+        except (ValueError, TypeError, AttributeError):
+            fields_known = False
+    if (not fields_known or any(summary.get(field) for field in
+                           ("missing_critical_fields", "conflicted_critical_fields",
+                            "invalid_record_indexes", "stale_official_fields", "secondary_only_fields"))):
+        reasons.append("critical_current_fields_unknown")
+    if confidence == "D":
+        reasons.append("evidence_confidence_D")
+    completeness = result["data_completeness"]
+    if not _number(completeness) or not 0.70 <= completeness <= 1:
+        reasons.append("data_completeness_below_0_70_or_unknown")
+    fit = result["fit_score"]
+    if not _number(fit) or not 60 <= fit <= 100:
+        reasons.append("fit_below_60_or_unknown")
+    for field in ("historical_volatility", "retest_risk"):
+        if result[field] not in ("low", "medium", "high"):
+            reasons.append(field + "_unknown")
+    if (score_scenario["status"] not in {"above", "overlaps", "below"}
+            or any(c["descriptive_only"] for c in score_scenario["comparisons"])):
+        reasons.append("compatible_nondescriptive_score_comparison_required")
+    if reasons:
+        return result
+    status = score_scenario["status"]
+    high_risk = result["historical_volatility"] == "high" or result["retest_risk"] == "high"
+    if status == "below" or high_risk:
+        result.update(risk_band="reach", reasons=["score_below_scoped_threshold" if status == "below"
+                                                  else "high_volatility_or_retest_risk"])
+    elif (status == "above" and confidence in {"A", "B"}
+          and result["historical_volatility"] == "low"
+          and all(c["total_margin"][0] >= 20 for c in score_scenario["comparisons"])):
+        result.update(risk_band="conservative", reasons=["strong_margin_adequate_fit_and_evidence"])
+    else:
+        result.update(risk_band="match", reasons=["compatible_score_with_moderate_conditions"])
+    return result
+
+
+def build_kaoyan_shortlist(results: dict[str, dict]) -> dict:
+    """Select by fit after sensitivity checks, preserving unresolved choices.
+
+    Input is candidate-ID keyed assessment output. The highest-fit match or
+    conservative target's sensitivity uses v0.1 stability/winner_set. Fragile
+    winners are intersected with eligible targets; missing/insufficient checks
+    require a user decision. A fit tie never uses ID order as a winner rule.
+    """
+    if not isinstance(results, dict):
+        raise ValueError("results must be a candidate-ID mapping")
+    for cid, item in results.items():
+        if not _text(cid) or not isinstance(item, dict) or item.get("candidate_id") != cid:
+            raise ValueError("result key must match candidate_id")
+        if item.get("risk_band") not in RISK_BANDS:
+            raise ValueError("unknown risk_band")
+        if item["risk_band"] in {"match", "conservative", "reach"} and (
+                not _number(item.get("fit_score")) or item["fit_score"] > 100):
+            raise ValueError("eligible result requires a finite fit_score in 0..100")
+    ordered = sorted(results, key=lambda cid: (
+        -results[cid]["fit_score"] if _number(results[cid].get("fit_score")) else 0, cid))
+    eligible = [cid for cid in ordered if results[cid]["risk_band"] in {"match", "conservative"}]
+    shortlist = {"primary": None, "decision_set": [], "requires_user_decision": False,
+                 "alternatives": [], "monitor": sorted(cid for cid in results if results[cid]["risk_band"] == "monitor"),
+                 "excluded": sorted(cid for cid in results if results[cid]["risk_band"] == "excluded"),
+                 "reasons": []}
+    if eligible:
+        top = eligible[0]
+        tied = [cid for cid in eligible if results[cid]["fit_score"] == results[top]["fit_score"]]
+        sensitivity = results[top].get("sensitivity")
+        stability = sensitivity.get("stability") if isinstance(sensitivity, dict) else None
+        if stability == "fragile":
+            winners = sensitivity.get("winner_set", [])
+            if not isinstance(winners, list) or not all(_text(cid) for cid in winners):
+                winners = []
+            choices = [cid for cid in eligible if cid in tied or cid in winners]
+            # An incomplete fragile set cannot justify a single apparent winner.
+            if len(choices) < 2:
+                choices = eligible
+            shortlist.update(decision_set=choices, requires_user_decision=True, reasons=["fragile_top_choice"])
+        elif len(tied) > 1:
+            shortlist.update(decision_set=tied, requires_user_decision=True, reasons=["equal_fit_top_choices"])
+        elif stability == "stable" and sensitivity.get("winner_set") == [top] and (
+                "baseline_order" not in sensitivity or
+                isinstance(sensitivity["baseline_order"], list) and sensitivity["baseline_order"][:1] == [top]):
+            shortlist.update(primary=top, reasons=["stable_highest_fit_eligible_target"])
+        else:
+            shortlist.update(decision_set=eligible, requires_user_decision=True,
+                             reasons=["sensitivity_missing_or_insufficient"])
+    else:
+        shortlist["reasons"] = ["no_eligible_match_or_conservative_target"]
+    selected = set(shortlist["decision_set"] + ([shortlist["primary"]] if shortlist["primary"] else []))
+    shortlist["alternatives"] = [cid for cid in ordered if results[cid]["risk_band"] in
+                                 {"reach", "match", "conservative"} and cid not in selected]
+    return shortlist

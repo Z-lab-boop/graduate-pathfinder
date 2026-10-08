@@ -5,6 +5,9 @@ import unittest
 from scripts.assess_kaoyan import (
     classify_threshold, compare_score_scenario, validate_subject_match,
 )
+from scripts import assess_kaoyan
+from scripts.audit_evidence import audit_evidence
+from datetime import datetime
 
 
 def evidence(value, year=2026, claim_id="subjects"):
@@ -42,6 +45,225 @@ def inputs():
                  "program_code": "085400", "subject_combination": combination(codes),
                  "thresholds": [record]}
     return profile, candidate
+
+
+def assessment_inputs():
+    profile, candidate = inputs()
+    candidate.update(historical_volatility="low", retest_risk="low", fit_score=80,
+                     data_completeness=0.9, evidence_confidence="A",
+                     gates=[{"gate_id": "eligibility", "status": "pass",
+                             "critical": True, "evidence_status": "confirmed"}],
+                     sensitivity={"stability": "stable", "winner_set": ["synthetic"]})
+    records = []
+    for field, value in (("eligibility", True), ("deadline", "2026-10-20"),
+                         ("program_availability", True), ("degree_type", "professional")):
+        record = evidence(value, claim_id=field)
+        record["field"] = field
+        records.append(record)
+    candidate["current_catalog"] = deepcopy(records[2])
+    audit = audit_evidence(records, datetime.fromisoformat(profile["audit_at"]))
+    return profile, candidate, audit
+
+
+class KaoyanAssessmentTests(unittest.TestCase):
+    def assess(self, p, c, audit):
+        self.assertTrue(callable(getattr(assess_kaoyan, "assess_kaoyan_candidate", None)),
+                        "assessment function is missing")
+        return assess_kaoyan.assess_kaoyan_candidate(p, c, audit)
+
+    def shortlist(self, results):
+        self.assertTrue(callable(getattr(assess_kaoyan, "build_kaoyan_shortlist", None)),
+                        "shortlist function is missing")
+        return assess_kaoyan.build_kaoyan_shortlist(results)
+
+    def test_confirmed_subject_mismatch_is_excluded_even_with_missing_data(self):
+        p, c, a = assessment_inputs()
+        c["subject_combination"] = combination(["101", "204", "301", "408"])
+        c.pop("current_catalog")
+        result = self.assess(p, c, a)
+        self.assertEqual(result["risk_band"], "excluded")
+        self.assertEqual(result["subject_match"], validate_subject_match(p, c))
+        self.assertTrue(result["reasons"])
+        self.assertIn("subjects", result["source_refs"])
+
+    def test_current_catalog_must_be_current_official_and_known(self):
+        for mutation in ("missing", "unknown", "stale", "secondary", "wrong_year", "wrong_candidate"):
+            with self.subTest(mutation=mutation):
+                p, c, a = assessment_inputs()
+                if mutation == "missing":
+                    c.pop("current_catalog")
+                else:
+                    key, value = {"unknown": ("value", None), "stale": ("status", "stale"),
+                                  "secondary": ("tier", "T3"), "wrong_year": ("applicable_admission_year", 2025),
+                                  "wrong_candidate": ("candidate_id", "other")}[mutation]
+                    c["current_catalog"][key] = value
+                self.assertEqual(self.assess(p, c, a)["risk_band"], "monitor")
+
+    def test_strong_margin_low_volatility_and_adequate_fit_is_conservative(self):
+        p, c, a = assessment_inputs()
+        p["score_scenario"]["total"] = [320, 340]
+        c["fit_score"] = 60
+        c["retest_risk"] = "medium"
+        result = self.assess(p, c, a)
+        self.assertEqual(result["risk_band"], "conservative")
+        self.assertEqual(result["score_scenario"], compare_score_scenario(p, c))
+        self.assertTrue(result["reasons"])
+        self.assertEqual(set(result["source_refs"]),
+                         {"subjects", "line", "eligibility", "deadline", "program_availability", "degree_type"})
+
+    def test_overlap_with_high_volatility_or_retest_risk_is_reach(self):
+        for field in ("historical_volatility", "retest_risk"):
+            p, c, a = assessment_inputs()
+            p["score_scenario"]["total"] = [290, 310]
+            c[field] = "high"
+            self.assertEqual(self.assess(p, c, a)["risk_band"], "reach")
+
+    def test_moderate_conditions_match_and_below_is_reach(self):
+        for total, volatility, expected in (([310, 330], "low", "match"),
+                                            ([320, 340], "medium", "match"),
+                                            ([290, 310], "low", "match"),
+                                            ([270, 290], "low", "reach")):
+            p, c, a = assessment_inputs()
+            p["score_scenario"]["total"] = total
+            c["historical_volatility"] = volatility
+            self.assertEqual(self.assess(p, c, a)["risk_band"], expected)
+
+    def test_unknown_critical_inputs_and_confidence_d_force_monitor(self):
+        for field, value in (("data_completeness", 0.6999), ("evidence_confidence", "D"),
+                             ("fit_score", None), ("historical_volatility", "unknown"),
+                             ("retest_risk", None), ("subject_combination", None)):
+            p, c, a = assessment_inputs()
+            c[field] = value
+            self.assertEqual(self.assess(p, c, a)["risk_band"], "monitor")
+        for field in ("missing_critical_fields", "conflicted_critical_fields", "invalid_record_indexes"):
+            p, c, a = assessment_inputs()
+            a["candidate_summary"]["synthetic"][field] = ["synthetic_unknown"]
+            self.assertEqual(self.assess(p, c, a)["risk_band"], "monitor")
+
+    def test_completeness_boundary_and_fit_boundary(self):
+        for fit, expected in ((59.999, "monitor"), (60, "conservative")):
+            p, c, a = assessment_inputs()
+            c.update(fit_score=fit, data_completeness=0.70)
+            p["score_scenario"]["total"] = [320, 340]
+            self.assertEqual(self.assess(p, c, a)["risk_band"], expected)
+
+    def test_insufficient_or_descriptive_score_comparison_is_monitor(self):
+        for mutation in ("no_threshold", "missing_subject_range", "descriptive"):
+            p, c, a = assessment_inputs()
+            if mutation == "no_threshold":
+                c["thresholds"] = []
+            elif mutation == "missing_subject_range":
+                p["score_scenario"]["subjects"] = {}
+            else:
+                p["score_scenario"].update(scope="admitted_distribution", statistic="median")
+                line = c["thresholds"][0]
+                line.update(scope="admitted_distribution", statistic="median")
+                line["evidence"]["value"] = {k: deepcopy(v) for k, v in line.items() if k != "evidence"}
+            result = self.assess(p, c, a)
+            self.assertEqual(result["risk_band"], "monitor")
+            self.assertEqual(result["score_scenario"], compare_score_scenario(p, c))
+
+    def test_stable_shortlist_uses_fit_among_eligible_match_and_conservative(self):
+        def result(cid, band, fit):
+            return {"candidate_id": cid, "risk_band": band, "fit_score": fit,
+                    "sensitivity": {"stability": "stable", "winner_set": ["target"]}}
+        results = {cid: result(cid, band, fit) for cid, band, fit in
+                   (("target", "match", 85), ("safe", "conservative", 75),
+                    ("ambitious", "reach", 99), ("watch", "monitor", 100),
+                    ("out", "excluded", 100))}
+        shortlist = self.shortlist(results)
+        self.assertEqual(shortlist["primary"], "target")
+        self.assertEqual(shortlist["decision_set"], [])
+        self.assertFalse(shortlist["requires_user_decision"])
+        self.assertEqual(shortlist["alternatives"], ["ambitious", "safe"])
+        self.assertEqual(shortlist["monitor"], ["watch"])
+        self.assertEqual(shortlist["excluded"], ["out"])
+
+    def test_fragile_or_equal_fit_top_returns_decision_set(self):
+        for stability, other_fit in (("fragile", 79), ("stable", 80)):
+            results = {cid: {"candidate_id": cid, "risk_band": "match", "fit_score": fit,
+                             "sensitivity": {"stability": stability, "winner_set": ["a", "b", "watch"]}}
+                       for cid, fit in (("a", 80), ("b", other_fit))}
+            results["watch"] = {"candidate_id": "watch", "risk_band": "monitor", "fit_score": 100}
+            shortlist = self.shortlist(results)
+            self.assertIsNone(shortlist["primary"])
+            self.assertEqual(shortlist["decision_set"], ["a", "b"])
+            self.assertTrue(shortlist["requires_user_decision"])
+
+    def test_missing_sensitivity_cannot_name_single_winner(self):
+        results = {"a": {"candidate_id": "a", "risk_band": "match", "fit_score": 80}}
+        shortlist = self.shortlist(results)
+        self.assertIsNone(shortlist["primary"])
+        self.assertEqual(shortlist["decision_set"], ["a"])
+        self.assertTrue(shortlist["requires_user_decision"])
+
+    def test_empty_shortlist_and_mismatched_result_key(self):
+        result = self.shortlist({})
+        self.assertIsNone(result["primary"])
+        self.assertFalse(result["requires_user_decision"])
+        with self.assertRaises(ValueError):
+            self.shortlist({"wrong": {"candidate_id": "a", "risk_band": "match", "fit_score": 80}})
+
+    def test_assessment_does_not_mutate_inputs(self):
+        p, c, a = assessment_inputs()
+        before = deepcopy((p, c, a))
+        self.assess(p, c, a)
+        self.assertEqual((p, c, a), before)
+
+    def test_fresh_audit_does_not_make_wrong_year_critical_claim_current(self):
+        p, c, a = assessment_inputs()
+        a["claims"][0]["record"]["applicable_admission_year"] = 2025
+        self.assertEqual(self.assess(p, c, a)["risk_band"], "monitor")
+
+    def test_missing_critical_field_detail_cannot_be_assumed_known(self):
+        p, c, a = assessment_inputs()
+        a["candidate_summary"]["synthetic"]["critical_fields"].pop("deadline")
+        self.assertEqual(self.assess(p, c, a)["risk_band"], "monitor")
+
+    def test_stable_sensitivity_for_different_winner_cannot_promote_fit_top(self):
+        results = {cid: {"candidate_id": cid, "risk_band": "match", "fit_score": fit,
+                         "sensitivity": {"stability": "stable", "winner_set": ["b"]}}
+                   for cid, fit in (("a", 80), ("b", 79))}
+        result = self.shortlist(results)
+        self.assertIsNone(result["primary"])
+        self.assertEqual(result["decision_set"], ["a", "b"])
+        self.assertTrue(result["requires_user_decision"])
+
+    def test_fragile_equal_fit_set_also_keeps_other_sensitivity_winners(self):
+        results = {cid: {"candidate_id": cid, "risk_band": "match", "fit_score": fit,
+                         "sensitivity": {"stability": "fragile", "winner_set": ["a", "c"]}}
+                   for cid, fit in (("a", 80), ("b", 80), ("c", 79))}
+        self.assertEqual(self.shortlist(results)["decision_set"], ["a", "b", "c"])
+
+    def test_margin_boundary_and_secondary_confidence_never_overstate_band(self):
+        for margin, confidence, expected in ((19.999, "A", "match"), (20, "A", "conservative"),
+                                              (20, "C", "match")):
+            p, c, a = assessment_inputs()
+            p["score_scenario"]["total"] = [300 + margin, 350]
+            c["evidence_confidence"] = confidence
+            self.assertEqual(self.assess(p, c, a)["risk_band"], expected)
+
+    def test_confirmed_gate_failure_is_excluded_and_unknown_gate_monitored(self):
+        for status, expected in (("fail", "excluded"), ("unknown", "monitor")):
+            p, c, a = assessment_inputs()
+            c["gates"][0]["status"] = status
+            self.assertEqual(self.assess(p, c, a)["risk_band"], expected)
+
+    def test_summary_only_audit_and_missing_candidate_are_monitored(self):
+        p, c, a = assessment_inputs()
+        result = self.assess(p, c, a["candidate_summary"])
+        self.assertEqual(result["risk_band"], "monitor")
+        self.assertIn("current_critical_source_provenance_missing", result["reasons"])
+        self.assertIn("program_availability", result["source_refs"])
+        self.assertEqual(self.assess(p, c, {})["risk_band"], "monitor")
+
+    def test_invalid_risk_extensions_cannot_confirm_decision_band(self):
+        for field, value in (("historical_volatility", []), ("retest_risk", {}),
+                             ("fit_score", True), ("fit_score", float("nan")),
+                             ("data_completeness", 10**400)):
+            p, c, a = assessment_inputs()
+            c[field] = value
+            self.assertEqual(self.assess(p, c, a)["risk_band"], "monitor")
 
 
 class SubjectTests(unittest.TestCase):
