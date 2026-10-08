@@ -1,0 +1,238 @@
+[
+  {
+    "candidate_id": "core-synthetic",
+    "pathway": "baoyan",
+    "admission_year": 2027,
+    "institution": "Fictional Lantern University",
+    "unit": "Fictional Computing Unit",
+    "program_code": null,
+    "program_name": "Synthetic Computing",
+    "degree_type": "academic-master",
+    "research_track": "Synthetic transparent systems",
+    "round": "summer-camp",
+    "deadline": "2027-06-14T17:00:00+08:00",
+    "status": "discovered",
+    "eligibility": "pass",
+    "evidence_confidence": "A",
+    "data_completeness": 1,
+    "sources": [
+      "core-synthetic-eligibility",
+      "core-synthetic-deadline",
+      "core-synthetic-program_availability",
+      "core-synthetic-degree_type"
+    ],
+    "gates": [
+      {
+        "gate_id": "eligibility",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
+      }
+    ],
+    "gate_bases": {
+      "eligibility": [
+        "core-synthetic-eligibility"
+      ]
+    },
+    "dimensions": {
+      "competitive_position": 70,
+      "research_fit": 90
+    },
+    "dimension_bases": {
+      "competitive_position": "Hand-selected synthetic 0-100 decision scale: 70; not a predicted admission outcome.",
+      "research_fit": "Hand-selected synthetic 0-100 research-interest scale: 90; no real institution assessment."
+    },
+    "completeness_basis": "All 2 selected scoring dimensions provided: 2/2. Critical evidence confidence and gate uncertainty are audited separately.",
+    "deadline_notes": "Synthetic exact timestamp only.",
+    "user_notes": "Entire target is fictional. Confidence A is an intentionally optimistic pre-audit placeholder; replace using audit output before ranking."
+  },
+  {
+    "candidate_id": "reach-synthetic",
+    "pathway": "baoyan",
+    "admission_year": 2027,
+    "institution": "Fictional Cloudglass Institute",
+    "unit": "Fictional Computing Unit",
+    "program_code": null,
+    "program_name": "Synthetic Computing",
+    "degree_type": "academic-master",
+    "research_track": "Synthetic transparent systems",
+    "round": "summer-camp",
+    "deadline": null,
+    "status": "discovered",
+    "eligibility": "pass",
+    "evidence_confidence": "A",
+    "data_completeness": 1,
+    "sources": [
+      "reach-synthetic-eligibility",
+      "reach-synthetic-deadline",
+      "reach-synthetic-program_availability",
+      "reach-synthetic-degree_type"
+    ],
+    "gates": [
+      {
+        "gate_id": "eligibility",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
+      }
+    ],
+    "gate_bases": {
+      "eligibility": [
+        "reach-synthetic-eligibility"
+      ]
+    },
+    "dimensions": {
+      "competitive_position": 40,
+      "research_fit": 75
+    },
+    "dimension_bases": {
+      "competitive_position": "Hand-selected synthetic 0-100 decision scale: 40; not a predicted admission outcome.",
+      "research_fit": "Hand-selected synthetic 0-100 research-interest scale: 75; no real institution assessment."
+    },
+    "completeness_basis": "All 2 selected scoring dimensions provided: 2/2. Critical evidence confidence and gate uncertainty are audited separately.",
+    "deadline_notes": "Deadline requires refresh or conflict resolution; omitted from calendar.",
+    "user_notes": "Entire target is fictional. Confidence A is an intentionally optimistic pre-audit placeholder; replace using audit output before ranking."
+  },
+  {
+    "candidate_id": "excluded-synthetic",
+    "pathway": "baoyan",
+    "admission_year": 2027,
+    "institution": "Fictional Copperleaf University",
+    "unit": "Fictional Computing Unit",
+    "program_code": null,
+    "program_name": "Synthetic Computing",
+    "degree_type": "academic-master",
+    "research_track": "Synthetic transparent systems",
+    "round": "summer-camp",
+    "deadline": "2027-06-18T17:00:00+08:00",
+    "status": "discovered",
+    "eligibility": "fail",
+    "evidence_confidence": "A",
+    "data_completeness": 1,
+    "sources": [
+      "excluded-synthetic-eligibility",
+      "excluded-synthetic-deadline",
+      "excluded-synthetic-program_availability",
+      "excluded-synthetic-degree_type"
+    ],
+    "gates": [
+      {
+        "gate_id": "eligibility",
+        "status": "fail",
+        "critical": true,
+        "evidence_status": "confirmed"
+      }
+    ],
+    "gate_bases": {
+      "eligibility": [
+        "excluded-synthetic-eligibility"
+      ]
+    },
+    "dimensions": {
+      "competitive_position": 95,
+      "research_fit": 95
+    },
+    "dimension_bases": {
+      "competitive_position": "Hand-selected synthetic 0-100 decision scale: 95; not a predicted admission outcome.",
+      "research_fit": "Hand-selected synthetic 0-100 research-interest scale: 95; no real institution assessment."
+    },
+    "completeness_basis": "All 2 selected scoring dimensions provided: 2/2. Critical evidence confidence and gate uncertainty are audited separately.",
+    "deadline_notes": "Synthetic exact timestamp only.",
+    "user_notes": "Entire target is fictional. Confidence A is an intentionally optimistic pre-audit placeholder; replace using audit output before ranking."
+  },
+  {
+    "candidate_id": "unknown-synthetic",
+    "pathway": "baoyan",
+    "admission_year": 2027,
+    "institution": "Fictional Snowbranch Institute",
+    "unit": "Fictional Computing Unit",
+    "program_code": null,
+    "program_name": "Synthetic Computing",
+    "degree_type": "academic-master",
+    "research_track": "Synthetic transparent systems",
+    "round": "summer-camp",
+    "deadline": "2027-06-19T17:00:00+08:00",
+    "status": "discovered",
+    "eligibility": "unknown",
+    "evidence_confidence": "A",
+    "data_completeness": 1,
+    "sources": [
+      "unknown-synthetic-eligibility",
+      "unknown-synthetic-deadline",
+      "unknown-synthetic-program_availability",
+      "unknown-synthetic-degree_type"
+    ],
+    "gates": [
+      {
+        "gate_id": "eligibility",
+        "status": "unknown",
+        "critical": true,
+        "evidence_status": "missing"
+      }
+    ],
+    "gate_bases": {
+      "eligibility": [
+        "unknown-synthetic-eligibility"
+      ]
+    },
+    "dimensions": {
+      "competitive_position": 85,
+      "research_fit": 90
+    },
+    "dimension_bases": {
+      "competitive_position": "Hand-selected synthetic 0-100 decision scale: 85; not a predicted admission outcome.",
+      "research_fit": "Hand-selected synthetic 0-100 research-interest scale: 90; no real institution assessment."
+    },
+    "completeness_basis": "All 2 selected scoring dimensions provided: 2/2. Critical evidence confidence and gate uncertainty are audited separately.",
+    "deadline_notes": "Synthetic exact timestamp only.",
+    "user_notes": "Entire target is fictional. Confidence A is an intentionally optimistic pre-audit placeholder; replace using audit output before ranking."
+  },
+  {
+    "candidate_id": "conflicted-synthetic",
+    "pathway": "baoyan",
+    "admission_year": 2027,
+    "institution": "Fictional Starweave University",
+    "unit": "Fictional Computing Unit",
+    "program_code": null,
+    "program_name": "Synthetic Computing",
+    "degree_type": "academic-master",
+    "research_track": "Synthetic transparent systems",
+    "round": "summer-camp",
+    "deadline": null,
+    "status": "discovered",
+    "eligibility": "pass",
+    "evidence_confidence": "A",
+    "data_completeness": 1,
+    "sources": [
+      "conflicted-synthetic-eligibility",
+      "conflicted-synthetic-deadline",
+      "conflicted-synthetic-program_availability",
+      "conflicted-synthetic-degree_type",
+      "conflicted-synthetic-deadline-alternate"
+    ],
+    "gates": [
+      {
+        "gate_id": "eligibility",
+        "status": "pass",
+        "critical": true,
+        "evidence_status": "confirmed"
+      }
+    ],
+    "gate_bases": {
+      "eligibility": [
+        "conflicted-synthetic-eligibility"
+      ]
+    },
+    "dimensions": {
+      "competitive_position": 75,
+      "research_fit": 85
+    },
+    "dimension_bases": {
+      "competitive_position": "Hand-selected synthetic 0-100 decision scale: 75; not a predicted admission outcome.",
+      "research_fit": "Hand-selected synthetic 0-100 research-interest scale: 85; no real institution assessment."
+    },
+    "completeness_basis": "All 2 selected scoring dimensions provided: 2/2. Critical evidence confidence and gate uncertainty are audited separately.",
+    "deadline_notes": "Deadline requires refresh or conflict resolution; omitted from calendar.",
+    "user_notes": "Entire target is fictional. Confidence A is an intentionally optimistic pre-audit placeholder; replace using audit output before ranking."
+  }
+]
