@@ -7,7 +7,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 from scripts.case_io import atomic_write_json, load_json
-from scripts.validate_case import validate_candidate, validate_case, validate_evidence, validate_profile
+from scripts.validate_case import (validate_applicant_claim, validate_candidate, validate_case,
+                                   validate_evidence, validate_profile)
 
 
 def profile():
@@ -34,6 +35,45 @@ def evidence():
 
 
 class CaseValidationTests(unittest.TestCase):
+    def test_applicant_claim_states_and_required_fields(self):
+        claim = {"claim_id": "gpa", "field": "gpa", "value": None,
+                 "state": "missing", "source_document_ids": [], "notes": ""}
+        for state in ("document_verified", "user_asserted", "derived", "inferred", "missing", "conflicted"):
+            item = dict(claim, state=state, source_document_ids=["document-1"])
+            self.assertEqual(validate_applicant_claim(item), [])
+        for field in claim:
+            with self.subTest(field=field):
+                item = claim.copy(); del item[field]
+                self.assertTrue(any(field in error for error in validate_applicant_claim(item)))
+        self.assertTrue(validate_applicant_claim([]))
+        self.assertTrue(validate_applicant_claim(dict(claim, state="confirmed")))
+
+    def test_document_verified_requires_document_reference(self):
+        claim = {"claim_id": "gpa", "field": "gpa", "value": 3.5,
+                 "state": "document_verified", "source_document_ids": [], "notes": ""}
+        self.assertTrue(any("source_document_ids" in error for error in validate_applicant_claim(claim)))
+        for refs in (None, "document-1", [""], [1]):
+            self.assertTrue(validate_applicant_claim(dict(claim, source_document_ids=refs)))
+        self.assertTrue(validate_applicant_claim(dict(claim, notes=[])))
+
+    def test_optional_applicant_claims_require_real_manifest_references(self):
+        with tempfile.TemporaryDirectory() as temp:
+            directory = Path(temp); self.write_case(directory)
+            claim = {"claim_id": "gpa", "field": "gpa", "value": 3.5,
+                     "state": "document_verified", "source_document_ids": ["document-1"], "notes": ""}
+            (directory / "applicant-claims.json").write_text(json.dumps([claim]))
+            self.assertTrue(validate_case(directory))
+            manifest = directory / "materials-manifest.json"
+            manifest.write_text(json.dumps([{"document_id": "document-1"}]))
+            self.assertEqual(validate_case(directory), [])
+            manifest.write_text(json.dumps([{"document_id": "document-2"}]))
+            self.assertTrue(any("document-1" in error for error in validate_case(directory)))
+            for malformed in ({}, [None], [{"document_id": []}]):
+                manifest.write_text(json.dumps(malformed))
+                self.assertTrue(validate_case(directory))
+            (directory / "applicant-claims.json").write_text("{}")
+            self.assertTrue(validate_case(directory))
+
     def test_valid_records(self):
         self.assertEqual(validate_profile(profile()), [])
         self.assertEqual(validate_candidate(candidate()), [])

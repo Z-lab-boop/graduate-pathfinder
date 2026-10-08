@@ -17,6 +17,10 @@ EVIDENCE_STATES = {
     "stale", "missing", "not_applicable",
 }
 ELIGIBILITY_STATES = {"pass", "fail", "unknown"}
+APPLICANT_CLAIM_STATES = {
+    "document_verified", "user_asserted", "derived",
+    "inferred", "missing", "conflicted",
+}
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -118,6 +122,64 @@ def validate_evidence(record: dict) -> list[str]:
     return errors
 
 
+def validate_applicant_claim(claim: dict) -> list[str]:
+    """Validate claim provenance shape, without certifying document authenticity."""
+    if not isinstance(claim, dict):
+        return ["record must be an object"]
+    errors = []
+    _strings(claim, ("claim_id", "field"), errors)
+    if "value" not in claim:
+        errors.append("value is required")
+    _enum(claim, "state", APPLICANT_CLAIM_STATES, errors)
+    refs = claim.get("source_document_ids")
+    if not isinstance(refs, list) or any(not isinstance(ref, str) or not ref.strip() for ref in refs):
+        errors.append("source_document_ids must be an array of non-empty strings")
+    elif claim.get("state") == "document_verified" and not refs:
+        errors.append("source_document_ids must reference at least one manifest document for document_verified")
+    if not isinstance(claim.get("notes"), str):
+        errors.append("notes must be a string")
+    return errors
+
+
+def _validate_applicant_claims(directory: Path) -> list[str]:
+    path = directory / "applicant-claims.json"
+    if not path.exists():
+        return []
+    try:
+        claims = load_json(path)
+    except (OSError, ValueError) as error:
+        return [f"applicant-claims.json: {error}"]
+    if not isinstance(claims, list):
+        return ["applicant-claims.json: must be an array"]
+    errors = []
+    references = []
+    for index, claim in enumerate(claims):
+        errors.extend(f"applicant-claims.json[{index}]: {error}" for error in validate_applicant_claim(claim))
+        if isinstance(claim, dict) and isinstance(claim.get("source_document_ids"), list):
+            references.extend((index, ref) for ref in claim["source_document_ids"]
+                              if isinstance(ref, str) and ref.strip())
+    if references:
+        try:
+            manifest = load_json(directory / "materials-manifest.json")
+        except (OSError, ValueError) as error:
+            errors.append(f"materials-manifest.json: {error}")
+            return errors
+        if not isinstance(manifest, list):
+            errors.append("materials-manifest.json: must be an array")
+            return errors
+        document_ids = set()
+        for index, document in enumerate(manifest):
+            if (not isinstance(document, dict) or not isinstance(document.get("document_id"), str)
+                    or not document["document_id"].strip()):
+                errors.append(f"materials-manifest.json[{index}]: document_id must be a non-empty string")
+            else:
+                document_ids.add(document["document_id"])
+        for index, reference in references:
+            if reference not in document_ids:
+                errors.append(f"applicant-claims.json[{index}]: unknown manifest document ID {reference}")
+    return errors
+
+
 def validate_case(case_dir: Path, *, skill_root: Path = SKILL_ROOT) -> list[str]:
     directory = Path(case_dir).resolve()
     if directory.is_relative_to(Path(skill_root).resolve()):
@@ -139,6 +201,7 @@ def validate_case(case_dir: Path, *, skill_root: Path = SKILL_ROOT) -> list[str]
                 errors.extend(f"{filename}[{index}]: {error}" for error in validator(record))
         else:
             errors.extend(f"{filename}: {error}" for error in validator(payload))
+    errors.extend(_validate_applicant_claims(directory))
     return errors
 
 
