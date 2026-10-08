@@ -94,6 +94,16 @@ class CaseValidationTests(unittest.TestCase):
             (directory / "candidates.json").write_text("{}")
             self.assertEqual(len(validate_case(directory)), 2)
 
+    def test_huge_completeness_integer_returns_error_and_continues_aggregation(self):
+        with tempfile.TemporaryDirectory() as temp:
+            directory = Path(temp); self.write_case(directory)
+            first = candidate(); first["data_completeness"] = 10**400
+            second = candidate(); second["eligibility"] = "likely"
+            (directory / "candidates.json").write_text(json.dumps([first, second]))
+            errors = validate_case(directory)
+            self.assertIn("candidates.json[0]: data_completeness must be a finite number between 0 and 1", errors)
+            self.assertTrue(any(error.startswith("candidates.json[1]: eligibility") for error in errors))
+
     def test_skill_root_and_resolved_symlink_rejected(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp); case = root / "case"; case.mkdir(); self.write_case(case)

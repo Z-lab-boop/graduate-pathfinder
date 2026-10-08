@@ -80,7 +80,7 @@ def validate_candidate(candidate: dict) -> list[str]:
     if "deadline" not in candidate or (candidate["deadline"] is not None and not _timestamp(candidate["deadline"])):
         errors.append("deadline must be a timezone-aware RFC3339 timestamp or null")
     completeness = candidate.get("data_completeness")
-    if type(completeness) not in (int, float) or not math.isfinite(completeness) or not 0 <= completeness <= 1:
+    if type(completeness) not in (int, float) or not 0 <= completeness <= 1 or not math.isfinite(completeness):
         errors.append("data_completeness must be a finite number between 0 and 1")
     if not isinstance(candidate.get("sources"), list):
         errors.append("sources must be an array")
