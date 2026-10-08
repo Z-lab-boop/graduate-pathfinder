@@ -1,0 +1,6 @@
+interface:
+  display_name: "研途择校"
+  short_description: "循证完成保研与考研择校决策"
+  default_prompt: "使用 $graduate-pathfinder，先确定保研或考研路径与入学年份，再分析循证择校方案。"
+policy:
+  allow_implicit_invocation: true
