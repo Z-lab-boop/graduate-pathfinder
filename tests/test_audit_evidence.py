@@ -106,14 +106,27 @@ class EvidenceAuditTests(unittest.TestCase):
         self.assertEqual(audit_evidence([], self.now),
                          {"claims": [], "candidate_summary": {}, "conflicts": {}, "errors": []})
 
-    def test_fresh_t2_support_can_confirm_an_old_t1_requirement(self):
+    def test_stale_strongest_t1_stays_b_despite_fresh_t2(self):
         self.records[1]["retrieved_at"] = "2020-01-01T00:00:00Z"
         fresh = copy.deepcopy(self.records[1])
         fresh.update(claim_id="fresh-copy", tier="T2", retrieved_at="2027-05-02T10:00:00+08:00")
         summary = self.summary(self.records + [fresh])
-        self.assertEqual(summary["confidence"], "A")
+        self.assertEqual(summary["confidence"], "B")
         self.assertEqual(summary["critical_fields"]["deadline"]["strongest_usable_tier"], "T1")
         self.assertEqual(summary["critical_fields"]["deadline"]["fresh_official_record_indexes"], [4])
+
+    def test_null_critical_value_is_missing_without_not_applicable(self):
+        self.records[1]["value"] = None
+        report = audit_evidence(self.records, self.now)
+        summary = report["candidate_summary"][self.candidate]
+        self.assertEqual(summary["confidence"], "D")
+        self.assertTrue(summary["critical_fields"]["deadline"]["missing"])
+        self.assertEqual(summary["critical_fields"]["deadline"]["usable_record_indexes"], [])
+        self.assertIsNone(report["claims"][1]["record"]["value"])
+
+    def test_null_not_applicable_value_keeps_justified_coverage(self):
+        self.records[1].update(value=None, status="not_applicable")
+        self.assertEqual(self.summary()["confidence"], "A")
 
     def test_secondary_band_takes_precedence_over_stale_official_band(self):
         self.records[0]["tier"] = "T4"

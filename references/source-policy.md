@@ -28,12 +28,15 @@ Apply confidence in this order:
 2. C: complete conflict-free critical coverage, but at least one critical field
    has only T3/T4 usable support.
 3. B: complete conflict-free critical coverage, all critical fields have T1/T2
-   support, but at least one field has no fresh T1/T2 support.
-4. A: every critical field is covered by fresh, conflict-free T1/T2 evidence.
+   support, but at least one field's strongest usable record is stale.
+4. A: every critical field's strongest usable record is fresh, conflict-free
+   T1/T2 evidence.
 
-The strongest usable tier follows source precedence, but a fresh T2 can satisfy
-fresh official coverage alongside an older T1. Missing/conflicted records are
-unusable; stale and not_applicable records remain inspectable usable support with
+The strongest usable tier follows source precedence. A stale strongest T1 keeps
+confidence B even alongside fresh T2 evidence. Missing/conflicted records are
+unusable. A null critical value means unknown and supplies no usable coverage
+unless its status explicitly justifies it as not_applicable. All such records
+remain preserved. Stale and not_applicable records remain inspectable support with
 their freshness exception/status exposed. These bands describe evidence quality,
 not admission probability. Candidates absent from all input records cannot be
 invented by this audit; the caller must supply their evidence or missing placeholders.

@@ -71,7 +71,10 @@ def audit_evidence(records: list[dict], now: datetime, stale_after_days: int = 3
         invalid = [c["record_index"] for c in claims if not c["valid"]]
         for field in sorted(CRITICAL_FIELDS):
             supporting = [c for c in claims if c["valid"] and c["record"]["field"] == field]
-            usable = [c for c in supporting if c["effective_status"] not in {"missing", "conflicted"}]
+            usable = [c for c in supporting
+                      if c["effective_status"] not in {"missing", "conflicted"}
+                      and (c["record"]["value"] is not None
+                           or c["effective_status"] == "not_applicable")]
             # Official precedence remains inspectable; no source records are discarded.
             strongest = max(usable, key=lambda c: (TIER_WEIGHT[c["record"]["tier"]],
                                                     not c["stale"]), default=None)
@@ -85,7 +88,7 @@ def audit_evidence(records: list[dict], now: datetime, stale_after_days: int = 3
                 conflicted.append(field)
             if usable and not official:
                 secondary.append(field)
-            if official and not fresh_official:
+            if official and strongest["stale"]:
                 stale_official.append(field)
             fields[field] = {
                 "record_indexes": [c["record_index"] for c in supporting],
