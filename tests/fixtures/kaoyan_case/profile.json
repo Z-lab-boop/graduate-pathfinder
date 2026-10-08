@@ -1,0 +1,74 @@
+{
+  "case_label": "synthetic-kaoyan-2026",
+  "synthetic": true,
+  "pathway": "kaoyan",
+  "admission_year": 2026,
+  "audit_at": "2026-10-08T10:00:00+08:00",
+  "fixture_note": "Fully fictional offline scenario. Names, scores, notices and URLs are invented. Not actual admissions guidance.",
+  "preferences": {
+    "willing_to_switch_subjects": false,
+    "criterion_weights": {
+      "research_fit": 0.75,
+      "location_fit": 0.25
+    }
+  },
+  "subject_combination": {
+    "codes": [
+      "101",
+      "201",
+      "301",
+      "408"
+    ],
+    "evidence": [
+      {
+        "claim_id": "research-first-profile_subjects",
+        "candidate_id": "research-first",
+        "field": "profile_subjects",
+        "value": [
+          "101",
+          "201",
+          "301",
+          "408"
+        ],
+        "source_url": "https://example.invalid/synthetic/research-first/profile_subjects",
+        "source_title": "Synthetic offline profile_subjects fixture",
+        "publisher": "Fictional admissions office",
+        "short_evidence": "Synthetic test premise only; invented and never fetched.",
+        "published_at": "2026-10-01",
+        "retrieved_at": "2026-10-02T10:00:00+08:00",
+        "tier": "T1",
+        "status": "confirmed",
+        "scope": "program",
+        "conflict_group": null,
+        "applicable_admission_year": 2026
+      }
+    ]
+  },
+  "score_scenario": {
+    "year": 2026,
+    "scope": "program",
+    "population": "ordinary applicants",
+    "total": [
+      320,
+      340
+    ],
+    "subjects": {
+      "101": [
+        50,
+        60
+      ],
+      "201": [
+        50,
+        60
+      ],
+      "301": [
+        100,
+        110
+      ],
+      "408": [
+        100,
+        110
+      ]
+    }
+  }
+}

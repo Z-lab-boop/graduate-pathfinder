@@ -1,0 +1,918 @@
+[
+  {
+    "candidate_id": "research-first",
+    "synthetic": true,
+    "pathway": "kaoyan",
+    "admission_year": 2026,
+    "institution": "Fictional Paperbridge University",
+    "unit": "Fictional Computing Unit",
+    "program_code": "085400",
+    "program_name": "Synthetic Computing",
+    "degree_type": "professional-master",
+    "research_track": "Synthetic transparent systems",
+    "area": "A",
+    "category": "synthetic engineering",
+    "round": "regular-exam",
+    "deadline": "2026-10-20T17:00:00+08:00",
+    "status": "discovered",
+    "eligibility": "pass",
+    "evidence_confidence": "A",
+    "data_completeness": 1,
+    "completeness_basis": "Synthetic all selected decision dimensions present; source uncertainty is assessed separately.",
+    "subject_combination": {
+      "codes": [
+        "101",
+        "201",
+        "301",
+        "408"
+      ],
+      "evidence": [
+        {
+          "claim_id": "research-first-subjects",
+          "candidate_id": "research-first",
+          "field": "subjects",
+          "value": [
+            "101",
+            "201",
+            "301",
+            "408"
+          ],
+          "source_url": "https://example.invalid/synthetic/research-first/subjects",
+          "source_title": "Synthetic offline subjects fixture",
+          "publisher": "Fictional admissions office",
+          "short_evidence": "Synthetic test premise only; invented and never fetched.",
+          "published_at": "2026-10-01",
+          "retrieved_at": "2026-10-02T10:00:00+08:00",
+          "tier": "T1",
+          "status": "confirmed",
+          "scope": "program",
+          "conflict_group": null,
+          "applicable_admission_year": 2026
+        }
+      ]
+    },
+    "thresholds": [
+      {
+        "year": 2026,
+        "scope": "program",
+        "total": 300,
+        "subject_minimums": {
+          "101": 40,
+          "201": 40
+        },
+        "subject_codes": [
+          "101",
+          "201",
+          "301",
+          "408"
+        ],
+        "population": "ordinary applicants",
+        "institution": "Fictional Paperbridge University",
+        "unit": "Fictional Computing Unit",
+        "program_code": "085400",
+        "research_track": "Synthetic transparent systems",
+        "area": "A",
+        "category": "synthetic engineering",
+        "source_ref": "research-first-threshold",
+        "evidence": {
+          "claim_id": "research-first-threshold",
+          "candidate_id": "research-first",
+          "field": "threshold",
+          "value": {
+            "year": 2026,
+            "scope": "program",
+            "total": 300,
+            "subject_minimums": {
+              "101": 40,
+              "201": 40
+            },
+            "subject_codes": [
+              "101",
+              "201",
+              "301",
+              "408"
+            ],
+            "population": "ordinary applicants",
+            "institution": "Fictional Paperbridge University",
+            "unit": "Fictional Computing Unit",
+            "program_code": "085400",
+            "research_track": "Synthetic transparent systems",
+            "area": "A",
+            "category": "synthetic engineering",
+            "source_ref": "research-first-threshold"
+          },
+          "source_url": "https://example.invalid/synthetic/research-first/threshold",
+          "source_title": "Synthetic offline threshold fixture",
+          "publisher": "Fictional admissions office",
+          "short_evidence": "Synthetic test premise only; invented and never fetched.",
+          "published_at": "2026-10-01",
+          "retrieved_at": "2026-10-02T10:00:00+08:00",
+          "tier": "T1",
+          "status": "confirmed",
+          "scope": "program",
+          "conflict_group": null,
+          "applicable_admission_year": 2026
+        }
+      }
+    ],
+    "current_catalog": {
+      "claim_id": "research-first-program_availability",
+      "candidate_id": "research-first",
+      "field": "program_availability",
+      "value": true,
+      "source_url": "https://example.invalid/synthetic/research-first/program_availability",
+      "source_title": "Synthetic offline program_availability fixture",
+      "publisher": "Fictional admissions office",
+      "short_evidence": "Synthetic test premise only; invented and never fetched.",
+      "published_at": "2026-10-01",
+      "retrieved_at": "2026-10-02T10:00:00+08:00",
+      "tier": "T1",
+      "status": "confirmed",
+      "scope": "program",
+      "conflict_group": null,
+      "applicable_admission_year": 2026
+    },
+    "historical_volatility": "low",
+    "retest_risk": "low",
+    "fit_score": 80,
+    "dimensions": {
+      "competitive_position": 65,
+      "research_fit": 90,
+      "location_fit": 40
+    },
+    "dimension_bases": "Synthetic hand-selected 0-100 decision values, not predicted outcomes.",
+    "gates": [
+      {
+        "gate_id": "eligibility",
+        "status": "unknown",
+        "critical": true,
+        "evidence_status": "missing"
+      },
+      {
+        "gate_id": "deadline",
+        "status": "unknown",
+        "critical": true,
+        "evidence_status": "missing"
+      },
+      {
+        "gate_id": "program_availability",
+        "status": "unknown",
+        "critical": true,
+        "evidence_status": "missing"
+      },
+      {
+        "gate_id": "degree_type",
+        "status": "unknown",
+        "critical": true,
+        "evidence_status": "missing"
+      }
+    ],
+    "gate_bases": {
+      "eligibility": "research-first-eligibility",
+      "deadline": "research-first-deadline",
+      "program_availability": "research-first-program_availability",
+      "degree_type": "research-first-degree_type"
+    },
+    "sources": [
+      "research-first-profile_subjects",
+      "research-first-eligibility",
+      "research-first-deadline",
+      "research-first-program_availability",
+      "research-first-degree_type",
+      "research-first-subjects",
+      "research-first-threshold"
+    ]
+  },
+  {
+    "candidate_id": "location-first",
+    "synthetic": true,
+    "pathway": "kaoyan",
+    "admission_year": 2026,
+    "institution": "Fictional Glasscloud University",
+    "unit": "Fictional Computing Unit",
+    "program_code": "085400",
+    "program_name": "Synthetic Computing",
+    "degree_type": "professional-master",
+    "research_track": "Synthetic transparent systems",
+    "area": "A",
+    "category": "synthetic engineering",
+    "round": "regular-exam",
+    "deadline": "2026-10-20T17:00:00+08:00",
+    "status": "discovered",
+    "eligibility": "pass",
+    "evidence_confidence": "A",
+    "data_completeness": 1,
+    "completeness_basis": "Synthetic all selected decision dimensions present; source uncertainty is assessed separately.",
+    "subject_combination": {
+      "codes": [
+        "101",
+        "201",
+        "301",
+        "408"
+      ],
+      "evidence": [
+        {
+          "claim_id": "location-first-subjects",
+          "candidate_id": "location-first",
+          "field": "subjects",
+          "value": [
+            "101",
+            "201",
+            "301",
+            "408"
+          ],
+          "source_url": "https://example.invalid/synthetic/location-first/subjects",
+          "source_title": "Synthetic offline subjects fixture",
+          "publisher": "Fictional admissions office",
+          "short_evidence": "Synthetic test premise only; invented and never fetched.",
+          "published_at": "2026-10-01",
+          "retrieved_at": "2026-10-02T10:00:00+08:00",
+          "tier": "T1",
+          "status": "confirmed",
+          "scope": "program",
+          "conflict_group": null,
+          "applicable_admission_year": 2026
+        }
+      ]
+    },
+    "thresholds": [
+      {
+        "year": 2026,
+        "scope": "program",
+        "total": 300,
+        "subject_minimums": {
+          "101": 40,
+          "201": 40
+        },
+        "subject_codes": [
+          "101",
+          "201",
+          "301",
+          "408"
+        ],
+        "population": "ordinary applicants",
+        "institution": "Fictional Glasscloud University",
+        "unit": "Fictional Computing Unit",
+        "program_code": "085400",
+        "research_track": "Synthetic transparent systems",
+        "area": "A",
+        "category": "synthetic engineering",
+        "source_ref": "location-first-threshold",
+        "evidence": {
+          "claim_id": "location-first-threshold",
+          "candidate_id": "location-first",
+          "field": "threshold",
+          "value": {
+            "year": 2026,
+            "scope": "program",
+            "total": 300,
+            "subject_minimums": {
+              "101": 40,
+              "201": 40
+            },
+            "subject_codes": [
+              "101",
+              "201",
+              "301",
+              "408"
+            ],
+            "population": "ordinary applicants",
+            "institution": "Fictional Glasscloud University",
+            "unit": "Fictional Computing Unit",
+            "program_code": "085400",
+            "research_track": "Synthetic transparent systems",
+            "area": "A",
+            "category": "synthetic engineering",
+            "source_ref": "location-first-threshold"
+          },
+          "source_url": "https://example.invalid/synthetic/location-first/threshold",
+          "source_title": "Synthetic offline threshold fixture",
+          "publisher": "Fictional admissions office",
+          "short_evidence": "Synthetic test premise only; invented and never fetched.",
+          "published_at": "2026-10-01",
+          "retrieved_at": "2026-10-02T10:00:00+08:00",
+          "tier": "T1",
+          "status": "confirmed",
+          "scope": "program",
+          "conflict_group": null,
+          "applicable_admission_year": 2026
+        }
+      }
+    ],
+    "current_catalog": {
+      "claim_id": "location-first-program_availability",
+      "candidate_id": "location-first",
+      "field": "program_availability",
+      "value": true,
+      "source_url": "https://example.invalid/synthetic/location-first/program_availability",
+      "source_title": "Synthetic offline program_availability fixture",
+      "publisher": "Fictional admissions office",
+      "short_evidence": "Synthetic test premise only; invented and never fetched.",
+      "published_at": "2026-10-01",
+      "retrieved_at": "2026-10-02T10:00:00+08:00",
+      "tier": "T1",
+      "status": "confirmed",
+      "scope": "program",
+      "conflict_group": null,
+      "applicable_admission_year": 2026
+    },
+    "historical_volatility": "low",
+    "retest_risk": "low",
+    "fit_score": 80,
+    "dimensions": {
+      "competitive_position": 65,
+      "research_fit": 70,
+      "location_fit": 90
+    },
+    "dimension_bases": "Synthetic hand-selected 0-100 decision values, not predicted outcomes.",
+    "gates": [
+      {
+        "gate_id": "eligibility",
+        "status": "unknown",
+        "critical": true,
+        "evidence_status": "missing"
+      },
+      {
+        "gate_id": "deadline",
+        "status": "unknown",
+        "critical": true,
+        "evidence_status": "missing"
+      },
+      {
+        "gate_id": "program_availability",
+        "status": "unknown",
+        "critical": true,
+        "evidence_status": "missing"
+      },
+      {
+        "gate_id": "degree_type",
+        "status": "unknown",
+        "critical": true,
+        "evidence_status": "missing"
+      }
+    ],
+    "gate_bases": {
+      "eligibility": "location-first-eligibility",
+      "deadline": "location-first-deadline",
+      "program_availability": "location-first-program_availability",
+      "degree_type": "location-first-degree_type"
+    },
+    "sources": [
+      "location-first-eligibility",
+      "location-first-deadline",
+      "location-first-program_availability",
+      "location-first-degree_type",
+      "location-first-subjects",
+      "location-first-threshold"
+    ]
+  },
+  {
+    "candidate_id": "subject-mismatch",
+    "synthetic": true,
+    "pathway": "kaoyan",
+    "admission_year": 2026,
+    "institution": "Fictional Inkfield University",
+    "unit": "Fictional Computing Unit",
+    "program_code": "085400",
+    "program_name": "Synthetic Computing",
+    "degree_type": "professional-master",
+    "research_track": "Synthetic transparent systems",
+    "area": "A",
+    "category": "synthetic engineering",
+    "round": "regular-exam",
+    "deadline": "2026-10-20T17:00:00+08:00",
+    "status": "discovered",
+    "eligibility": "pass",
+    "evidence_confidence": "A",
+    "data_completeness": 1,
+    "completeness_basis": "Synthetic all selected decision dimensions present; source uncertainty is assessed separately.",
+    "subject_combination": {
+      "codes": [
+        "101",
+        "204",
+        "301",
+        "408"
+      ],
+      "evidence": [
+        {
+          "claim_id": "subject-mismatch-subjects",
+          "candidate_id": "subject-mismatch",
+          "field": "subjects",
+          "value": [
+            "101",
+            "204",
+            "301",
+            "408"
+          ],
+          "source_url": "https://example.invalid/synthetic/subject-mismatch/subjects",
+          "source_title": "Synthetic offline subjects fixture",
+          "publisher": "Fictional admissions office",
+          "short_evidence": "Synthetic test premise only; invented and never fetched.",
+          "published_at": "2026-10-01",
+          "retrieved_at": "2026-10-02T10:00:00+08:00",
+          "tier": "T1",
+          "status": "confirmed",
+          "scope": "program",
+          "conflict_group": null,
+          "applicable_admission_year": 2026
+        }
+      ]
+    },
+    "thresholds": [
+      {
+        "year": 2026,
+        "scope": "program",
+        "total": 300,
+        "subject_minimums": {
+          "101": 40,
+          "204": 40
+        },
+        "subject_codes": [
+          "101",
+          "204",
+          "301",
+          "408"
+        ],
+        "population": "ordinary applicants",
+        "institution": "Fictional Inkfield University",
+        "unit": "Fictional Computing Unit",
+        "program_code": "085400",
+        "research_track": "Synthetic transparent systems",
+        "area": "A",
+        "category": "synthetic engineering",
+        "source_ref": "subject-mismatch-threshold",
+        "evidence": {
+          "claim_id": "subject-mismatch-threshold",
+          "candidate_id": "subject-mismatch",
+          "field": "threshold",
+          "value": {
+            "year": 2026,
+            "scope": "program",
+            "total": 300,
+            "subject_minimums": {
+              "101": 40,
+              "204": 40
+            },
+            "subject_codes": [
+              "101",
+              "204",
+              "301",
+              "408"
+            ],
+            "population": "ordinary applicants",
+            "institution": "Fictional Inkfield University",
+            "unit": "Fictional Computing Unit",
+            "program_code": "085400",
+            "research_track": "Synthetic transparent systems",
+            "area": "A",
+            "category": "synthetic engineering",
+            "source_ref": "subject-mismatch-threshold"
+          },
+          "source_url": "https://example.invalid/synthetic/subject-mismatch/threshold",
+          "source_title": "Synthetic offline threshold fixture",
+          "publisher": "Fictional admissions office",
+          "short_evidence": "Synthetic test premise only; invented and never fetched.",
+          "published_at": "2026-10-01",
+          "retrieved_at": "2026-10-02T10:00:00+08:00",
+          "tier": "T1",
+          "status": "confirmed",
+          "scope": "program",
+          "conflict_group": null,
+          "applicable_admission_year": 2026
+        }
+      }
+    ],
+    "current_catalog": {
+      "claim_id": "subject-mismatch-program_availability",
+      "candidate_id": "subject-mismatch",
+      "field": "program_availability",
+      "value": true,
+      "source_url": "https://example.invalid/synthetic/subject-mismatch/program_availability",
+      "source_title": "Synthetic offline program_availability fixture",
+      "publisher": "Fictional admissions office",
+      "short_evidence": "Synthetic test premise only; invented and never fetched.",
+      "published_at": "2026-10-01",
+      "retrieved_at": "2026-10-02T10:00:00+08:00",
+      "tier": "T1",
+      "status": "confirmed",
+      "scope": "program",
+      "conflict_group": null,
+      "applicable_admission_year": 2026
+    },
+    "historical_volatility": "low",
+    "retest_risk": "low",
+    "fit_score": 80,
+    "dimensions": {
+      "competitive_position": 65,
+      "research_fit": 60,
+      "location_fit": 20
+    },
+    "dimension_bases": "Synthetic hand-selected 0-100 decision values, not predicted outcomes.",
+    "gates": [
+      {
+        "gate_id": "eligibility",
+        "status": "unknown",
+        "critical": true,
+        "evidence_status": "missing"
+      },
+      {
+        "gate_id": "deadline",
+        "status": "unknown",
+        "critical": true,
+        "evidence_status": "missing"
+      },
+      {
+        "gate_id": "program_availability",
+        "status": "unknown",
+        "critical": true,
+        "evidence_status": "missing"
+      },
+      {
+        "gate_id": "degree_type",
+        "status": "unknown",
+        "critical": true,
+        "evidence_status": "missing"
+      }
+    ],
+    "gate_bases": {
+      "eligibility": "subject-mismatch-eligibility",
+      "deadline": "subject-mismatch-deadline",
+      "program_availability": "subject-mismatch-program_availability",
+      "degree_type": "subject-mismatch-degree_type"
+    },
+    "sources": [
+      "subject-mismatch-eligibility",
+      "subject-mismatch-deadline",
+      "subject-mismatch-program_availability",
+      "subject-mismatch-degree_type",
+      "subject-mismatch-subjects",
+      "subject-mismatch-threshold"
+    ]
+  },
+  {
+    "candidate_id": "catalog-unknown",
+    "synthetic": true,
+    "pathway": "kaoyan",
+    "admission_year": 2026,
+    "institution": "Fictional Mapleleaf University",
+    "unit": "Fictional Computing Unit",
+    "program_code": "085400",
+    "program_name": "Synthetic Computing",
+    "degree_type": "professional-master",
+    "research_track": "Synthetic transparent systems",
+    "area": "A",
+    "category": "synthetic engineering",
+    "round": "regular-exam",
+    "deadline": "2026-10-20T17:00:00+08:00",
+    "status": "discovered",
+    "eligibility": "pass",
+    "evidence_confidence": "A",
+    "data_completeness": 1,
+    "completeness_basis": "Synthetic all selected decision dimensions present; source uncertainty is assessed separately.",
+    "subject_combination": {
+      "codes": [
+        "101",
+        "201",
+        "301",
+        "408"
+      ],
+      "evidence": [
+        {
+          "claim_id": "catalog-unknown-subjects",
+          "candidate_id": "catalog-unknown",
+          "field": "subjects",
+          "value": [
+            "101",
+            "201",
+            "301",
+            "408"
+          ],
+          "source_url": "https://example.invalid/synthetic/catalog-unknown/subjects",
+          "source_title": "Synthetic offline subjects fixture",
+          "publisher": "Fictional admissions office",
+          "short_evidence": "Synthetic test premise only; invented and never fetched.",
+          "published_at": "2026-10-01",
+          "retrieved_at": "2026-10-02T10:00:00+08:00",
+          "tier": "T1",
+          "status": "confirmed",
+          "scope": "program",
+          "conflict_group": null,
+          "applicable_admission_year": 2026
+        }
+      ]
+    },
+    "thresholds": [
+      {
+        "year": 2026,
+        "scope": "program",
+        "total": 300,
+        "subject_minimums": {
+          "101": 40,
+          "201": 40
+        },
+        "subject_codes": [
+          "101",
+          "201",
+          "301",
+          "408"
+        ],
+        "population": "ordinary applicants",
+        "institution": "Fictional Mapleleaf University",
+        "unit": "Fictional Computing Unit",
+        "program_code": "085400",
+        "research_track": "Synthetic transparent systems",
+        "area": "A",
+        "category": "synthetic engineering",
+        "source_ref": "catalog-unknown-threshold",
+        "evidence": {
+          "claim_id": "catalog-unknown-threshold",
+          "candidate_id": "catalog-unknown",
+          "field": "threshold",
+          "value": {
+            "year": 2026,
+            "scope": "program",
+            "total": 300,
+            "subject_minimums": {
+              "101": 40,
+              "201": 40
+            },
+            "subject_codes": [
+              "101",
+              "201",
+              "301",
+              "408"
+            ],
+            "population": "ordinary applicants",
+            "institution": "Fictional Mapleleaf University",
+            "unit": "Fictional Computing Unit",
+            "program_code": "085400",
+            "research_track": "Synthetic transparent systems",
+            "area": "A",
+            "category": "synthetic engineering",
+            "source_ref": "catalog-unknown-threshold"
+          },
+          "source_url": "https://example.invalid/synthetic/catalog-unknown/threshold",
+          "source_title": "Synthetic offline threshold fixture",
+          "publisher": "Fictional admissions office",
+          "short_evidence": "Synthetic test premise only; invented and never fetched.",
+          "published_at": "2026-10-01",
+          "retrieved_at": "2026-10-02T10:00:00+08:00",
+          "tier": "T1",
+          "status": "confirmed",
+          "scope": "program",
+          "conflict_group": null,
+          "applicable_admission_year": 2026
+        }
+      }
+    ],
+    "current_catalog": {
+      "claim_id": "catalog-unknown-program_availability",
+      "candidate_id": "catalog-unknown",
+      "field": "program_availability",
+      "value": null,
+      "source_url": "https://example.invalid/synthetic/catalog-unknown/program_availability",
+      "source_title": "Synthetic offline program_availability fixture",
+      "publisher": "Fictional admissions office",
+      "short_evidence": "Synthetic test premise only; invented and never fetched.",
+      "published_at": "2026-10-01",
+      "retrieved_at": "2026-10-02T10:00:00+08:00",
+      "tier": "T1",
+      "status": "missing",
+      "scope": "program",
+      "conflict_group": null,
+      "applicable_admission_year": 2026
+    },
+    "historical_volatility": "low",
+    "retest_risk": "low",
+    "fit_score": 80,
+    "dimensions": {
+      "competitive_position": 65,
+      "research_fit": 60,
+      "location_fit": 20
+    },
+    "dimension_bases": "Synthetic hand-selected 0-100 decision values, not predicted outcomes.",
+    "gates": [
+      {
+        "gate_id": "eligibility",
+        "status": "unknown",
+        "critical": true,
+        "evidence_status": "missing"
+      },
+      {
+        "gate_id": "deadline",
+        "status": "unknown",
+        "critical": true,
+        "evidence_status": "missing"
+      },
+      {
+        "gate_id": "program_availability",
+        "status": "unknown",
+        "critical": true,
+        "evidence_status": "missing"
+      },
+      {
+        "gate_id": "degree_type",
+        "status": "unknown",
+        "critical": true,
+        "evidence_status": "missing"
+      }
+    ],
+    "gate_bases": {
+      "eligibility": "catalog-unknown-eligibility",
+      "deadline": "catalog-unknown-deadline",
+      "program_availability": "catalog-unknown-program_availability",
+      "degree_type": "catalog-unknown-degree_type"
+    },
+    "sources": [
+      "catalog-unknown-eligibility",
+      "catalog-unknown-deadline",
+      "catalog-unknown-program_availability",
+      "catalog-unknown-degree_type",
+      "catalog-unknown-subjects",
+      "catalog-unknown-threshold"
+    ]
+  },
+  {
+    "candidate_id": "national-only",
+    "synthetic": true,
+    "pathway": "kaoyan",
+    "admission_year": 2026,
+    "institution": "Fictional Lineonly University",
+    "unit": "Fictional Computing Unit",
+    "program_code": "085400",
+    "program_name": "Synthetic Computing",
+    "degree_type": "professional-master",
+    "research_track": "Synthetic transparent systems",
+    "area": "A",
+    "category": "synthetic engineering",
+    "round": "regular-exam",
+    "deadline": "2026-10-20T17:00:00+08:00",
+    "status": "discovered",
+    "eligibility": "pass",
+    "evidence_confidence": "A",
+    "data_completeness": 1,
+    "completeness_basis": "Synthetic all selected decision dimensions present; source uncertainty is assessed separately.",
+    "subject_combination": {
+      "codes": [
+        "101",
+        "201",
+        "301",
+        "408"
+      ],
+      "evidence": [
+        {
+          "claim_id": "national-only-subjects",
+          "candidate_id": "national-only",
+          "field": "subjects",
+          "value": [
+            "101",
+            "201",
+            "301",
+            "408"
+          ],
+          "source_url": "https://example.invalid/synthetic/national-only/subjects",
+          "source_title": "Synthetic offline subjects fixture",
+          "publisher": "Fictional admissions office",
+          "short_evidence": "Synthetic test premise only; invented and never fetched.",
+          "published_at": "2026-10-01",
+          "retrieved_at": "2026-10-02T10:00:00+08:00",
+          "tier": "T1",
+          "status": "confirmed",
+          "scope": "program",
+          "conflict_group": null,
+          "applicable_admission_year": 2026
+        }
+      ]
+    },
+    "thresholds": [
+      {
+        "year": 2026,
+        "scope": "national",
+        "total": 300,
+        "subject_minimums": {
+          "101": 40,
+          "201": 40
+        },
+        "subject_codes": [
+          "101",
+          "201",
+          "301",
+          "408"
+        ],
+        "population": "ordinary applicants",
+        "institution": "Fictional Lineonly University",
+        "unit": "Fictional Computing Unit",
+        "program_code": "085400",
+        "research_track": "Synthetic transparent systems",
+        "area": "A",
+        "category": "synthetic engineering",
+        "source_ref": "national-only-threshold",
+        "evidence": {
+          "claim_id": "national-only-threshold",
+          "candidate_id": "national-only",
+          "field": "threshold",
+          "value": {
+            "year": 2026,
+            "scope": "national",
+            "total": 300,
+            "subject_minimums": {
+              "101": 40,
+              "201": 40
+            },
+            "subject_codes": [
+              "101",
+              "201",
+              "301",
+              "408"
+            ],
+            "population": "ordinary applicants",
+            "institution": "Fictional Lineonly University",
+            "unit": "Fictional Computing Unit",
+            "program_code": "085400",
+            "research_track": "Synthetic transparent systems",
+            "area": "A",
+            "category": "synthetic engineering",
+            "source_ref": "national-only-threshold"
+          },
+          "source_url": "https://example.invalid/synthetic/national-only/threshold",
+          "source_title": "Synthetic offline threshold fixture",
+          "publisher": "Fictional admissions office",
+          "short_evidence": "Synthetic test premise only; invented and never fetched.",
+          "published_at": "2026-10-01",
+          "retrieved_at": "2026-10-02T10:00:00+08:00",
+          "tier": "T1",
+          "status": "confirmed",
+          "scope": "program",
+          "conflict_group": null,
+          "applicable_admission_year": 2026
+        }
+      }
+    ],
+    "current_catalog": {
+      "claim_id": "national-only-program_availability",
+      "candidate_id": "national-only",
+      "field": "program_availability",
+      "value": true,
+      "source_url": "https://example.invalid/synthetic/national-only/program_availability",
+      "source_title": "Synthetic offline program_availability fixture",
+      "publisher": "Fictional admissions office",
+      "short_evidence": "Synthetic test premise only; invented and never fetched.",
+      "published_at": "2026-10-01",
+      "retrieved_at": "2026-10-02T10:00:00+08:00",
+      "tier": "T1",
+      "status": "confirmed",
+      "scope": "program",
+      "conflict_group": null,
+      "applicable_admission_year": 2026
+    },
+    "historical_volatility": "low",
+    "retest_risk": "low",
+    "fit_score": 80,
+    "dimensions": {
+      "competitive_position": 65,
+      "research_fit": 60,
+      "location_fit": 20
+    },
+    "dimension_bases": "Synthetic hand-selected 0-100 decision values, not predicted outcomes.",
+    "gates": [
+      {
+        "gate_id": "eligibility",
+        "status": "unknown",
+        "critical": true,
+        "evidence_status": "missing"
+      },
+      {
+        "gate_id": "deadline",
+        "status": "unknown",
+        "critical": true,
+        "evidence_status": "missing"
+      },
+      {
+        "gate_id": "program_availability",
+        "status": "unknown",
+        "critical": true,
+        "evidence_status": "missing"
+      },
+      {
+        "gate_id": "degree_type",
+        "status": "unknown",
+        "critical": true,
+        "evidence_status": "missing"
+      }
+    ],
+    "gate_bases": {
+      "eligibility": "national-only-eligibility",
+      "deadline": "national-only-deadline",
+      "program_availability": "national-only-program_availability",
+      "degree_type": "national-only-degree_type"
+    },
+    "sources": [
+      "national-only-eligibility",
+      "national-only-deadline",
+      "national-only-program_availability",
+      "national-only-degree_type",
+      "national-only-subjects",
+      "national-only-threshold"
+    ]
+  }
+]
