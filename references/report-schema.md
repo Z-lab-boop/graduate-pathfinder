@@ -1,4 +1,8 @@
-# v0.1 报告契约
+# 分路径报告契约
+
+仅执行当前路径部分：保研 v0.1 用下节，考研 v0.2 用 [考研报告](#考研-v02-报告)。不混合两类分组或把同名 reach 解释成同一计算规则。
+
+## 保研 v0.1 报告
 
 deep portfolio 的 report.md 必须按下列顺序，使用对应中文标题；缺资料的章节也保留并注明未执行原因。quick screen 可在聊天压缩同一逻辑；target comparison 不扩大发现范围。JSON 输入见 [案例契约](case-schema.md)，算法见 [决策模型](decision-model.md)，采证见 [来源规则](source-policy.md)。
 
@@ -14,7 +18,7 @@ deep portfolio 的 report.md 必须按下列顺序，使用对应中文标题；
 10. **来源（sources）**：每项 claim_id、对应目标/断言、可点击 source_url、标题、发布者、发布/检索日期、tier/status/scope；缺失占位说明检索入口与未找到项。按当前年份与历史资料分清适用范围，短引文遵守许可，不复制整页。
 11. **边界声明（boundary statement）**：明确“分数、排名与分组用于当前候选集合及权重下的决策比较；不代表个人录取概率，safety 不保证录取。资格和日期以适用年份官方公告为准，未知与冲突仍需核验。本技能不自动提交、代投、联系导师或接受录取；申请者数据仅本地保存。”
 
-## candidate-matrix.csv
+### 保研 candidate-matrix.csv
 
 UTF-8，第一行为固定列名，使用 CSV 转义；任何缺失值用空单元格，不能写成 0。数组/对象列用紧凑 JSON 文本；rank 空值只用于 monitor/excluded 或未评分。列顺序：
 
@@ -24,8 +28,36 @@ candidate_id,institution,unit,program_code,program_name,research_track,degree_ty
 
 已分析候选的 eligibility 必须取 `ranked[candidate_id]["eligibility"]`（门槛重算结果），不得取候选原始标签；例如原值 pass、confirmed fail 门槛应交付 fail/excluded。sources 来自候选的 claim_id，门槛数组来自 gate_evaluation，评分/分组列来自脚本结果；其余来自候选原记录。未分析时 eligibility 保留原值，并在报告明确其尚未由门槛重算；评分、权重覆盖和分组列留空，不能伪造脚本结果。含原始权重/维度依据的解释放报告并引用案例文件。若 CSV 将进入电子表格，防止来源文本被当作公式执行，同时保留本地 JSON 原值。
 
-## refresh 的 changes.md
+## 共享 refresh 的 changes.md
 
 开头记录旧/新分析时间、候选范围、权重与来源复查范围；随后按 added / removed / changed / newly_conflicted / unavailable 分类（空分类写无）。每条含 candidate_id、claim_id 或字段、旧/新归一化值、来源、变化时间、影响门槛/置信度/分组及待办。删除仅指当前范围排除，旧证据与用户备注保留；无法访问单列 unavailable，不认定撤招。变化后重算再发布报告，禁止覆盖未核验用户状态。
 
 机器验证、合成测试和行为清单复核各自标明范围；它们不证明真实录取、材料真实性或外部操作已完成。报告不能含真实申请者的敏感标识；公开示例只使用合成案例。
+
+## 考研 v0.2 报告
+
+deep shortlist 的 report.md 按下列顺序保留全部章节；unknown/未执行须注明原因。quick screen 可在聊天压缩，target comparison 只覆盖指定目标。计算输入与定义见 [考研流程](kaoyan-mode.md) 和 [阈值契约](threshold-semantics.md)；不使用保研 candidate-matrix 列、portfolio_group 或 safety。
+
+1. **结论与当前项目身份**：明确入学年/考试年、截至时间、候选范围和本轮版本；逐目标列 candidate_id、学校、院系、专业代码/名称、方向、学位、regular-exam、学习方式、地区/类别和计划/人群。保留 current_catalog 的 claim_id 与本年核验边界，未知不填猜测。
+2. **科目门**：用户与目标完整有序代码、status、differences（1 起位置）、switch_required、source_refs/reasons；愿意换科的用户声明与目标科目分数情景分别说明，不声称换科完成。
+3. **分数情景**：用户区间与依据、year/scope/population/statistic/subject_codes、total/subjects，不生成预测分数；明确与现年或显式历史年份比较。
+4. **分层阈值表**：每条原记录的 year/scope/身份限定/area/category/population/statistic/完整 subject_codes/total/subject_minimums/source_ref，comparisons 的 total_margin/subject_margins/status/descriptive_only/reasons。完整列 excluded_thresholds 及不兼容或缺证原因，不能挑低线。国家线不能当作专业线；已录取分布不能当复试线，各年不合并或外推未来线。
+5. **历史波动**：逐年同口径原来源与缺口，historical_volatility 的 low/medium/high/unknown 和依据；口径变化、缺年、科目变化须明确，不用未知证明低波动。
+6. **复试风险**：本年官方复试规则、考核内容/资格限制/计划等证据，retest_risk 的类别、理由与未核验项；分数 above 不证明资格或录取。
+7. **适配与硬约束**：用户 fit_score 的 0–100 尺度与理由、地区/学习方式/预算/职业研究适配、换科成本及 gates 的有效状态与证据。completeness_basis 给分母与计数，data_completeness 不替代证据置信度或偏好权重覆盖率。
+8. **证据置信度与风险带**：审计与声明中的较差 A–D、data_completeness、全部审计 errors/conflicts/过期/二手/未知。注明完整 evidence-audit.json 的 claims/candidate_summary/conflicts/errors 与审计时间；仅摘要不能确认当前关键字段。current_catalog 须与同 claim_id 的原审计 record 内容及值类型完全一致且有效/confirmed/无过期争议。列每目标 risk_band、reasons/source_refs/gate_evaluation，按考研流程明确 excluded/monitor/reach/match/conservative 的决策规则与未校准边界。
+9. **敏感性**：本轮 candidate.sensitivity 的来源与完整 baseline_order/baseline_weights/scenarios/winner_set/stability/counterfactual_threshold；未执行原因保留。delta=0.10 与 0.01 网格阈值只表示偏好权重变化，无阈值不证明全局稳健，不足两目标不能称稳定。逐最高适配并列目标的赢家集合合并展示；分数、科目、候选/事实变化另列重算情景，不能冒称共享脚本已执行。
+10. **Shortlist 与用户选择**：原样交付 `primary,decision_set,requires_user_decision,alternatives,monitor,excluded,reasons`，空列表与 null 均保留。只从 match/conservative 中按适配选择；唯一最高适配且 stable/winner_set 精确为该目标（若有 baseline_order 则首项一致）才给 primary；同分/fragile/缺敏感性给 decision_set，不用 ID 打破平局。reach alternatives、monitor 与 excluded 的原因保留，不把它们升级为可执行主目标。
+11. **未完成官方核验与下一步**：逐 candidate_id/claim_id 给待查事实、真实官方入口、责任人（默认用户）、依赖与期限/未知期限；截止/日程原时区、精度和冲突说明，未知不写进 ICS。refresh 链接 changes.md，说明集合、用户区间、权重、规则和证据变化影响。
+12. **来源**：逐 claim_id 列断言、可点击 URL、标题、发布者、发布/实际检索日、tier/status/effective_status/scope/applicable_admission_year；历史阈值来源必须支持当年的科目、全部身份与人群限定。本年科目来源不能替代历史适用性；机器审计不验证网页真实性。
+13. **边界声明**：明确“科目门、分数区间的算术位置、风险带与 shortlist 用于当前证据和用户偏好下的择校比较，不代表个人录取概率。国家线、院校/院系/专业/方向线与已录取分布分别呈现，历史线不预测未来线；conservative 不保证录取。资格、目录、科目和时间以适用年份官方公告为准，未知/冲突仍需核验。本技能不自动提交、代投、联系导师或接受录取；申请者数据仅本地保存。”
+
+### 考研 candidate-matrix.csv
+
+UTF-8，标准 CSV 转义，空值留空，数组/对象使用紧凑 JSON；规则同保研表的公式防护与隐私要求。固定列顺序：
+
+```text
+candidate_id,institution,unit,program_code,program_name,research_track,degree_type,round,admission_year,study_mode,area,category,population,status,eligibility,risk_band,subject_match,score_scenario,historical_volatility,retest_risk,fit_score,evidence_confidence,data_completeness,sensitivity,current_catalog,thresholds,gate_evaluation,reasons,source_refs,sources
+```
+
+subject_match/score_scenario/risk_band/置信度等分析字段取 kaoyan-assessments.json 完整返回值；eligibility 取 gate_evaluation.eligibility，若科目 fail 导致提前 excluded、无 gate_evaluation，则写 fail 并以 subject_match 理由说明；未分析留空且报告注明未执行。其余身份/目录/原阈值取候选记录，缺失不补零。基础候选 status 不由分析自动推进。shortlist 固定字段另存 kaoyan-shortlist.json，不将 decision_set 缩成一名赢家。保存完整 evidence-audit.json；报告/表格不能替代其原始 claims。
