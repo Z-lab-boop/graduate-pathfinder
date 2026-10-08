@@ -11,7 +11,7 @@
 | deep shortlist | 官方核验、科目门、分数区间、风险带、偏好敏感性、shortlist 与报告 | 每个目标均有结果或 monitor/excluded 理由，必要验证完成；单主目标条件不足时保留 decision_set |
 | refresh | 复查既有案例的本年目录、科目、阈值来源、复试规则、费用及用户事实 | changes.md 覆盖新增/移除/变化/新冲突/不可访问，受影响分析重算，保留旧证据与用户备注 |
 
-先收集：明确入学年（另记考试年，不能默默换算）；专业类别/专业族及接受的具体专业；academic-master 或 professional-master；完整有序科目代码组合；用户预计总分与各科区间、情景年份/阈值 scope/人群；全日制/非全日制；地区、费用口径与预算、职业/研究偏好及硬约束；是否愿意换科目（preferences.willing_to_switch_subjects 必须为布尔）。未知保持 null/unknown，不由代理预测分数。
+先收集：明确入学年（另记考试年，不能默默换算）；专业类别/专业族及接受的具体专业；academic-master 或 professional-master；完整有序科目代码组合；用户预计总分与各科区间、情景年份/阈值 scope/人群；全日制/非全日制（study_mode 为 full-time/part-time）、专项计划（special_plan 为明确计划标识，无专项可明示 ordinary）；地区、费用口径与预算、职业/研究偏好及硬约束；是否愿意换科目（preferences.willing_to_switch_subjects 必须为布尔）。未知保持 null/unknown，不由代理预测分数。
 
 深度分析还需用户给定 fit_score（0–100）的尺度、理由、completeness_basis（决策字段分母与已知计数）、historical_volatility 与 retest_risk 的 low/medium/high 判断及依据。缺历史数据、复试规则或无法给出有依据的类别时保持 unknown，不把未知写成 low。偏好权重/维度未提供则不运行敏感性，shortlist 保留待用户决策。风险偏好、备考换科成本、位置与学费等约束均给出用户事实和官方规则各自依据。
 
@@ -29,11 +29,17 @@ current official 的计算口径为结构有效、T1/T2、confirmed、适用年�
 
 profile/candidate.subject_combination 均为 `{codes: [...], evidence: [...]}`；完整有序代码按 NFKC 与首尾空白归一化，保留前导零；证据 value 支持相同完整序列。无证据/争议为 unknown；确认不匹配且未明确愿意换科为 fail。愿意换科仅允许确认差异进入 pass，仍需报告 switch_required/differences；情景必须显式提供目标 subject_codes，不能沿用旧组合分数或声称已完成换科。
 
+将双方科目证据及每条 threshold.evidence 原样加入 evidence.json 并统一审计，不能只审计四个基础关键字段。直接决策调用科目/分数函数必须传完整 audit 第三参数；每个消费 claim_id 必须存在，审计 record 与嵌入记录递归内容及类型一致，valid=true、effective_status=confirmed、stale=false、conflict_groups=[]。审计失效不能被 raw status=confirmed 覆盖；科目 unknown、分数 insufficient_evidence 会保持 monitor，输出保留原记录、绑定理由和 source IDs。省略第三参数只为兼容直接形状/算术调用，不构成决策证据。
+
 thresholds 每条保留 year/scope/total/source_ref/subject_codes、population、已公布 subject_minimums、身份限定和 evidence；admitted_distribution 另有 statistic。每年的完整 subject_codes 必须由该年的阈值证据支持，不能从当前组合反推。evidence 的 claim_id=source_ref、candidate_id 对齐、applicable_admission_year=threshold.year，value 完整支持原阈值事实及限定，不能丢弃单科、人群、地区或类别。institution/unit/program/direction/admitted_distribution 的必需身份见阈值契约；所有已填写限定都须与目标一致。national 必须有非空 area/category，目标也必须明确且完全一致，population 文本不能替代这两项。国家线不能当作专业线；专业代码不会提升 scope。
+
+适用限定还包含 study_mode/special_plan：candidate、threshold、source payload 中的限制递归内容和值类型须一致；来源单独写明学习方式或专项时，不得忽略。支持字段清单和备注边界见阈值契约；非 null 的不支持限定（含任意 applicability 容器）拒绝，返回具体缺口，不靠人群文字隐式解释。
 
 score_scenario 为用户范围：year/scope/population/total=[low,high]/subjects={code:[low,high]}，描述统计另带 statistic，必要时显式 subject_codes。只比较同年、同 scope/人群/统计口径、同身份与完整科目的可用记录；每条公布最低分的单科均需用户范围。margin=[low-line,high-line]；所有下界严格高于线为 above，任一完整区间上界低于线为 below，其他为 overlaps（含等于）；缺项或兼容记录矛盾为 insufficient_evidence。comparisons 与 excluded_thresholds 均完整保留，不能只挑最低线。
 
 assess_kaoyan_candidate 第三参数必须传 audit_evidence 的完整输出 `{claims,candidate_summary,conflicts,errors}`，禁止只传 candidate_summary 或手写置信度。每个关键字段 eligibility/deadline/program_availability/degree_type 需同目标同入学年、非 null、当前官方且 effective_status=confirmed 的原始 claim，摘要也须无缺失/争议/无效/过期/二手依赖。summary-only 会以 current_critical_source_provenance_missing 留 monitor。先检查审计 errors、claims 和引用，再按有效证据重核 gates；原 confirmed 不能绕过审计失效。保留完整返回值。
+
+考研 gates 的来源扩展为 `evidence: [完整原始记录, ...]`，可另写 `source_refs: [claim_id, ...]`；既有 candidate.gate_bases[gate_id] 也作为必需解析的引用。每条原始证据必须属于该候选、适用本入学年、满足 current official，并与完整审计递归绑定；每一个引用都须由该 gate 的原始证据覆盖。缺原记录、额外未覆盖引用、来源变化、无效/过期/冲突均将原 pass/fail 降为 unknown。gate_evaluation.audit_bindings 保留声明门、所有引用和拒绝理由；即使失效门原来非 critical，也须 monitor，不能沿用旧 fail 排除。可用审计支持的 confirmed fail 仍 excluded；pass/fail 的事实推导由采证者说明，脚本只验证声明状态和依据可用性，不代替人工资格解释。
 
 ## 风险带与 shortlist
 

@@ -61,8 +61,228 @@ def assessment_inputs():
         record["field"] = field
         records.append(record)
     candidate["current_catalog"] = deepcopy(records[2])
+    candidate["gates"][0]["evidence"] = [deepcopy(records[0])]
+    candidate["gates"][0]["source_refs"] = ["eligibility"]
+    profile["subject_combination"]["evidence"][0]["claim_id"] = "profile-subjects"
+    records.extend(deepcopy(profile["subject_combination"]["evidence"]))
+    records.extend(deepcopy(candidate["subject_combination"]["evidence"]))
+    records.append(deepcopy(candidate["thresholds"][0]["evidence"]))
     audit = audit_evidence(records, datetime.fromisoformat(profile["audit_at"]))
     return profile, candidate, audit
+
+
+class FinalAuditBindingTests(unittest.TestCase):
+    """Catch trusting raw confirmed labels after a full audit invalidates them."""
+
+    def records(self, audit):
+        return [deepcopy(claim["record"]) for claim in audit["claims"]]
+
+    def audit(self, profile, records):
+        return audit_evidence(records, datetime.fromisoformat(profile["audit_at"]))
+
+    def test_audited_subject_conflict_becomes_unknown_and_monitor(self):
+        p, c, a = assessment_inputs()
+        records = self.records(a)
+        subject = next(r for r in records if r["claim_id"] == "subjects")
+        subject["conflict_group"] = "subject-disagreement"
+        c["subject_combination"]["evidence"][0] = deepcopy(subject)
+        contrary = deepcopy(subject)
+        contrary.update(claim_id="contrary-subjects", value=["101", "204", "301", "408"])
+        a = self.audit(p, records + [contrary])
+        result = assess_kaoyan.assess_kaoyan_candidate(p, c, a)
+        self.assertEqual(result["subject_match"]["status"], "unknown")
+        self.assertEqual(result["risk_band"], "monitor")
+        self.assertIn("subjects", result["source_refs"])
+
+    def test_consumed_subject_claim_missing_changed_or_unusable_is_unknown(self):
+        for mutation in ("missing", "changed", "stale", "invalid", "nested_type"):
+            with self.subTest(mutation=mutation):
+                p, c, a = assessment_inputs()
+                claim = next(r for r in a["claims"] if r["record"]["claim_id"] == "subjects")
+                if mutation == "missing":
+                    a["claims"].remove(claim)
+                elif mutation == "changed":
+                    claim["record"]["source_url"] += "/changed"
+                elif mutation == "nested_type":
+                    c["subject_combination"]["evidence"][0]["metadata"] = {"flag": True}
+                    claim["record"]["metadata"] = {"flag": 1}
+                else:
+                    claim["effective_status"] = mutation
+                    if mutation == "invalid":
+                        claim["valid"] = False
+                result = assess_kaoyan.assess_kaoyan_candidate(p, c, a)
+                self.assertEqual(result["subject_match"]["status"], "unknown")
+                self.assertEqual(result["risk_band"], "monitor")
+
+    def test_audited_threshold_conflict_and_payload_mismatch_are_insufficient(self):
+        for mutation in ("conflict", "changed", "nested_type", "missing", "stale", "invalid"):
+            with self.subTest(mutation=mutation):
+                p, c, a = assessment_inputs()
+                if mutation == "conflict":
+                    records = self.records(a)
+                    line = next(r for r in records if r["claim_id"] == "line")
+                    line["conflict_group"] = "line-disagreement"
+                    c["thresholds"][0]["evidence"] = deepcopy(line)
+                    contrary = deepcopy(line)
+                    contrary["claim_id"] = "contrary-line"
+                    contrary["value"]["total"] = 350
+                    a = self.audit(p, records + [contrary])
+                else:
+                    claim = next(r for r in a["claims"] if r["record"]["claim_id"] == "line")
+                    if mutation == "missing":
+                        a["claims"].remove(claim)
+                    elif mutation in ("changed", "nested_type"):
+                        claim["record"]["value"]["total"] = 350 if mutation == "changed" else 300.0
+                    else:
+                        claim["effective_status"] = mutation
+                        if mutation == "invalid":
+                            claim["valid"] = False
+                result = assess_kaoyan.assess_kaoyan_candidate(p, c, a)
+                self.assertEqual(result["score_scenario"]["status"], "insufficient_evidence")
+                self.assertEqual(result["risk_band"], "monitor")
+                self.assertEqual(result["score_scenario"]["excluded_thresholds"][0]["threshold"]["evidence"],
+                                 c["thresholds"][0]["evidence"])
+
+    def test_old_confirmed_gate_fail_loses_exclusion_when_audit_is_unusable(self):
+        for mutation in ("conflicted", "stale", "missing", "changed", "invalid"):
+            with self.subTest(mutation=mutation):
+                p, c, a = assessment_inputs()
+                c["gates"][0]["status"] = "fail"
+                claim = a["claims"][0]
+                if mutation == "missing":
+                    a["claims"].remove(claim)
+                elif mutation == "changed":
+                    claim["record"]["value"] = False
+                else:
+                    claim["effective_status"] = mutation
+                    if mutation == "invalid":
+                        claim["valid"] = False
+                result = assess_kaoyan.assess_kaoyan_candidate(p, c, a)
+                self.assertEqual(result["risk_band"], "monitor")
+                self.assertEqual(result["gate_evaluation"]["eligibility"], "unknown")
+
+    def test_confirmed_usable_audited_gate_failure_still_excludes(self):
+        p, c, a = assessment_inputs()
+        c["gates"][0]["status"] = "fail"
+        c["gates"][0]["evidence"][0]["value"] = False
+        records = self.records(a)
+        records[0]["value"] = False
+        a = self.audit(p, records)
+        result = assess_kaoyan.assess_kaoyan_candidate(p, c, a)
+        self.assertEqual(result["risk_band"], "excluded")
+        self.assertEqual(result["gate_evaluation"]["eligibility"], "fail")
+
+    def test_gate_pass_requires_every_referenced_audited_claim(self):
+        for mutation in ("missing_refs", "extra_ref", "changed_embedded", "wrong_candidate"):
+            p, c, a = assessment_inputs()
+            gate = c["gates"][0]
+            if mutation == "missing_refs":
+                gate.pop("evidence")
+                gate.pop("source_refs")
+            elif mutation == "extra_ref":
+                gate["source_refs"].append("unseen-rule")
+            elif mutation == "changed_embedded":
+                gate["evidence"][0]["value"] = False
+            else:
+                gate["evidence"][0]["candidate_id"] = "other"
+            self.assertEqual(assess_kaoyan.assess_kaoyan_candidate(p, c, a)["risk_band"], "monitor")
+
+    def test_unusable_noncritical_fail_also_requires_monitor(self):
+        p, c, a = assessment_inputs()
+        old_fail = deepcopy(c["gates"][0])
+        old_fail.update(gate_id="old-constraint", critical=False, status="fail")
+        old_fail["source_refs"] = ["unseen-rule"]
+        c["gates"].append(old_fail)
+        self.assertEqual(assess_kaoyan.assess_kaoyan_candidate(p, c, a)["risk_band"], "monitor")
+
+    def test_subject_output_keeps_raw_unusable_records_for_traceability(self):
+        p, c, a = assessment_inputs()
+        a["claims"] = []
+        result = assess_kaoyan.assess_kaoyan_candidate(p, c, a)
+        self.assertEqual(result["subject_match"].get("evidence_records"), {
+            "profile": p["subject_combination"]["evidence"],
+            "candidate": c["subject_combination"]["evidence"]})
+        self.assertIn("subject_audit_claim_missing", result["subject_match"]["reasons"])
+
+    def test_one_conflicted_compatible_line_blocks_favorable_other_line(self):
+        p, c, a = assessment_inputs()
+        other = deepcopy(c["thresholds"][0])
+        other["source_ref"] = other["evidence"]["claim_id"] = "other-line"
+        c["thresholds"].append(other)
+        records = self.records(a) + [deepcopy(other["evidence"])]
+        a = self.audit(p, records)
+        a["claims"][-1]["effective_status"] = "conflicted"
+        self.assertEqual(assess_kaoyan.assess_kaoyan_candidate(p, c, a)["risk_band"], "monitor")
+
+    def test_direct_apis_bind_full_audit_when_supplied_and_empty_audit_cannot_exclude(self):
+        p, c, a = assessment_inputs()
+        a["claims"] = []
+        self.assertEqual(assess_kaoyan.validate_subject_match(p, c, a)["status"], "unknown")
+        self.assertEqual(assess_kaoyan.compare_score_scenario(p, c, a)["status"], "insufficient_evidence")
+        c["subject_combination"] = combination(["101", "204", "301", "408"])
+        c["gates"][0]["status"] = "fail"
+        self.assertEqual(assess_kaoyan.assess_kaoyan_candidate(p, c, {})["risk_band"], "monitor")
+
+    def test_full_time_candidate_rejects_explicit_part_time_line(self):
+        p, c = inputs()
+        c["study_mode"] = "full-time"
+        line = c["thresholds"][0]
+        line["study_mode"] = line["evidence"]["value"]["study_mode"] = "part-time"
+        self.assertEqual(compare_score_scenario(p, c)["status"], "insufficient_evidence")
+
+    def test_source_only_study_or_special_plan_restriction_is_not_dropped(self):
+        for field, value in (("study_mode", "part-time"), ("special_plan", "veterans")):
+            p, c = inputs()
+            c[field] = value
+            c["thresholds"][0]["evidence"]["value"][field] = value
+            self.assertEqual(compare_score_scenario(p, c)["status"], "insufficient_evidence")
+
+    def test_special_plan_mismatch_and_unknown_target_are_insufficient(self):
+        for value in ("ordinary", None):
+            p, c = inputs()
+            c["special_plan"] = value
+            line = c["thresholds"][0]
+            line["special_plan"] = line["evidence"]["value"]["special_plan"] = "veterans"
+            self.assertEqual(compare_score_scenario(p, c)["status"], "insufficient_evidence")
+
+    def test_supported_study_mode_and_special_plan_exact_match_is_usable(self):
+        p, c = inputs()
+        line = c["thresholds"][0]
+        for field, value in (("study_mode", "full-time"), ("special_plan", "ordinary")):
+            c[field] = line[field] = line["evidence"]["value"][field] = value
+        result = compare_score_scenario(p, c)
+        self.assertEqual(result["status"], "above")
+        self.assertEqual(result["comparisons"][0]["threshold"]["special_plan"], "ordinary")
+
+    def test_unsupported_study_mode_values_and_candidate_qualifiers_block_comparison(self):
+        for mutation in ("mode", "candidate_qualifier"):
+            p, c = inputs()
+            line = c["thresholds"][0]
+            if mutation == "mode":
+                c["study_mode"] = line["study_mode"] = line["evidence"]["value"]["study_mode"] = "hybrid"
+            else:
+                c["applicability"] = {"applicant_type": "restricted cohort"}
+            self.assertEqual(compare_score_scenario(p, c)["status"], "insufficient_evidence")
+
+    def test_invalid_audited_critical_claim_cannot_cover_a_field(self):
+        p, c, a = assessment_inputs()
+        a["claims"][1]["valid"] = False
+        self.assertEqual(assess_kaoyan.assess_kaoyan_candidate(p, c, a)["risk_band"], "monitor")
+
+    def test_populated_unsupported_qualifiers_in_line_or_source_are_rejected(self):
+        for side in ("line", "source", "both"):
+            p, c = inputs()
+            line = c["thresholds"][0]
+            if side in ("line", "both"):
+                line["applicant_type"] = "restricted cohort"
+            if side in ("source", "both"):
+                line["evidence"]["value"]["applicant_type"] = "restricted cohort"
+            self.assertEqual(compare_score_scenario(p, c)["status"], "insufficient_evidence")
+
+    def test_threshold_source_payload_requires_recursive_exact_types(self):
+        p, c = inputs()
+        c["thresholds"][0]["evidence"]["value"]["subject_minimums"]["101"] = 40.0
+        self.assertEqual(compare_score_scenario(p, c)["status"], "insufficient_evidence")
 
 
 class KaoyanAssessmentTests(unittest.TestCase):
@@ -79,6 +299,9 @@ class KaoyanAssessmentTests(unittest.TestCase):
     def test_confirmed_subject_mismatch_is_excluded_even_with_missing_data(self):
         p, c, a = assessment_inputs()
         c["subject_combination"] = combination(["101", "204", "301", "408"])
+        # A confirmed mismatch needs a fresh audit of that exact new record.
+        subject = next(claim for claim in a["claims"] if claim["record"]["claim_id"] == "subjects")
+        subject["record"] = deepcopy(c["subject_combination"]["evidence"][0])
         c.pop("current_catalog")
         result = self.assess(p, c, a)
         self.assertEqual(result["risk_band"], "excluded")
@@ -109,7 +332,7 @@ class KaoyanAssessmentTests(unittest.TestCase):
         self.assertEqual(result["score_scenario"], compare_score_scenario(p, c))
         self.assertTrue(result["reasons"])
         self.assertEqual(set(result["source_refs"]),
-                         {"subjects", "line", "eligibility", "deadline", "program_availability", "degree_type"})
+                         {"subjects", "profile-subjects", "line", "eligibility", "deadline", "program_availability", "degree_type"})
 
     def test_overlap_with_high_volatility_or_retest_risk_is_reach(self):
         for field in ("historical_volatility", "retest_risk"):
@@ -161,7 +384,7 @@ class KaoyanAssessmentTests(unittest.TestCase):
                 line["evidence"]["value"] = {k: deepcopy(v) for k, v in line.items() if k != "evidence"}
             result = self.assess(p, c, a)
             self.assertEqual(result["risk_band"], "monitor")
-            self.assertEqual(result["score_scenario"], compare_score_scenario(p, c))
+            self.assertEqual(result["score_scenario"], compare_score_scenario(p, c, a))
 
     def test_stable_shortlist_uses_fit_among_eligible_match_and_conservative(self):
         def result(cid, band, fit):

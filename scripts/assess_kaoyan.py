@@ -20,6 +20,47 @@ IDENTITY_FIELDS = {
     "direction": ("institution", "unit", "program_code", "research_track"),
     "admitted_distribution": ("institution", "unit", "program_code"),
 }
+APPLICABILITY_FIELDS = {
+    "institution", "unit", "program_code", "research_track", "degree_type",
+    "round", "area", "category", "study_mode", "special_plan",
+}
+THRESHOLD_PAYLOAD_FIELDS = {
+    "year", "scope", "total", "population", "statistic", "subject_minimums", "subject_codes",
+} | APPLICABILITY_FIELDS
+THRESHOLD_METADATA_FIELDS = {"source_ref", "evidence", "notes"}
+
+
+def _typed_equal(left, right):
+    """JSON payload equality without bool/int or nested int/float coercion."""
+    if type(left) is not type(right):
+        return False
+    if isinstance(left, dict):
+        return left.keys() == right.keys() and all(_typed_equal(left[k], right[k]) for k in left)
+    if isinstance(left, list):
+        return len(left) == len(right) and all(_typed_equal(a, b) for a, b in zip(left, right))
+    return left == right
+
+
+def _audit_binding(record, evidence_audit, prefix):
+    """Resolve the consumed raw record against every audit entry with its ID."""
+    claims = evidence_audit.get("claims", []) if isinstance(evidence_audit, dict) else []
+    matches = [claim for claim in claims if isinstance(claim, dict)
+               and isinstance(claim.get("record"), dict)
+               and isinstance(record, dict) and _text(record.get("claim_id"))
+               and claim["record"].get("claim_id") == record["claim_id"]] if isinstance(claims, list) else []
+    if not matches:
+        return [prefix + "_audit_claim_missing"]
+    if any(not _typed_equal(claim["record"], record) for claim in matches):
+        return [prefix + "_audit_payload_mismatch"]
+    if any(claim.get("valid") is not True or claim.get("effective_status") != "confirmed"
+           or claim.get("stale") is not False or claim.get("conflict_groups") != [] for claim in matches):
+        return [prefix + "_audit_claim_unusable"]
+    return []
+
+
+def _unsupported_threshold_fields(record):
+    return [k for k, v in record.items()
+            if k not in THRESHOLD_PAYLOAD_FIELDS | THRESHOLD_METADATA_FIELDS and v is not None]
 
 
 def _number(value):
@@ -69,7 +110,7 @@ def _official(record, year, now, candidate_id=None):
     return 0 <= age <= 365 and (published is None or datetime.fromisoformat(published).date() <= now.date())
 
 
-def _subject_support(owner, year, now, candidate_id=None):
+def _subject_support(owner, year, now, candidate_id=None, evidence_audit=None):
     combination = owner.get("subject_combination")
     if not isinstance(combination, dict):
         return None, [], "missing_subject_combination"
@@ -78,18 +119,26 @@ def _subject_support(owner, year, now, candidate_id=None):
     if codes is None or not isinstance(records, list) or not records:
         return codes, [], "missing_codes_or_evidence"
     usable = []
+    refs = [r.get("claim_id") for r in records if isinstance(r, dict) and _text(r.get("claim_id"))]
     # Preserve disagreements instead of selecting one favorable record.
     for record in records:
+        if evidence_audit is not None:
+            reasons = _audit_binding(record, evidence_audit, "subject")
+            if reasons:
+                return codes, refs, reasons[0]
         if not _official(record, year, now, candidate_id) or _codes(record.get("value")) != codes:
-            return codes, [], "unconfirmed_stale_or_conflicting_subject_evidence"
+            return codes, refs, "unconfirmed_stale_or_conflicting_subject_evidence"
         usable.append(record["claim_id"])
     return codes, usable, None
 
 
-def validate_subject_match(profile: dict, candidate: dict) -> dict:
-    """A willingness gate may accept a switch, but never repairs absent evidence."""
+def validate_subject_match(profile: dict, candidate: dict, evidence_audit: dict | None = None) -> dict:
+    """Bind a supplied full audit; omitted audit is legacy direct-call checking."""
     result = {"status": "unknown", "differences": [], "switch_required": False,
-              "profile_codes": None, "candidate_codes": None, "source_refs": [], "reasons": []}
+              "profile_codes": None, "candidate_codes": None, "source_refs": [], "reasons": [],
+              "evidence_records": {name: deepcopy(owner["subject_combination"].get("evidence"))
+                                   if isinstance(owner.get("subject_combination"), dict) else None
+                                   for name, owner in (("profile", profile), ("candidate", candidate))}}
     if profile.get("pathway") != "kaoyan" or candidate.get("pathway") != "kaoyan":
         result["reasons"].append("kaoyan_pathway_required")
         return result
@@ -102,8 +151,8 @@ def validate_subject_match(profile: dict, candidate: dict) -> dict:
     except (ValueError, TypeError, AttributeError):
         result["reasons"].append("invalid_audit_at")
         return result
-    p_codes, p_refs, p_reason = _subject_support(profile, year, now)
-    c_codes, c_refs, c_reason = _subject_support(candidate, year, now, candidate.get("candidate_id"))
+    p_codes, p_refs, p_reason = _subject_support(profile, year, now, evidence_audit=evidence_audit)
+    c_codes, c_refs, c_reason = _subject_support(candidate, year, now, candidate.get("candidate_id"), evidence_audit)
     result.update(profile_codes=p_codes, candidate_codes=c_codes, source_refs=p_refs + c_refs)
     if p_codes and c_codes:
         for index in range(max(len(p_codes), len(c_codes))):
@@ -134,6 +183,11 @@ def classify_threshold(record: dict) -> dict:
         raise ValueError("threshold requires a finite nonnegative total and source_ref")
     if record["scope"] == "admitted_distribution" and not _text(record.get("statistic")):
         raise ValueError("admitted_distribution requires a named statistic")
+    unsupported = _unsupported_threshold_fields(record)
+    if unsupported:
+        raise ValueError("unsupported_threshold_qualifiers:" + ",".join(sorted(unsupported)))
+    if record.get("study_mode") is not None and record["study_mode"] not in ("full-time", "part-time"):
+        raise ValueError("study_mode must be full-time or part-time")
     minimums = record.get("subject_minimums", {})
     if not isinstance(minimums, dict) or any(not _text(k) or not _number(v) for k, v in minimums.items()):
         raise ValueError("subject_minimums must map subject codes to finite nonnegative scores")
@@ -156,11 +210,14 @@ def _margin_status(margin):
     return "above" if margin[0] > 0 else ("below" if margin[1] < 0 else "overlaps")
 
 
-def compare_score_scenario(profile: dict, candidate: dict) -> dict:
-    """Compare an explicitly selected year/scope/population without future inference."""
+def compare_score_scenario(profile: dict, candidate: dict, evidence_audit: dict | None = None) -> dict:
+    """Bind supplied audit and compare only the explicit year/scope/population."""
     result = {"status": "insufficient_evidence", "comparisons": [], "excluded_thresholds": [], "reasons": []}
     if profile.get("pathway") != "kaoyan" or candidate.get("pathway") != "kaoyan":
         result["reasons"] = ["kaoyan_pathway_required"]
+        return result
+    if candidate.get("applicability") is not None:
+        result["reasons"] = ["unsupported_candidate_applicability_qualifiers"]
         return result
     scenario = profile.get("score_scenario")
     if (not isinstance(scenario, dict) or type(scenario.get("year")) is not int
@@ -168,7 +225,7 @@ def compare_score_scenario(profile: dict, candidate: dict) -> dict:
             or _range(scenario.get("total")) is None):
         result["reasons"] = ["missing_or_invalid_score_scenario"]
         return result
-    match = validate_subject_match(profile, candidate)
+    match = validate_subject_match(profile, candidate, evidence_audit)
     result["subject_match"] = match
     scenario_codes = _codes(scenario.get("subject_codes", match["profile_codes"]))
     if match["status"] != "pass" or scenario_codes != match["candidate_codes"]:
@@ -183,6 +240,7 @@ def compare_score_scenario(profile: dict, candidate: dict) -> dict:
     if not isinstance(records, list) or not records:
         result["reasons"] = ["no_threshold_records"]
         return result
+    binding_failed = False
     for raw in records:
         reasons = []
         try:
@@ -209,21 +267,25 @@ def compare_score_scenario(profile: dict, candidate: dict) -> dict:
             for field in ("area", "category"):
                 if not _text(threshold.get(field)) or not _text(candidate.get(field)):
                     reasons.append("national_" + field + "_applicability_required")
-        for field in ("institution", "unit", "program_code", "research_track", "degree_type", "round", "area", "category"):
+        for field in sorted(APPLICABILITY_FIELDS):
             if threshold.get(field) is not None and (
-                    not _text(threshold[field]) or threshold[field] != candidate.get(field)):
+                    not _text(threshold[field]) or not _typed_equal(threshold[field], candidate.get(field))):
                 reasons.append(field + "_mismatch")
         ev = threshold.get("evidence")
+        if evidence_audit is not None:
+            binding_reasons = _audit_binding(ev, evidence_audit, "threshold")
+            reasons.extend(binding_reasons)
+            if binding_reasons and threshold["year"] == scenario["year"] and threshold["scope"] == scenario["scope"]:
+                binding_failed = True
         if (not _official(ev, threshold["year"], now, candidate.get("candidate_id"))
                 or ev.get("claim_id") != threshold["source_ref"]):
             reasons.append("current_official_threshold_evidence_required")
-        payload_fields = {"year", "scope", "total", "population", "statistic", "subject_minimums", "subject_codes",
-                          "institution", "unit", "program_code", "research_track", "degree_type",
-                          "round", "area", "category"}
-        expected_value = {k: v for k, v in raw.items() if k in payload_fields}
+        expected_value = {k: v for k, v in raw.items() if k in THRESHOLD_PAYLOAD_FIELDS}
         source_value = ev.get("value") if isinstance(ev, dict) else None
-        source_payload = {k: v for k, v in source_value.items() if k in payload_fields} if isinstance(source_value, dict) else None
-        if source_payload != expected_value:
+        source_payload = {k: v for k, v in source_value.items() if k in THRESHOLD_PAYLOAD_FIELDS} if isinstance(source_value, dict) else None
+        if isinstance(source_value, dict) and _unsupported_threshold_fields(source_value):
+            reasons.append("unsupported_source_threshold_qualifiers")
+        if not _typed_equal(source_payload, expected_value):
             reasons.append("threshold_content_not_supported_by_source")
         if reasons:
             result["excluded_thresholds"].append({"threshold": threshold, "reasons": reasons})
@@ -245,11 +307,61 @@ def compare_score_scenario(profile: dict, candidate: dict) -> dict:
             comparison["status"] = "below" if "below" in statuses else ("overlaps" if "overlaps" in statuses else "above")
         result["comparisons"].append(comparison)
     statuses = [c["status"] for c in result["comparisons"]]
-    if statuses and "insufficient_evidence" not in statuses:
+    if binding_failed:
+        result["reasons"] = ["consumed_threshold_audit_binding_failed"]
+    elif statuses and "insufficient_evidence" not in statuses:
         result["status"] = statuses[0] if len(set(statuses)) == 1 else "insufficient_evidence"
         result["reasons"] = ["compatible_scoped_comparison" if len(set(statuses)) == 1 else "conflicting_compatible_thresholds"]
     else:
         result["reasons"] = ["no_complete_compatible_threshold_comparison"]
+    return result
+
+
+def _audited_gates(profile, candidate, evidence_audit):
+    """Keep declared gates, and downgrade labels when any basis is unusable."""
+    raw_gates = candidate.get("gates", [])
+    evaluate_gates(raw_gates)  # Retain the shared gate shape contract.
+    gates = deepcopy(raw_gates)
+    bindings = []
+    for raw_gate, gate in zip(raw_gates, gates):
+        records = gate.get("evidence", [])
+        reasons = []
+        refs = gate.get("source_refs", [])
+        if not isinstance(refs, list) or any(not _text(ref) for ref in refs):
+            reasons.append("gate_source_refs_invalid")
+            refs = []
+        refs = list(refs)
+        bases = candidate.get("gate_bases", {})
+        basis = bases.get(gate["gate_id"]) if isinstance(bases, dict) else None
+        if basis is not None:
+            if _text(basis):
+                refs.append(basis)
+            else:
+                reasons.append("gate_basis_invalid")
+        if not isinstance(records, list) or not records:
+            reasons.append("gate_raw_evidence_missing")
+            records = []
+        refs.extend(record.get("claim_id") for record in records
+                    if isinstance(record, dict) and _text(record.get("claim_id")))
+        for record in records:
+            reasons.extend(_audit_binding(record, evidence_audit, "gate"))
+            try:
+                official = _official(record, profile.get("admission_year"), _now(profile), candidate["candidate_id"])
+            except (ValueError, TypeError, AttributeError):
+                official = False
+            if not official:
+                reasons.append("current_official_gate_evidence_required")
+        record_refs = {record.get("claim_id") for record in records if isinstance(record, dict)
+                       and _text(record.get("claim_id"))}
+        if not refs or any(ref not in record_refs for ref in refs):
+            reasons.append("gate_referenced_claim_missing")
+        if reasons:
+            gate["status"] = "unknown"
+            gate["evidence_status"] = "missing"
+        bindings.append({"gate": deepcopy(raw_gate),
+                         "source_refs": sorted(set(refs)), "reasons": sorted(set(reasons))})
+    result = evaluate_gates(gates)
+    result["audit_bindings"] = bindings
     return result
 
 
@@ -268,8 +380,12 @@ def assess_kaoyan_candidate(profile: dict, candidate: dict, evidence_audit: dict
     candidate_id = candidate.get("candidate_id")
     if not _text(candidate_id):
         raise ValueError("candidate_id must be a non-empty string")
-    subject_match = validate_subject_match(profile, candidate)
-    score_scenario = compare_score_scenario(profile, candidate)
+    # Passing even an empty audit is deliberate: legacy direct calls cannot
+    # supply non-audited evidence to an assessment.
+    if not isinstance(evidence_audit, dict):
+        evidence_audit = {}
+    subject_match = validate_subject_match(profile, candidate, evidence_audit)
+    score_scenario = compare_score_scenario(profile, candidate, evidence_audit)
     summary_map = evidence_audit.get("candidate_summary", evidence_audit)
     summary = summary_map.get(candidate_id, {}) if isinstance(summary_map, dict) else {}
     if not isinstance(summary, dict):
@@ -298,6 +414,9 @@ def assess_kaoyan_candidate(profile: dict, candidate: dict, evidence_audit: dict
     catalog = candidate.get("current_catalog")
     if isinstance(catalog, dict):
         refs.append(catalog.get("claim_id"))
+    gates = _audited_gates(profile, candidate, evidence_audit)
+    result["gate_evaluation"] = gates
+    refs.extend(ref for binding in gates["audit_bindings"] for ref in binding["source_refs"])
     for claim in evidence_audit.get("claims", []):
         record = claim.get("record", {}) if isinstance(claim, dict) else {}
         if isinstance(record, dict) and record.get("candidate_id") == candidate_id:
@@ -306,8 +425,6 @@ def assess_kaoyan_candidate(profile: dict, candidate: dict, evidence_audit: dict
     if subject_match["status"] == "fail":
         result.update(risk_band="excluded", reasons=["confirmed_subject_mismatch"])
         return result
-    gates = evaluate_gates(candidate.get("gates", []))
-    result["gate_evaluation"] = gates
     if gates["eligibility"] == "fail":
         result.update(risk_band="excluded", reasons=["confirmed_gate_failure"])
         return result
@@ -324,18 +441,7 @@ def assess_kaoyan_candidate(profile: dict, candidate: dict, evidence_audit: dict
         reasons.append("current_catalog_unknown")
     claims = evidence_audit.get("claims", [])
     if isinstance(catalog, dict) and _text(catalog.get("claim_id")):
-        catalog_claims = [claim for claim in claims if isinstance(claim, dict)
-                          and isinstance(claim.get("record"), dict)
-                          and claim["record"].get("claim_id") == catalog["claim_id"]]
-        if not catalog_claims:
-            reasons.append("current_catalog_audit_claim_missing")
-        elif any(claim["record"] != catalog or any(
-                type(claim["record"].get(key)) is not type(value) for key, value in catalog.items())
-                 for claim in catalog_claims):
-            reasons.append("current_catalog_audit_payload_mismatch")
-        elif any(claim.get("valid") is not True or claim.get("effective_status") != "confirmed"
-                 or claim.get("stale") or claim.get("conflict_groups") for claim in catalog_claims):
-            reasons.append("current_catalog_audit_claim_unusable")
+        reasons.extend(_audit_binding(catalog, evidence_audit, "current_catalog"))
     try:
         if any(isinstance(claim, dict) and isinstance(claim.get("record"), dict)
                and claim["record"].get("field") == "program_availability"
@@ -347,6 +453,8 @@ def assess_kaoyan_candidate(profile: dict, candidate: dict, evidence_audit: dict
         reasons.append("current_catalog_audit_claim_unusable")
     if gates["eligibility"] != "pass":
         reasons.append("critical_gates_unknown")
+    if any(binding["reasons"] for binding in gates["audit_bindings"]):
+        reasons.append("gate_audit_binding_failed")
     fields = summary.get("critical_fields", {})
     fields_known = isinstance(fields, dict) and all(
         isinstance(fields.get(field), dict) and fields[field].get("fresh_official_record_indexes")
@@ -362,6 +470,7 @@ def assess_kaoyan_candidate(profile: dict, candidate: dict, evidence_audit: dict
                 isinstance(claim, dict) and isinstance(claim.get("record"), dict)
                 and claim["record"].get("field") == field
                 and claim["record"].get("value") is not None
+                and claim.get("valid") is True
                 and claim.get("effective_status") == "confirmed"
                 and not claim.get("stale") and not claim.get("conflict_groups")
                 and _official(claim["record"], profile.get("admission_year"), _now(profile), candidate_id)

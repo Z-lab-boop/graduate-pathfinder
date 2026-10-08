@@ -64,15 +64,19 @@ class V02IntegrationTests(unittest.TestCase):
                 claim = next(c for c in audit["claims"] if c["record"]["claim_id"] == record["claim_id"])
                 gate["evidence_status"] = claim["effective_status"]
                 gate["status"] = "pass" if claim["effective_status"] == "confirmed" else "unknown"
-            subjects = validate_subject_match(profile, candidate)
+                gate["evidence"] = [copy.deepcopy(record)]
+                gate["source_refs"] = [record["claim_id"]]
+            subjects = validate_subject_match(profile, candidate, audit)
             candidate["gates"].append({"gate_id": "subject_match", "critical": True,
                                       "status": subjects["status"],
-                                      "evidence_status": "confirmed" if subjects["status"] != "unknown" else "missing"})
-            scenario = compare_score_scenario(profile, candidate)
+                                      "evidence_status": "confirmed" if subjects["status"] != "unknown" else "missing",
+                                      "evidence": copy.deepcopy(candidate["subject_combination"]["evidence"])})
+            scenario = compare_score_scenario(profile, candidate, audit)
             compatible = scenario["status"] in {"above", "overlaps", "below"}
             candidate["gates"].append({"gate_id": "scoped_comparison", "critical": True,
                                       "status": "pass" if compatible else "unknown",
-                                      "evidence_status": "confirmed" if compatible else "missing"})
+                                      "evidence_status": "confirmed" if compatible else "missing",
+                                      "evidence": [copy.deepcopy(line["evidence"]) for line in candidate["thresholds"]]})
         sensitivity = analyze_sensitivity(scoring, profile["preferences"]["criterion_weights"])
         self.assertEqual(sensitivity["baseline_order"][:2], ["research-first", "location-first"])
         self.assertEqual(sensitivity["stability"], "fragile")
@@ -98,14 +102,14 @@ class V02IntegrationTests(unittest.TestCase):
         national_profile = copy.deepcopy(profile)
         national_profile["score_scenario"]["scope"] = "national"
         national_candidate = next(c for c in scoring if c["candidate_id"] == "national-only")
-        national_comparison = compare_score_scenario(national_profile, national_candidate)
+        national_comparison = compare_score_scenario(national_profile, national_candidate, audit)
         self.assertEqual(national_comparison["status"], "above")
         self.assertEqual(national_comparison["comparisons"][0]["threshold"]["scope"], "national")
         self.assertFalse(national_comparison["comparisons"][0]["threshold"]["is_program_specific"])
         for field in ("area", "category", "institution", "unit", "program_code", "research_track"):
             wrong_target = copy.deepcopy(national_candidate)
             wrong_target[field] = "different synthetic applicability"
-            self.assertEqual(compare_score_scenario(national_profile, wrong_target)["status"],
+            self.assertEqual(compare_score_scenario(national_profile, wrong_target, audit)["status"],
                              "insufficient_evidence")
         for cid in ("research-first", "location-first"):
             self.assertEqual(results[cid]["subject_match"]["status"], "pass")
