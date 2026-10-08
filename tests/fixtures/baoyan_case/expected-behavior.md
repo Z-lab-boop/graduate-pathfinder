@@ -8,6 +8,7 @@
 - [ ] 社区消息与本年官方公告相抵触：遵循官方源优先，保留冲突记录和 conflict_group，未经范围核验不能悄悄覆盖。
 - [ ] 往年公告、本年检索：记录适用年份缺口，不能因检索日期新就视为 confirmed；关键未知进入 monitor。
 - [ ] 经确认的关键不满足项进入 excluded；资格确认后才按显式维度、覆盖率和置信度构建 reach/core/safety；证据缺失进入 monitor。
+- [ ] 合成候选原始 eligibility=pass、关键门槛 confirmed fail：已分析 CSV 的 eligibility 取 ranked[candidate_id]["eligibility"]，交付 fail/excluded；未分析时保留原始 eligibility 并注明尚未门槛重算，评分/覆盖率/分组留空。
 - [ ] 缺评分维度：不补零、不从学校名气推算；用户给定尺度、权重与依据才做排序。
 - [ ] 排名仅在当前候选集合和权重配置下比较；不同集合、权重或更新轮次不直接比较 rank。
 - [ ] 两场合成考核时间重叠：输出冲突与原时区；时间未知时记录待核验，不能伪造冲突或可兼顾结论。

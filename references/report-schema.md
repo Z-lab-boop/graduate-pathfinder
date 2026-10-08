@@ -22,7 +22,7 @@ UTF-8，第一行为固定列名，使用 CSV 转义；任何缺失值用空单�
 candidate_id,institution,unit,program_code,program_name,research_track,degree_type,round,admission_year,status,eligibility,portfolio_group,weighted_score,rank,evidence_confidence,data_completeness,weight_coverage,deadline,failed_gates,unknown_critical_gates,normalized_weights,dimension_contributions,grouping_inputs,sources
 ```
 
-除 sources 来自候选的 claim_id，门槛数组来自 gate_evaluation，评分/分组列来自脚本结果；其余来自候选原记录。未评分时评分、权重覆盖和分组列留空并在报告解释，不能伪造脚本结果。含原始权重/维度依据的解释放报告并引用案例文件。若 CSV 将进入电子表格，防止来源文本被当作公式执行，同时保留本地 JSON 原值。
+已分析候选的 eligibility 必须取 `ranked[candidate_id]["eligibility"]`（门槛重算结果），不得取候选原始标签；例如原值 pass、confirmed fail 门槛应交付 fail/excluded。sources 来自候选的 claim_id，门槛数组来自 gate_evaluation，评分/分组列来自脚本结果；其余来自候选原记录。未分析时 eligibility 保留原值，并在报告明确其尚未由门槛重算；评分、权重覆盖和分组列留空，不能伪造脚本结果。含原始权重/维度依据的解释放报告并引用案例文件。若 CSV 将进入电子表格，防止来源文本被当作公式执行，同时保留本地 JSON 原值。
 
 ## refresh 的 changes.md
 
