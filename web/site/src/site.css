@@ -1,0 +1,58 @@
+:root {
+  color-scheme: light;
+  --paper: #f5f0e5;
+  --flax: #e8dfcb;
+  --ink: #182a32;
+  --teal: #245b55;
+  --cinnabar: #9b3325;
+  --brass: #715820;
+  --plum: #623e5a;
+  --focus-light: #9b3325;
+  --focus-dark: #f5d779;
+  --focus: var(--focus-light);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans CJK SC", sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  line-height: 1.65;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 0; }
+a { color: inherit; text-underline-offset: 0.22em; }
+button { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+.shell { width: min(100% - 2.5rem, 76rem); margin-inline: auto; }
+.skip-link { display: inline-block; margin: 0.7rem 1.25rem; font-size: 0.85rem; }
+.site-header { display: flex; align-items: center; flex-wrap: wrap; gap: 1.25rem; padding-block: 1.2rem; border-block: 1px solid var(--ink); }
+.brand { font-family: Georgia, "Songti SC", serif; font-size: 1.4rem; font-weight: 700; text-decoration: none; }
+nav { display: flex; flex-wrap: wrap; gap: 1.3rem; margin-inline-start: auto; }
+nav a { padding: 0.35rem 0; text-decoration: none; }
+nav a[aria-current="page"] { border-bottom: 2px solid var(--cinnabar); }
+.language-switch { background: transparent; border: 1px solid var(--ink); border-radius: 0; padding: 0.45rem 0.8rem; color: var(--ink); cursor: pointer; }
+main { padding-block: clamp(3rem, 7vw, 7rem); min-height: 60vh; }
+.eyebrow, .synthetic-label { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cinnabar); }
+h1, h2 { font-family: Georgia, "Songti SC", "STSong", serif; font-weight: 500; line-height: 1.12; text-wrap: balance; }
+h1 { font-size: clamp(2.7rem, 6.4vw, 5.8rem); max-width: 15ch; margin: 1.5rem 0; overflow-wrap: break-word; }
+h2 { font-size: clamp(1.6rem, 3vw, 2.5rem); }
+p { max-width: 65ch; }
+.intro { font-size: clamp(1.05rem, 2vw, 1.3rem); }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1.1rem 2rem; margin-block: 2rem; }
+.primary-action { display: inline-block; color: var(--paper); background: var(--ink); padding: 0.85rem 1.2rem; --focus: var(--focus-light); }
+.archive-note { border-top: 1px solid var(--ink); margin-top: 4rem; padding-top: 1.5rem; }
+.workflow { color: var(--teal); font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; overflow-wrap: anywhere; }
+.synthetic-label { display: inline-block; border: 1px solid currentColor; padding: 0.4rem 0.6rem; }
+.site-footer { background: var(--ink); color: var(--paper); --focus: var(--focus-dark); padding-block: 2rem; }
+.site-footer p { margin-block: 0 0.5rem; }
+.site-footer a { display: inline-block; margin-top: 0.5rem; }
+@media (max-width: 600px) {
+  .shell { width: min(100% - 2rem, 76rem); }
+  .site-header { gap: 1rem; }
+  .brand { flex-basis: 100%; }
+  nav { margin-inline-start: 0; gap: 1rem; }
+  .language-switch { margin-inline-start: auto; }
+  h1 { max-width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
