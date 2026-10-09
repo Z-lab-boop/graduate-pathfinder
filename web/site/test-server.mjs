@@ -9,7 +9,7 @@ if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error("Port m
 const mimeTypes = {
   ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8", ".json": "application/json; charset=utf-8",
-  ".png": "image/png", ".svg": "image/svg+xml"
+  ".png": "image/png", ".webp": "image/webp", ".svg": "image/svg+xml"
 };
 
 function contained(path) {

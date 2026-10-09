@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "build:site": "node site/build.mjs",
+    "capture:site": "npm run build:site && node site/capture.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test:site": "npm run build:site && playwright test --config site/playwright.config.ts"
   },

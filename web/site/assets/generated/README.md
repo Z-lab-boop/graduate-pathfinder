@@ -37,3 +37,21 @@ Final original-pixel inspection: blank envelope, unlettered circular seal, empty
 Final original-pixel inspection: imagined colonnade, abstract circular ornaments and branching light paths. No apparent letters, signs, logos, people, watermark or identifiable institution. Accepted first output: `exec-73da7168-7fe4-410c-bab7-8912b2a02e7b`.
 
 Four independent built-in calls total: two hero attempts, one materials image, one campus image. No collages, crops, overlays or raster edits were used to hide rejected content. Inspection is an agent visual review, not a claim of independent human approval.
+
+## Lossless web delivery derivatives
+
+Task 5 retains the three approved PNG originals and their hashes above unchanged. Local WebP derivatives reduce image transfer without cropping, resizing, overlays, regenerated content or altered captions. The site uses `<picture>` with a local WebP source and the original PNG fallback. These remain conceptual artwork, never synthetic product screenshots. No remote encoding service or new runtime dependency is used.
+
+Encoded with local `cwebp` **1.6.0**, using `-lossless -exact -metadata all`. Example (repeat for each of the three names):
+
+```bash
+cwebp -lossless -exact -metadata all web/site/assets/generated/admissions-atlas-hero.png -o web/site/assets/generated/admissions-atlas-hero.webp
+```
+
+| Derivative | Bytes | SHA-256 |
+| --- | --- | --- |
+| `admissions-atlas-hero.webp` | 1,499,544 | `ca4a0e034a6c24d9e8f4040b7c9c046b3ef332f9a8ee8630eca794f23c9d22d7` |
+| `materials-review.webp` | 1,563,682 | `0b0afc6e1a2393a2bbc118b8400de013f557fc9b8f4bf0ba6c880752dc33bd6c` |
+| `campus-route.webp` | 1,780,180 | `f2cf4809d6b830383f64c741bf68bd7393778d323f09be77a4cf4c2e53a6e5cb` |
+
+The original PNGs total **7,174,223 bytes (6.84 MiB)**; the WebPs total **4,843,406 bytes (4.62 MiB)**, saving **2,330,817 bytes (32.49%)** of artwork transfer in supported browsers. The hero alone saves **35.27%**. Secondary images retain lazy loading. Keeping originals plus derivatives increases repository/deployment storage by 4.62 MiB; this is an explicit provenance/fallback tradeoff. Chromium canvas RGBA SHA-256 comparison verifies exact decoded pixel equality and matching dimensions for all three pairs. The asset checker pins both original and derivative hashes.

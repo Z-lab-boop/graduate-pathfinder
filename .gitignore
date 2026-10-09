@@ -19,3 +19,4 @@ private-cases/
 /web/test-results/
 /web/playwright-report/
 /dist/site/
+/docs/assets/.capture-*/
