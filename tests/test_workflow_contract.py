@@ -271,6 +271,72 @@ class WorkflowContractTests(unittest.TestCase):
         ))
         self.assert_contract_failure(result, "Pages trigger allowlist")
 
+    def test_rejects_anchor_alias_permission_keys(self) -> None:
+        for workflow, source, job in (("ci", CI, "verify"), ("pages", PAGES, "build"),
+                                      ("pages", PAGES, "deploy")):
+            for value in ("write-all", "\n      contents: write"):
+                with self.subTest(workflow=workflow, job=job, value=value):
+                    mutation = source.replace(source.splitlines()[1], "name: &permission_key permissions")
+                    mutation = mutation.replace(f"  {job}:\n", f"  {job}:\n    *permission_key: {value}\n")
+                    self.assert_contract_failure(self.run_check(**{workflow: mutation}), "anchors or aliases")
+
+    def test_rejects_other_anchor_alias_locations(self) -> None:
+        mutations = (
+            CI.replace("name: CI", "name: &title CI"),
+            CI.replace("name: CI", "name: *title"),
+            CI.replace("os: [ubuntu-latest, macos-latest]", "os: [&runner ubuntu-latest, *runner]"),
+            CI.replace("  verify:\n", "  verify: &job\n"),
+            CI.replace("  verify:\n", "  verify:\n    env: {LEVEL: &level write-all, COPY: *level}\n"),
+        )
+        for mutation in mutations:
+            with self.subTest(mutation=mutation):
+                self.assert_contract_failure(self.run_check(ci=mutation), "anchors or aliases")
+
+    def test_rejects_compact_block_scalar_hiding_required_action_conditions(self) -> None:
+        for action, version in (("configure-pages", "v5"), ("upload-pages-artifact", "v3"),
+                                ("deploy-pages", "v4")):
+            for scalar in ("|", ">", "|-", ">+", "|2", ">2-"):
+                for key in ('"\\u0069f"', '"\\x69f"', "'if'"):
+                    with self.subTest(action=action, scalar=scalar, key=key):
+                        original = f"      - uses: actions/{action}@{version}\n"
+                        if action == "deploy-pages":
+                            original = "      - name: Deploy\n        id: deployment\n        uses: actions/deploy-pages@v4\n"
+                        replacement = (f"      - name: {scalar}\n"
+                                       f"        uses: actions/{action}@{version}\n"
+                                       f"        {key}: false\n")
+                        self.assert_contract_failure(
+                            self.run_check(pages=PAGES.replace(original, replacement)),
+                            "unsupported block scalar",
+                        )
+
+    def test_rejects_block_scalars_outside_canonical_run_fields(self) -> None:
+        for header in ("name: |", "name: >", "name: |2-", "name: !!str |", "name: !<tag:yaml.org,2002:str> |"):
+            with self.subTest(header=header):
+                mutation = CI.replace("name: CI", header + "\n  CI")
+                self.assert_contract_failure(self.run_check(ci=mutation), "unsupported block scalar")
+        for header in ("      - run: |", "        run: >", "        run: |-", "        run: |2"):
+            with self.subTest(header=header):
+                mutation = CI + "      - name: Additional shell\n" + header + "\n          echo okay\n"
+                self.assert_contract_failure(self.run_check(ci=mutation), "unsupported block scalar")
+
+    def test_rejects_noncanonical_shell_body_indentation(self) -> None:
+        for indent in (9, 11, 12):
+            with self.subTest(indent=indent):
+                mutation = CI + "      - name: Additional shell\n        run: |\n" + " " * indent + "echo okay\n"
+                self.assert_contract_failure(self.run_check(ci=mutation), "shell block indentation")
+
+    def test_accepts_yaml_metacharacters_inside_literal_shell(self) -> None:
+        mutation = CI + '''      - name: Additional shell
+        run: |
+          printf '%s\\n' '&anchor *alias ? key: | >'
+          printf '%s\\n' '\\u0069f'
+          if true; then
+            echo okay
+          fi
+'''
+        result = self.run_check(ci=mutation)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_rejects_configure_action_present_only_in_comment(self) -> None:
         result = self.run_check(pages=PAGES.replace(
             "      - uses: actions/configure-pages@v5\n",

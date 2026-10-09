@@ -129,27 +129,61 @@ def exact_run_step_indexes(job: str, commands: tuple[str, ...]) -> list[int]:
     return indexes
 
 
-def has_quoted_mapping_key(text: str) -> bool:
-    """Fail closed on quoted YAML keys while ignoring literal block content."""
-    block_indent: int | None = None
-    block_scalar = re.compile(
-        r"^(?:-\s+)?[A-Za-z_][A-Za-z0-9_-]*\s*:\s*[|>][+-]?(?:\s+#.*)?$"
-    )
+def workflow_syntax_errors(text: str) -> list[str]:
+    """Enforce the supported YAML subset before using text-based contracts.
+
+    Only canonical step run blocks may contain opaque text. Anchors, aliases,
+    tags, explicit/quoted keys and other block scalars are unsupported, even in
+    quoted scalar values. This deliberately trades YAML flexibility for a small
+    auditable grammar; it is not a general YAML parser.
+    """
+    errors: list[str] = []
+    parents: list[tuple[int, str]] = []
+    in_shell = False
+    first_shell_line = False
     for line in text.splitlines():
         stripped = line.lstrip()
         indent = len(line) - len(stripped)
-        if block_indent is not None:
-            if not stripped or indent > block_indent:
+        if "\t" in line[:indent]:
+            errors.append("workflow indentation: use spaces only")
+        if in_shell:
+            if not stripped:
                 continue
-            block_indent = None
+            if indent > 8:
+                if indent < 10 or (first_shell_line and indent != 10):
+                    errors.append("shell block indentation: first content must use ten spaces; later content must use at least ten")
+                first_shell_line = False
+                continue
+            in_shell = False
         if not stripped or stripped.startswith("#"):
             continue
+        while parents and parents[-1][0] >= indent:
+            parents.pop()
         candidate = stripped[2:].lstrip() if stripped.startswith("- ") else stripped
-        if candidate.startswith(('"', "'", "? ")) or candidate == "?":
-            return True
-        if block_scalar.match(stripped):
-            block_indent = indent
-    return False
+        if candidate.startswith(('"', "'")) or re.match(r"\?(?:\s|$)", candidate):
+            errors.append("quoted or escaped structural key: workflow keys must use plain ASCII spelling")
+        if re.search(r"[&*]", stripped):
+            errors.append("YAML anchors or aliases: unsupported in workflow structure")
+        if "|" in stripped or ">" in stripped:
+            canonical_run = (
+                line == "        run: |"
+                and len(parents) == 4
+                and parents[0] == (0, "jobs:")
+                and parents[1][0] == 2
+                and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_-]*:", parents[1][1])
+                and parents[2] == (4, "steps:")
+                and parents[3][0] == 6
+                and parents[3][1].startswith("- ")
+            )
+            if canonical_run:
+                in_shell = True
+                first_shell_line = True
+            else:
+                errors.append("unsupported block scalar: only canonical step run: | fields are supported")
+        if "!" in stripped:
+            errors.append("YAML tags: unsupported in workflow structure")
+        parents.append((indent, stripped))
+    return list(dict.fromkeys(errors))
 
 
 def has_job_level_permissions(text: str) -> bool:
@@ -175,8 +209,8 @@ def check_workflows(root: Path) -> list[str]:
 
     ci = texts["ci.yml"]
     pages = texts["pages.yml"]
-    if has_quoted_mapping_key(ci) or has_quoted_mapping_key(pages):
-        errors.append("quoted or escaped structural key: workflow keys must use plain ASCII spelling")
+    errors.extend(workflow_syntax_errors(ci))
+    errors.extend(workflow_syntax_errors(pages))
     if permission_values(ci) != {"contents: read"}:
         errors.append("permissions: ordinary CI must grant only contents: read")
     if has_job_level_permissions(ci):
