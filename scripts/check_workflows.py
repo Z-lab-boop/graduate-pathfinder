@@ -108,12 +108,19 @@ def step_blocks(job: str) -> list[str]:
             for position, start in enumerate(starts)]
 
 
+def has_execution_override(text: str, *, job: bool = False) -> bool:
+    # Structural validation rejects quoted/escaped/explicit keys before these
+    # contracts run. Match every supported plain spelling, including a step's
+    # first field and YAML spaces/tabs before the mapping colon.
+    prefix = r"    " if job else r"(?:        |      -[ \t]+)"
+    return bool(re.search(rf"^{prefix}(?:if|continue-on-error)[ \t]*:", text, re.MULTILINE))
+
+
 def action_step_indexes(job: str, action: str) -> list[int]:
     pattern = re.compile(rf"^(?:      - uses|        uses): {re.escape(action)}@[^\s#]+\s*$", re.MULTILINE)
-    condition = re.compile(r'''^        (?:if|"if"|'if')[ \t]*:''', re.MULTILINE)
     return [
         index for index, step in enumerate(step_blocks(job))
-        if pattern.search(step) and not condition.search(step)
+        if pattern.search(step) and not has_execution_override(step)
     ]
 
 
@@ -124,7 +131,7 @@ def exact_run_step_indexes(job: str, commands: tuple[str, ...]) -> list[int]:
         if len(entries) != 1:
             continue
         lines = tuple(line.strip() for line in entries[0][1].splitlines() if line.strip())
-        if lines == commands and not re.search(r"^        if:\s*", step, re.MULTILINE):
+        if lines == commands and not has_execution_override(step):
             indexes.append(index)
     return indexes
 
@@ -216,6 +223,8 @@ def check_workflows(root: Path) -> list[str]:
     if has_job_level_permissions(ci):
         errors.append("job-level permissions: ordinary CI must not override top-level permissions")
     ci_job = job_section(ci, "verify")
+    if has_execution_override(ci_job, job=True):
+        errors.append("ordinary CI execution: verify must not have job-level if or continue-on-error")
     if len(exact_run_step_indexes(ci_job, CI_COMMANDS)) != 1:
         errors.append("ordinary CI gate: required commands must be one exact executable run step")
 
@@ -250,6 +259,9 @@ def check_workflows(root: Path) -> list[str]:
 
     build_job = job_section(pages, "build")
     deploy_job = job_section(pages, "deploy")
+    if any(re.search(r"^    continue-on-error[ \t]*:", job, re.MULTILINE)
+           for job in (build_job, deploy_job)):
+        errors.append("Pages job execution: jobs must not have continue-on-error")
     job_condition = re.compile(r"^    if[ \t]*:.*$", re.MULTILINE)
     if job_condition.findall(build_job) != ["    if: github.ref == 'refs/heads/main'"]:
         errors.append("main guard: build job must have only the exact refs/heads/main condition")

@@ -120,6 +120,59 @@ class WorkflowContractTests(unittest.TestCase):
         result = self.run_check(pages=PAGES.replace("  pages: write\n", ""))
         self.assert_contract_failure(result, "permissions")
 
+    def execution_override_fields(self):
+        for key, value in (("if", "false"), ("continue-on-error", "true")):
+            for spelling in (key, key + " ", key + "\t", key + " \t ",
+                             f"'{key}'", f'"{key}"',
+                             '"\\u%04x%s"' % (ord(key[0]), key[1:]),
+                             '"\\x%02x%s"' % (ord(key[0]), key[1:])):
+                yield f"{spelling}: {value}"
+            for value in ("'false'", '"true"', "${{ false }}", "always()", "", "false # disabled"):
+                yield f"{key}: {value}"
+
+    def test_rejects_execution_overrides_on_required_run_steps(self) -> None:
+        for workflow, source, title in (
+            ("ci", CI, "Verify repository"),
+            ("pages", PAGES, "Verify repository"),
+            ("pages", PAGES, "Rebuild clean Pages artifact"),
+        ):
+            for field in self.execution_override_fields():
+                for first in (False, True):
+                    with self.subTest(workflow=workflow, title=title, field=field, first=first):
+                        original = f"      - name: {title}\n"
+                        replacement = (f"      - {field}\n        name: {title}\n" if first else
+                                       original + f"        {field}\n")
+                        result = self.run_check(**{workflow: source.replace(original, replacement)})
+                        self.assertNotEqual(result.returncode, 0, field)
+
+    def test_rejects_execution_overrides_on_ci_verify_job(self) -> None:
+        for field in self.execution_override_fields():
+            with self.subTest(field=field):
+                mutation = CI.replace("  verify:\n", f"  verify:\n    {field}\n")
+                self.assertNotEqual(self.run_check(ci=mutation).returncode, 0, field)
+
+    def test_rejects_tolerated_failures_on_pages_jobs_and_actions(self) -> None:
+        for job in ("build", "deploy"):
+            with self.subTest(job=job):
+                mutation = PAGES.replace(f"  {job}:\n", f"  {job}:\n    continue-on-error : true\n")
+                self.assertNotEqual(self.run_check(pages=mutation).returncode, 0)
+        for action in ("configure-pages@v5", "upload-pages-artifact@v3", "deploy-pages@v4"):
+            with self.subTest(action=action):
+                original = f"uses: actions/{action}\n"
+                mutation = PAGES.replace(original, original + "        continue-on-error\t: true\n")
+                self.assertNotEqual(self.run_check(pages=mutation).returncode, 0)
+
+    def test_rejects_explicit_execution_override_keys(self) -> None:
+        for key in ("if", "continue-on-error"):
+            for workflow, source, marker, indent in (
+                ("ci", CI, "  verify:\n", "    "),
+                ("ci", CI, "      - name: Verify repository\n", "        "),
+                ("pages", PAGES, "      - name: Verify repository\n", "        "),
+            ):
+                with self.subTest(key=key, workflow=workflow, indent=indent):
+                    mutation = source.replace(marker, marker + f"{indent}? {key}\n{indent}: false\n")
+                    self.assert_contract_failure(self.run_check(**{workflow: mutation}), "structural key")
+
     def test_rejects_wrong_pages_branch(self) -> None:
         result = self.run_check(pages=PAGES.replace("      - main\n", "      - develop\n"))
         self.assert_contract_failure(result, "main branch trigger")
