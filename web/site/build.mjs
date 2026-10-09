@@ -67,7 +67,7 @@ for (const directory of ["data", "assets"]) {
 const compilation = spawnSync(process.execPath, [
   resolve(source, "../node_modules/typescript/bin/tsc"),
   "--ignoreConfig", "--target", "ES2022", "--module", "ES2022", "--moduleResolution", "bundler",
-  "--strict", "--skipLibCheck", "--rootDir", resolve(source, "src"), "--outDir", outputPath("assets"),
+  "--strict", "--skipLibCheck", "--noEmitOnError", "--rootDir", resolve(source, "src"), "--outDir", outputPath("assets"),
   ...await typeScriptSources(resolve(source, "src"))
 ], { stdio: "inherit" });
 if (compilation.error) throw compilation.error;
