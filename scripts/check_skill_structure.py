@@ -45,14 +45,17 @@ def parse_scalar(value: str) -> tuple[str, str | None]:
             else:
                 return "", "malformed single-quoted string"
         return "".join(output), None
+    if "#" in value:
+        return "", "plain strings must not contain YAML comments"
     if any(character in value for character in "'\"[]{}:"):
         return "", "unsupported or malformed plain string"
-    if re.match(r"^(?:[&*!>@`]|[-?]\s)", value) or re.match(
-        r"^(?:null|~|true|false|yes|no|on|off|[-+]?\d+(?:\.\d+)?)$",
-        value,
-        re.IGNORECASE,
-    ):
+    if re.match(r"^(?:null|~|true|false|yes|no|on|off)$", value, re.IGNORECASE):
         return "", "plain scalar is not an unambiguous string"
+    if not value[0].isalpha() or not all(
+        character.isalnum() or character.isspace() or character in "_.,/()+-"
+        for character in value
+    ):
+        return "", "plain scalar is outside the supported string grammar"
     return value, None
 
 
@@ -120,11 +123,11 @@ def check_skill_structure(root: Path) -> list[str]:
         errors.extend(frontmatter_errors)
         name = values.get("name", "")
         description = values.get("description", "")
-        if not name:
+        if not name.strip():
             errors.append("frontmatter name must be nonempty")
         elif name != "graduate-pathfinder":
             errors.append("frontmatter name must be graduate-pathfinder")
-        if not description:
+        if not description.strip():
             errors.append("frontmatter description must be nonempty")
 
     for relative, kind in REQUIRED_PATHS:

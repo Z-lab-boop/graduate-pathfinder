@@ -238,6 +238,32 @@ class WorkflowContractTests(unittest.TestCase):
             with self.subTest(label=label):
                 self.assert_contract_failure(self.run_check(ci=ci, pages=pages), "job-level permissions")
 
+    def test_rejects_escaped_workflow_mapping_keys(self) -> None:
+        mutations = {
+            "CI escaped permissions": (CI.replace(
+                "  verify:\n",
+                '  verify:\n    "permis\\u0073ions": write-all\n',
+            ), PAGES),
+            "Pages hex-escaped permissions": (CI, PAGES.replace(
+                "  build:\n",
+                '  build:\n    "permis\\x73ions": write-all\n',
+            )),
+            "quoted structural key": (CI.replace(
+                "    runs-on: ${{ matrix.os }}\n",
+                '    "runs-on": ${{ matrix.os }}\n',
+            ), PAGES),
+            "CI explicit escaped permissions key": (CI.replace(
+                "  verify:\n",
+                '  verify:\n    ? "permis\\u0073ions"\n    : write-all\n',
+            ), PAGES),
+        }
+        for label, (ci, pages) in mutations.items():
+            with self.subTest(label=label):
+                self.assert_contract_failure(
+                    self.run_check(ci=ci, pages=pages),
+                    "quoted or escaped structural key",
+                )
+
     def test_rejects_inline_extra_pages_trigger(self) -> None:
         result = self.run_check(pages=PAGES.replace(
             "  workflow_dispatch:\n",
@@ -279,6 +305,32 @@ class WorkflowContractTests(unittest.TestCase):
                 result = self.run_check(pages=pages)
                 self.assertNotEqual(result.returncode, 0)
                 self.assertRegex(result.stderr, r"(?:configure|upload|deploy)-pages step")
+
+    def test_rejects_escaped_condition_keys_on_required_pages_actions(self) -> None:
+        mutations = {
+            "configure unicode escape": PAGES.replace(
+                "      - uses: actions/configure-pages@v5\n",
+                '      - uses: actions/configure-pages@v5\n        "\\u0069f": false\n',
+            ),
+            "upload hex escape": PAGES.replace(
+                "      - uses: actions/upload-pages-artifact@v3\n",
+                '      - uses: actions/upload-pages-artifact@v3\n        "\\x69f": false\n',
+            ),
+            "deploy unicode escape": PAGES.replace(
+                "        uses: actions/deploy-pages@v4\n",
+                '        uses: actions/deploy-pages@v4\n        "\\u0069f": false\n',
+            ),
+            "configure explicit unicode escape": PAGES.replace(
+                "      - uses: actions/configure-pages@v5\n",
+                '      - uses: actions/configure-pages@v5\n        ? "\\u0069f"\n        : false\n',
+            ),
+        }
+        for label, pages in mutations.items():
+            with self.subTest(label=label):
+                self.assert_contract_failure(
+                    self.run_check(pages=pages),
+                    "quoted or escaped structural key",
+                )
 
     def test_public_release_gates_do_not_publish_a_machine_home_path(self) -> None:
         text = (REPO_ROOT / "docs" / "public-site-release-gates.md").read_text(encoding="utf-8")

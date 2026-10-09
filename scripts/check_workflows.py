@@ -129,6 +129,29 @@ def exact_run_step_indexes(job: str, commands: tuple[str, ...]) -> list[int]:
     return indexes
 
 
+def has_quoted_mapping_key(text: str) -> bool:
+    """Fail closed on quoted YAML keys while ignoring literal block content."""
+    block_indent: int | None = None
+    block_scalar = re.compile(
+        r"^(?:-\s+)?[A-Za-z_][A-Za-z0-9_-]*\s*:\s*[|>][+-]?(?:\s+#.*)?$"
+    )
+    for line in text.splitlines():
+        stripped = line.lstrip()
+        indent = len(line) - len(stripped)
+        if block_indent is not None:
+            if not stripped or indent > block_indent:
+                continue
+            block_indent = None
+        if not stripped or stripped.startswith("#"):
+            continue
+        candidate = stripped[2:].lstrip() if stripped.startswith("- ") else stripped
+        if candidate.startswith(('"', "'", "? ")) or candidate == "?":
+            return True
+        if block_scalar.match(stripped):
+            block_indent = indent
+    return False
+
+
 def has_job_level_permissions(text: str) -> bool:
     return bool(re.search(
         r'''^[ \t]+(?:permissions|"permissions"|'permissions')[ \t]*:''',
@@ -152,6 +175,8 @@ def check_workflows(root: Path) -> list[str]:
 
     ci = texts["ci.yml"]
     pages = texts["pages.yml"]
+    if has_quoted_mapping_key(ci) or has_quoted_mapping_key(pages):
+        errors.append("quoted or escaped structural key: workflow keys must use plain ASCII spelling")
     if permission_values(ci) != {"contents: read"}:
         errors.append("permissions: ordinary CI must grant only contents: read")
     if has_job_level_permissions(ci):

@@ -65,6 +65,17 @@ class SkillStructureCheckTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("description must be nonempty", result.stderr)
 
+    def test_rejects_whitespace_only_quoted_description(self) -> None:
+        for value in ('"   "', "'   '"):
+            with self.subTest(value=value), tempfile.TemporaryDirectory() as directory:
+                root = self.make_skill(
+                    Path(directory),
+                    f"---\nname: graduate-pathfinder\ndescription: {value}\n---\n",
+                )
+                result = self.run_check(root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("description must be nonempty", result.stderr)
+
     def test_rejects_malformed_top_level_frontmatter_line(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = self.make_skill(
@@ -99,6 +110,48 @@ class SkillStructureCheckTests(unittest.TestCase):
                 root = self.make_skill(
                     Path(directory),
                     f"---\nname: graduate-pathfinder\ndescription: {value}\n---\n",
+                )
+                result = self.run_check(root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("frontmatter scalar", result.stderr)
+
+    def test_rejects_yaml_implicit_and_explicit_non_string_scalars(self) -> None:
+        invalid_values = (
+            "# absent",
+            "null",
+            "~",
+            "true",
+            "42",
+            "3.14",
+            "1e3",
+            "0x10",
+            "2026-10-10",
+            "2026-10-10T10:30:00Z",
+            ".nan",
+            ".inf",
+            "-.inf",
+            "[]",
+            "{}",
+            "!!null null",
+            "!!bool true",
+            "!!int 1",
+        )
+        for value in invalid_values:
+            with self.subTest(value=value), tempfile.TemporaryDirectory() as directory:
+                root = self.make_skill(
+                    Path(directory),
+                    f"---\nname: graduate-pathfinder\ndescription: {value}\n---\n",
+                )
+                result = self.run_check(root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("frontmatter scalar", result.stderr)
+
+    def test_rejects_non_string_or_comment_only_name(self) -> None:
+        for value in ("# absent", "null", "false", "2026-10-10", ".nan", "[]"):
+            with self.subTest(value=value), tempfile.TemporaryDirectory() as directory:
+                root = self.make_skill(
+                    Path(directory),
+                    f"---\nname: {value}\ndescription: Present.\n---\n",
                 )
                 result = self.run_check(root)
             self.assertNotEqual(result.returncode, 0)
