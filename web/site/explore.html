@@ -6,6 +6,7 @@
   <meta name="description" content="A synthetic walkthrough of evidence-led material review and target comparison. Fictional data only; no uploads.">
   <title>Explore | Graduate Pathfinder</title>
   <link rel="stylesheet" href="./assets/site.css">
+  <noscript><style>.language-switch { display: none; }</style></noscript>
   <script type="module" src="./assets/site.js"></script>
 </head>
 <body data-page="explore">
@@ -25,9 +26,8 @@
     <p class="intro" data-i18n="explore.intro">This walkthrough uses fictional applicant and institution data to explain the local review workflow.</p>
     <p data-i18n="explore.boundary">Materials, targets, previous-cycle counts and outlook are reviewed separately. Historical cohort ratios are not a personal admission probability.</p>
     <div class="actions"><a href="./docs.html" data-i18n="explore.docs">Read the local workflow</a></div>
-    <section id="walkthrough" aria-label="Synthetic admissions case" aria-busy="true">
-      <p>Loading fictional evidence…</p>
-      <noscript><p>The interactive case needs JavaScript. Read the local workflow above for the evidence and privacy boundaries.</p></noscript>
+    <section id="walkthrough" aria-label="Synthetic admissions case" data-i18n-label="Synthetic admissions case" aria-busy="false">
+      <p data-i18n="explore.fallback">The interactive case needs JavaScript. Read the local workflow above for the evidence and privacy boundaries.</p>
     </section>
   </main>
   <footer class="site-footer">

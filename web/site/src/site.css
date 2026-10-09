@@ -46,6 +46,22 @@ p { max-width: 65ch; }
 .site-footer p { margin-block: 0 0.5rem; }
 .site-footer a { display: inline-block; margin-top: 0.5rem; }
 
+/* Docs retains the complete source instructions without scripting. */
+.docs-page { max-width: 66rem; }
+.docs-index { display: flex; flex-wrap: wrap; margin: 2.5rem 0 0; padding: 1.5rem 0; border-block: 1px solid var(--ink); gap: 0.7rem 1.5rem; font-size: 0.9rem; }
+.docs-page section { scroll-margin-top: 2rem; }
+.docs-page section p { max-width: 78ch; }
+.code-block { border: 1px solid var(--ink); background: #faf7ef; margin-block: 1.5rem; min-width: 0; }
+.code-block pre { margin: 0; padding: 1.25rem; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.85rem; line-height: 1.7; }
+.code-block button { margin: 0 1.25rem 1.25rem; border: 1px solid var(--ink); background: var(--flax); color: var(--ink); padding: 0.5rem 0.8rem; cursor: pointer; }
+.deliverables { margin: 2rem 0; }
+.deliverables > div { padding-block: 1.2rem; border-bottom: 1px solid #b6b4a6; }
+.deliverables dt { font-weight: 700; overflow-wrap: anywhere; }
+.deliverables dd { margin: 0.5rem 0 0; max-width: 78ch; }
+.copy-status { position: fixed; inset: auto 1.25rem 1.25rem auto; max-width: min(30rem, calc(100% - 2.5rem)); background: var(--ink); color: var(--paper); padding: 0.75rem 1rem; z-index: 3; font-size: 0.85rem; }
+.copy-status:empty { display: none; }
+.release-note { font-size: 0.85rem; margin-top: 2rem; }
+
 /* Home: a measured archive spread, with the evidence trail as its spine. */
 .atlas-home { padding-block: clamp(2.5rem, 5vw, 5rem) 4rem; }
 .atlas-home figure { margin: 0; min-width: 0; }

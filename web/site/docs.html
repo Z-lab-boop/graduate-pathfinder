@@ -6,6 +6,7 @@
   <meta name="description" content="Understand Graduate Pathfinder, its complete local Skill directory, and evidence and privacy boundaries.">
   <title>Docs | Graduate Pathfinder</title>
   <link rel="stylesheet" href="./assets/site.css">
+  <noscript><style>.language-switch { display: none; }</style></noscript>
   <script type="module" src="./assets/site.js"></script>
 </head>
 <body data-page="docs">
@@ -19,19 +20,90 @@
     </nav>
     <button class="language-switch" type="button" data-language-switch data-i18n="language.switch">切换到中文</button>
   </header>
-  <main id="content" class="shell" tabindex="-1">
+  <main id="content" class="shell docs-page" tabindex="-1">
     <p class="eyebrow" data-i18n="site.eyebrow">Admissions Evidence Atlas</p>
     <h1 data-i18n="docs.heading">Use the Skill locally.</h1>
     <p class="intro" data-i18n="docs.intro">Graduate Pathfinder supports Chinese graduate admissions decisions inside Codex. It keeps official evidence, missing information, conflicts and calculated results separate.</p>
-    <p data-i18n="docs.versions">v0.1: baoyan portfolio review. v0.2: kaoyan subject and score gates. v0.3: material review, scoped previous-cycle history and ordinal admission outlook.</p>
+    <div class="docs-index" role="group" aria-label="In this field guide" data-i18n-label="docs.contents">
+      <a href="#capabilities" data-i18n="docs.capabilities.heading">Three versions, separate decisions</a>
+      <a href="#install" data-i18n="docs.install.heading">Install the complete Skill</a>
+      <a href="#usage" data-i18n="docs.usage.heading">Start with a concrete request</a>
+      <a href="#outputs" data-i18n="docs.outputs.heading">Local cases and review deliverables</a>
+      <a href="#privacy" data-i18n="docs.boundary.heading">Evidence and privacy boundaries</a>
+      <a href="#source" data-i18n="docs.source.heading">Public source, tests and release status</a>
+    </div>
+    <section id="capabilities" class="archive-note" aria-labelledby="capabilities-heading">
+      <h2 id="capabilities-heading" data-i18n="docs.capabilities.heading">Three versions, separate decisions</h2>
+      <p data-i18n="docs.baoyan">v0.1 · Baoyan: screen opportunities, compare specified targets, build a portfolio, and check deadlines and schedule conflicts. Expected recommendation eligibility remains separate from confirmed eligibility.</p>
+      <p data-i18n="docs.kaoyan">v0.2 · Kaoyan: check the complete subject combination, score scenarios, distinct threshold meanings, risk bands and shortlists. Baoyan groups do not replace kaoyan decisions.</p>
+      <p data-i18n="docs.materials">v0.3 · Materials and outlook: review local materials against target requirements, reconstruct scoped previous-cycle timelines and aggregate counts, and explain eligibility, packet readiness, ordinal competition, fit and evidence confidence independently.</p>
+    </section>
     <section id="install" class="archive-note" aria-labelledby="install-heading">
-      <h2 id="install-heading" data-i18n="docs.install.heading">Install the complete Skill directory</h2>
-      <p data-i18n="docs.install">Keep SKILL.md, references/, scripts/ and agents/ together when installing. Review an existing destination before changing it. Keep applicant case files outside the installed Skill directory.</p>
+      <h2 id="install-heading" data-i18n="docs.install.heading">Install the complete Skill</h2>
+      <p data-i18n="docs.install">Install the whole repository directory: SKILL.md, references/, scripts/ and agents/ are all required. You may also copy the complete repository into the Codex skills directory. Keep case files outside the installed Skill.</p>
+      <p data-i18n="docs.install.source">Clone the repository from its Code menu, then run this macOS/Linux command from the repository root. It refuses to overwrite an existing destination and validates the installed Skill.</p>
+      <div class="code-block"><pre tabindex="0"><code id="install-command">set -eu
+codex_root=&quot;${CODEX_HOME:-$HOME/.codex}&quot;
+skill_parent=&quot;$codex_root/skills&quot;
+skill_target=&quot;$skill_parent/graduate-pathfinder&quot;
+mkdir -p &quot;$skill_parent&quot;
+if [ -e &quot;$skill_target&quot; ] || [ -L &quot;$skill_target&quot; ]; then
+  printf '%s\n' &quot;Refusing to overwrite existing skill target: $skill_target&quot; &gt;&amp;2
+  exit 1
+else
+  ln -s &quot;$(pwd)&quot; &quot;$skill_target&quot;
+  python3 &quot;$skill_parent/.system/skill-creator/scripts/quick_validate.py&quot; &quot;$skill_target&quot;
+fi</code></pre><button type="button" data-copy="install-command" data-i18n="copy.command" hidden>Copy command</button></div>
+    </section>
+    <section id="usage" class="archive-note" aria-labelledby="usage-heading">
+      <h2 id="usage-heading" data-i18n="docs.usage.heading">Start with a concrete request</h2>
+      <p data-i18n="docs.usage.intro">The following are the three existing repository examples. Paste one into Codex and adapt the facts to your case. The original Chinese prompts remain available in either language.</p>
+      <h3 data-i18n="docs.usage.baoyan">Baoyan portfolio</h3>
+      <div class="code-block"><pre tabindex="0"><code id="usage-1" lang="zh-CN">使用 $graduate-pathfinder，我是计算机专业前 5%，做一份 2027 保研投递组合。</code></pre><button type="button" data-copy="usage-1" data-i18n="copy.prompt" hidden>Copy prompt</button></div>
+      <h3 data-i18n="docs.usage.kaoyan">Kaoyan shortlist</h3>
+      <div class="code-block"><pre tabindex="0"><code id="usage-2" lang="zh-CN">使用 $graduate-pathfinder，我估分 355，想考长三角的控制工程，先核对科目组合和官方口径，再给 shortlist。</code></pre><button type="button" data-copy="usage-2" data-i18n="copy.prompt" hidden>Copy prompt</button></div>
+      <h3 data-i18n="docs.usage.materials">Material review and outlook</h3>
+      <div class="code-block"><pre tabindex="0"><code id="usage-3" lang="zh-CN">使用 $graduate-pathfinder，我会提供简历、成绩单和推荐信草稿。请复核这个保研目标的材料，整理上一可比年度的面试时间和各阶段人数，再给出序数竞争档位和不确定性。</code></pre><button type="button" data-copy="usage-3" data-i18n="copy.prompt" hidden>Copy prompt</button></div>
+      <p data-i18n="docs.usage.evidence">Allow official-source checks for current rules, dates and counts. Without browsing, use user-provided official materials, retain gaps, and stop any judgment that depends on missing facts.</p>
+    </section>
+    <section id="outputs" class="archive-note" aria-labelledby="outputs-heading">
+      <h2 id="outputs-heading" data-i18n="docs.outputs.heading">Local cases and review deliverables</h2>
+      <p data-i18n="docs.outputs.local">A quick screen may stay in chat. Create a case only when persistence or file delivery is requested, outside the installed Skill, normally at graduate-pathfinder-cases/&lt;anonymous-label&gt;/ in the working directory. Originals stay at the selected local paths; a manifest records paths, hashes and extraction states without copying or rewriting them.</p>
+      <dl class="deliverables">
+        <div><dt><code>material-audit.md</code></dt><dd data-i18n="docs.outputs.audit">Target-specific completeness, missing conditions, contradictions and review flags; completeness does not authenticate documents or mean submission.</dd></div>
+        <div><dt><code>applicant-claims.json</code></dt><dd data-i18n="docs.outputs.claims">Normalized academic claims with six evidence states and source-document IDs. Keep missing values and conflicting claims; omit private identifiers.</dd></div>
+        <div><dt><code>historical-cycle.json</code></dt><dd data-i18n="docs.outputs.history">Explicit historical scope, timelines, aggregate stage counts, calculations and all refusal reasons; no applicant list rows.</dd></div>
+        <div><dt><code>admission-outlook.md</code></dt><dd data-i18n="docs.outputs.outlook">Five independent results, uncertainty, missing evidence and verifiable conditions that could change an ordinal judgment.</dd></div>
+        <div><dt><code>privacy-review.md</code></dt><dd data-i18n="docs.outputs.privacy">Redaction findings, possible over-redaction, missed-information checks and an honest pending/completed human-review status.</dd></div>
+      </dl>
+      <p data-i18n="docs.outputs.private">Private manifests, material requirements and full evidence audits remain local review inputs. Public-safe deliverables still need redaction and human privacy review before sharing; automated checks do not guarantee anonymity.</p>
     </section>
     <section id="privacy" class="archive-note" aria-labelledby="privacy-heading">
       <h2 id="privacy-heading" data-i18n="docs.boundary.heading">Evidence and privacy boundaries</h2>
-      <p data-i18n="docs.boundary">Review current official sources for the intended intake year and applicant route. Missing or conflicting evidence remains unresolved. Original materials stay local; public examples must be fictional or reviewed for privacy.</p>
+      <p data-i18n="docs.boundary">Check current requirements, dates and counts against official evidence for the exact intake year and target identity: institution, unit, program code, degree, research track and admission round. Unknown, stale or conflicting facts stay unresolved.</p>
+      <p data-i18n="docs.evidence.tiers">T1 current official notices support current critical requirements. T2 official clarification supports checks; T3/T4 discovery sources do not replace T1. A–D audit confidence is separate from source tier and year applicability. Source labels alone do not verify a webpage.</p>
+      <p data-i18n="docs.evidence.materials">Material review does not authenticate documents. A visible file, a hash, OCR text or a resume statement does not establish authenticity. Missing signatures or dates, unreadable pages, contradictions and unclear policies remain review blockers.</p>
+      <p data-i18n="docs.evidence.history">Historical ratios are not personal probabilities. Only matching year, institution, unit, program code, degree, track and round with a verified denominator can support final_admitted / confirmed_attended. Listed or deduplicated names are not confirmed attendance; incompatible or ambiguous counts are refused. Past dates do not establish current deadlines.</p>
+      <p data-i18n="docs.evidence.tier">Competitive tiers are ordinal: strong, competitive, borderline, weak, evidence_insufficient. They remain separate from baoyan portfolio groups and kaoyan risk bands. Missing current competitive evidence or comparable history stays evidence_insufficient; no tier guarantees admission.</p>
+      <p data-i18n="docs.privacy">This site uses fictional demo data, accepts no uploads and has no tracking. The local-first Skill keeps originals local and does not submit applications, contact supervisors, send messages or accept offers. Remove private identifiers from generated reports and review redaction manually before sharing.</p>
     </section>
+    <section id="source" class="archive-note" aria-labelledby="source-heading">
+      <h2 id="source-heading" data-i18n="docs.source.heading">Public source, tests and release status</h2>
+      <p data-i18n="docs.source">Graduate Pathfinder is a local-first Codex Skill. Public source and tests are available in the repository. These checks cover structure, logic and synthetic behavior; they do not authenticate materials or prove current nationwide admissions coverage.</p>
+      <a href="https://github.com/Z-lab-boop/graduate-pathfinder" data-i18n="docs.source.link">Browse source and tests</a>
+      <p data-i18n="docs.source.tests">Run the following from the repository root to verify the Python Skill and build/test the public site. The skill-creator validator path must be adapted to your installation.</p>
+      <div class="code-block"><pre tabindex="0"><code id="test-command">python3 -m unittest discover -s tests -v
+python3 /path/to/skill-creator/scripts/quick_validate.py .
+python3 -m compileall -q scripts tests
+npm --prefix web ci
+npm --prefix web run build:site
+npm --prefix web run test:site
+npm --prefix web run typecheck
+git diff --check</code></pre><button type="button" data-copy="test-command" data-i18n="copy.command" hidden>Copy command</button></div>
+      <p data-i18n="release.boundary">No tagged binary release is published.</p>
+      <p data-i18n="docs.source.release">Install the source repository as a complete Skill directory. Website assets and synthetic screenshots are documentation, not release binaries.</p>
+    </section>
+    <p class="copy-status" data-copy-status role="status" aria-live="polite"></p>
   </main>
   <footer class="site-footer">
     <div class="shell">

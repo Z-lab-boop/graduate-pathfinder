@@ -1,9 +1,10 @@
-import { copy, LANGUAGE_KEY, type Language } from "./i18n.js";
-import { homeCopy, initHome } from "./home.js";
+import { LANGUAGE_KEY, type Language } from "./i18n.js";
+import { contentCopy } from "./content.js";
+import { initHome } from "./home.js";
 import { initExplore } from "./explore.js";
 
 export function applyLanguage(language: Language): void {
-  const dictionary = { ...copy[language], ...homeCopy[language] };
+  const dictionary: Record<string, string> = contentCopy[language];
   document.documentElement.lang = language;
   document.querySelectorAll<HTMLElement>("[data-i18n]").forEach((element) => {
     const value = dictionary[element.dataset.i18n ?? ""];
@@ -35,6 +36,27 @@ export function initSite(): void {
   applyLanguage(language);
   initHome();
   void initExplore();
+  document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((button) => {
+    button.hidden = false;
+    button.addEventListener("click", async () => {
+      const command = document.getElementById(button.dataset.copy ?? "");
+      const status = document.querySelector<HTMLElement>("[data-copy-status]");
+      if (!command || !status) return;
+      let key: "copy.success" | "copy.manual" = "copy.success";
+      try {
+        await navigator.clipboard.writeText(command.textContent ?? "");
+      } catch {
+        const range = document.createRange();
+        range.selectNodeContents(command);
+        const selection = window.getSelection();
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+        key = "copy.manual";
+      }
+      status.dataset.i18n = key;
+      status.textContent = contentCopy[language][key];
+    });
+  });
   document.querySelector<HTMLButtonElement>("[data-language-switch]")?.addEventListener("click", () => {
     language = language === "en" ? "zh-CN" : "en";
     applyLanguage(language);

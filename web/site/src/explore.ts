@@ -1,25 +1,6 @@
 import { parseDemo, type CountStage, type Demo, type DemoEvidence, type DemoRequirement, type EvidenceStatus } from "./demo-schema.js";
+import { contentCopy, type ContentCopy } from "./content.js";
 
-const chinese: Record<string, string> = {
-  "Fictional institutions only": "以下院校均为虚构", "Select a fictional target": "选择虚构目标", "Synthetic admissions case": "合成招生案例",
-  "Northlake Institute": "虚构·北湖研究院", "Data Systems": "数据系统", "Meridian Technical College": "虚构·子午技术学院", "Intelligent Systems": "智能系统", "Harborline Academy": "虚构·港线学园", "Human-Centered Computing": "人本计算",
-  "Data Methods": "数据方法", "Interactive Engineering": "交互工程", "Design Computing": "设计计算", "academic": "学术学位", "professional": "专业学位", "summer-camp": "夏令营", "pre-recommendation": "预推免", "september": "九月推免",
-  "Materials": "材料", "Targets": "目标", "Previous cycle": "上年度", "Outlook": "展望", "Case views": "案例视图", "Evidence filters": "证据筛选", "Confirmed": "已确认", "Missing": "缺失", "Conflicted": "有冲突", "Review required": "需复核",
-  "Evidence inspector": "证据检查器", "Select a record to inspect its source claim.": "选择记录，查看其来源主张。", "Source": "来源", "Claim": "主张", "Tier": "层级", "Synthetic primary": "合成一手记录", "Synthetic note": "合成复核记录",
-  "Target requirements": "目标材料要求", "Material": "材料", "Extraction": "提取状态", "Requirement / evidence": "要求与证据", "No records match these evidence filters.": "没有记录符合当前证据筛选。", "Six anonymous materials · target-specific requirements": "六份匿名材料 · 按目标复核要求", "Inspect evidence": "检查证据", "Preview guidance": "预览指导",
-  "Anonymous resume": "匿名简历", "Course transcript": "课程成绩单", "Unsigned letter draft": "未签字的推荐信草稿", "Language certificate": "语言证书", "Project certificate": "项目证明", "Ranking supplement": "排名补充材料", "reviewed": "已复核", "partial": "部分提取", "unreadable": "无法读取",
-  "Reviewed resume required": "需要已复核的简历", "Signed recommendation required": "需要签字推荐信", "Resolve certificate date conflict": "解决证书日期冲突", "Review unreadable project evidence": "复核无法读取的项目证据", "Review ranking supplement": "复核排名补充材料", "Reviewed transcript required": "需要已复核的成绩单",
-  "Resume extraction was reviewed in this fictional case.": "本虚构案例已复核简历提取结果。", "Transcript fields were reviewed in this fictional case.": "本虚构案例已复核成绩单字段。", "The recommendation is a draft and lacks a signature.": "推荐信仍为草稿，缺少签字。", "Two fictional certificate dates disagree.": "两份虚构证书日期存在冲突。", "The project certificate extraction is unreadable.": "项目证明提取结果无法读取。", "The ranking denominator needs manual review.": "排名分母需要人工复核。", "Counts share one fictional intake, route and unit scope.": "人数属于同一虚构入学年、路径与单位口径。", "Attendance belongs to a different fictional route scope.": "参加人数属于另一虚构申请路径口径。",
-  "Fictional material review sheet": "虚构材料复核表", "Fictional recommendation checklist": "虚构推荐信清单", "Fictional conflict register": "虚构冲突记录", "Fictional extraction review": "虚构提取复核", "Fictional cycle register": "虚构周期记录", "Fictional alternate cycle register": "虚构其他路径记录",
-  "Target comparison": "目标比较", "Choose a target to update every view.": "选择目标以同步更新各视图。", "Admission outlook": "录取展望", "Eligibility": "资格", "Material readiness": "材料就绪度", "Competitive tier": "竞争序数档位", "Fit": "适配", "Evidence confidence": "证据信心", "Independent dimensions · no combined score": "独立维度 · 不合成为总分",
-  "eligible": "符合", "blocked": "受阻", "ready": "就绪", "repairable": "可修复", "strong": "强", "competitive": "有竞争力", "borderline": "临界", "weak": "弱", "evidence_insufficient": "证据不足", "insufficient": "证据不足", "high": "高", "medium": "中", "low": "低",
-  "Unsigned draft blocks material readiness.": "未签字草稿阻碍材料就绪。", "Certificate conflict limits evidence confidence.": "证书冲突限制证据信心。", "Ranking denominator needs review.": "排名分母需要复核。", "Unreadable evidence leaves a required gate unresolved.": "无法读取的证据使必要门槛尚未解决。",
-  "Current competitive evidence is missing.": "缺少本年度竞争证据。", "Comparable history and current competitive evidence are missing.": "缺少可比历史与本年度竞争证据。",
-  "Past cohort description · not personal probability": "历史群体描述 · 非个人录取概率", "Scoped stage counts": "按口径区分的阶段人数", "Timeline": "时间线", "Scope": "口径", "Numerator": "分子", "Denominator": "分母", "Refused: stage scopes do not match": "拒绝计算：阶段口径不匹配", "No previous-cycle evidence for this fictional target.": "此虚构目标没有上年度证据。", "Reported applicants": "报告的申请人数", "Confirmed attended": "确认参加人数", "Final admitted": "最终录取人数", "Announced quota": "公布名额", "Listed shortlist": "名单人数", "Deduplicated shortlist": "去重名单人数", "Excellent campers": "优秀营员人数", "Pre admit": "预录取人数", "Waitlist": "候补人数",
-  "Fictional announcement": "虚构公告", "Fictional interviews": "虚构面试", "Fictional cohort recorded": "虚构群体记录", "Final admitted among confirmed attendees": "确认参加群体中的最终录取人数", "Final admitted among alternate-route confirmed attendees": "其他路径确认参加群体中的最终录取人数", "synthetic-data-methods": "合成-数据方法", "final_admitted / confirmed_attended": "最终录取人数 / 确认参加人数",
-  "Guidance only": "仅供指导", "Close preview": "关闭预览", "This preview changes no material or evidence.": "此预览不会修改材料或证据。", "Review the draft with its fictional author and check the signature field locally.": "在本地与虚构作者复核草稿，并检查签字字段。", "Recheck the fictional source image and record unresolved extraction fields locally.": "重新核对虚构源图，在本地记录未解决的提取字段。",
-  "Walkthrough unavailable": "演示暂不可用", "The committed fictional case could not be validated. No partial results are shown.": "已提交的虚构案例未能通过校验，未显示部分结果。", "Read the expected behavior": "阅读预期行为", "Close the preview to change the case language.": "关闭预览后可切换案例语言。"
-};
 const statusLabels: Record<EvidenceStatus, string> = { confirmed: "Confirmed", missing: "Missing", conflicted: "Conflicted", review_required: "Review required" };
 const dimensions = [["eligibility", "Eligibility"], ["material_readiness", "Material readiness"], ["competitive_tier", "Competitive tier"], ["fit", "Fit"], ["confidence", "Evidence confidence"]] as const;
 const tabs = ["Materials", "Targets", "Previous cycle", "Outlook"];
@@ -44,7 +25,7 @@ export async function initExplore(): Promise<void> {
   let evidenceId: string | undefined;
   let previewId: string | undefined;
   const filters = new Set<EvidenceStatus>(Object.keys(statusLabels) as EvidenceStatus[]);
-  const tr = (value: string) => document.documentElement.lang === "zh-CN" ? chinese[value] ?? value : value;
+  const tr = (value: string) => contentCopy[document.documentElement.lang === "zh-CN" ? "zh-CN" : "en"][value as keyof ContentCopy] ?? value;
   const button = (text: string, control: string, action: () => void) => {
     const node = element("button", text); node.type = "button"; node.dataset.control = control;
     node.addEventListener("click", action); return node;
