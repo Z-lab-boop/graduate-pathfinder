@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import json
+import re
 import sys
 from pathlib import Path
 
@@ -13,6 +15,45 @@ REQUIRED_PATHS = (
     ("tests", "directory"),
     ("agents/openai.yaml", "file"),
 )
+
+
+def parse_scalar(value: str) -> tuple[str, str | None]:
+    """Parse the intentionally small string-scalar subset supported here."""
+    if not value:
+        return "", None
+    if value.startswith('"'):
+        try:
+            parsed = json.loads(value)
+        except (json.JSONDecodeError, UnicodeError):
+            return "", "malformed double-quoted string"
+        if not isinstance(parsed, str):
+            return "", "double-quoted scalar must be a string"
+        return parsed, None
+    if value.startswith("'"):
+        if len(value) < 2 or not value.endswith("'"):
+            return "", "unterminated single-quoted string"
+        inner = value[1:-1]
+        output: list[str] = []
+        index = 0
+        while index < len(inner):
+            if inner[index] != "'":
+                output.append(inner[index])
+                index += 1
+            elif index + 1 < len(inner) and inner[index + 1] == "'":
+                output.append("'")
+                index += 2
+            else:
+                return "", "malformed single-quoted string"
+        return "".join(output), None
+    if any(character in value for character in "'\"[]{}:"):
+        return "", "unsupported or malformed plain string"
+    if re.match(r"^(?:[&*!>@`]|[-?]\s)", value) or re.match(
+        r"^(?:null|~|true|false|yes|no|on|off|[-+]?\d+(?:\.\d+)?)$",
+        value,
+        re.IGNORECASE,
+    ):
+        return "", "plain scalar is not an unambiguous string"
+    return value, None
 
 
 def parse_frontmatter(path: Path) -> tuple[dict[str, str], list[str]]:
@@ -41,8 +82,8 @@ def parse_frontmatter(path: Path) -> tuple[dict[str, str], list[str]]:
         if not key:
             errors.append(f"frontmatter malformed top-level line: {line.strip()}")
             continue
-        value = value.strip().strip("'\"")
-        if value in {"|", "|-", "|+", ">", ">-", ">+"}:
+        raw_value = value.strip()
+        if raw_value in {"|", "|-", "|+", ">", ">-", ">+"}:
             continuation: list[str] = []
             for nested in body[index + 1 :]:
                 if nested.strip() and not nested[:1].isspace():
@@ -50,6 +91,11 @@ def parse_frontmatter(path: Path) -> tuple[dict[str, str], list[str]]:
                 if nested.strip():
                     continuation.append(nested.strip())
             value = " ".join(continuation)
+        else:
+            value, scalar_error = parse_scalar(raw_value)
+            if scalar_error:
+                errors.append(f"frontmatter scalar for {key}: {scalar_error}")
+                continue
         if key in values:
             errors.append(f"frontmatter field is duplicated: {key}")
         else:

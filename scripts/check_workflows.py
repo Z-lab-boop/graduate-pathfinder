@@ -110,7 +110,11 @@ def step_blocks(job: str) -> list[str]:
 
 def action_step_indexes(job: str, action: str) -> list[int]:
     pattern = re.compile(rf"^(?:      - uses|        uses): {re.escape(action)}@[^\s#]+\s*$", re.MULTILINE)
-    return [index for index, step in enumerate(step_blocks(job)) if pattern.search(step)]
+    condition = re.compile(r'''^        (?:if|"if"|'if')[ \t]*:''', re.MULTILINE)
+    return [
+        index for index, step in enumerate(step_blocks(job))
+        if pattern.search(step) and not condition.search(step)
+    ]
 
 
 def exact_run_step_indexes(job: str, commands: tuple[str, ...]) -> list[int]:
@@ -126,7 +130,11 @@ def exact_run_step_indexes(job: str, commands: tuple[str, ...]) -> list[int]:
 
 
 def has_job_level_permissions(text: str) -> bool:
-    return bool(re.search(r"^[ \t]+permissions[ \t]*:", text, re.MULTILINE))
+    return bool(re.search(
+        r'''^[ \t]+(?:permissions|"permissions"|'permissions')[ \t]*:''',
+        text,
+        re.MULTILINE,
+    ))
 
 
 def check_workflows(root: Path) -> list[str]:

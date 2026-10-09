@@ -215,6 +215,29 @@ class WorkflowContractTests(unittest.TestCase):
         ))
         self.assert_contract_failure(result, "job-level permissions")
 
+    def test_rejects_quoted_job_level_permissions_overrides(self) -> None:
+        mutations = {
+            "CI double quoted": (CI.replace(
+                "  verify:\n",
+                '  verify:\n    "permissions": write-all\n',
+            ), PAGES),
+            "CI single quoted": (CI.replace(
+                "  verify:\n",
+                "  verify:\n    'permissions': write-all\n",
+            ), PAGES),
+            "Pages double quoted": (CI, PAGES.replace(
+                "  build:\n",
+                '  build:\n    "permissions":\n      contents: write\n',
+            )),
+            "Pages single quoted": (CI, PAGES.replace(
+                "  build:\n",
+                "  build:\n    'permissions': write-all\n",
+            )),
+        }
+        for label, (ci, pages) in mutations.items():
+            with self.subTest(label=label):
+                self.assert_contract_failure(self.run_check(ci=ci, pages=pages), "job-level permissions")
+
     def test_rejects_inline_extra_pages_trigger(self) -> None:
         result = self.run_check(pages=PAGES.replace(
             "  workflow_dispatch:\n",
@@ -235,6 +258,27 @@ class WorkflowContractTests(unittest.TestCase):
             "        # actions/deploy-pages@v4\n",
         ))
         self.assert_contract_failure(result, "deploy-pages step")
+
+    def test_rejects_conditioned_required_pages_actions(self) -> None:
+        mutations = {
+            "configure false": PAGES.replace(
+                "      - uses: actions/configure-pages@v5\n",
+                "      - uses: actions/configure-pages@v5\n        if: false\n",
+            ),
+            "upload single-quoted false": PAGES.replace(
+                "      - uses: actions/upload-pages-artifact@v3\n",
+                "      - uses: actions/upload-pages-artifact@v3\n        if: 'false'\n",
+            ),
+            "deploy double-quoted false": PAGES.replace(
+                "        uses: actions/deploy-pages@v4\n",
+                "        uses: actions/deploy-pages@v4\n        if: \"false\"\n",
+            ),
+        }
+        for label, pages in mutations.items():
+            with self.subTest(label=label):
+                result = self.run_check(pages=pages)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertRegex(result.stderr, r"(?:configure|upload|deploy)-pages step")
 
     def test_public_release_gates_do_not_publish_a_machine_home_path(self) -> None:
         text = (REPO_ROOT / "docs" / "public-site-release-gates.md").read_text(encoding="utf-8")

@@ -75,6 +75,35 @@ class SkillStructureCheckTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("malformed top-level line", result.stderr)
 
+    def test_accepts_supported_quoted_frontmatter_scalars(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.make_skill(
+                Path(directory),
+                "---\nname: 'graduate-pathfinder'\ndescription: \"Evidence-first: admissions support.\"\n---\n",
+            )
+            result = self.run_check(root)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_rejects_malformed_frontmatter_scalars(self) -> None:
+        invalid_values = (
+            '\"unterminated',
+            "'unterminated",
+            "[unterminated",
+            "{unterminated",
+            "present: invalid",
+            "[closed]",
+            "{key: value}",
+        )
+        for value in invalid_values:
+            with self.subTest(value=value), tempfile.TemporaryDirectory() as directory:
+                root = self.make_skill(
+                    Path(directory),
+                    f"---\nname: graduate-pathfinder\ndescription: {value}\n---\n",
+                )
+                result = self.run_check(root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("frontmatter scalar", result.stderr)
+
     def test_rejects_missing_required_path(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = self.make_skill(Path(directory))
