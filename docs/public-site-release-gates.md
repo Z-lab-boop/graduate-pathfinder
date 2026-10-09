@@ -10,7 +10,6 @@ Run the repository checks from the repository root:
 python3 -m unittest discover -s tests -v
 python3 -m compileall -q scripts tests
 python3 scripts/check_skill_structure.py .
-python3 /Users/zzz/.codex/skills/.system/skill-creator/scripts/quick_validate.py .
 npm --prefix web ci
 npx --prefix web playwright install chromium
 npm --prefix web run typecheck
@@ -19,6 +18,13 @@ npm --prefix web run build:site
 node scripts/check-site-assets.mjs
 python3 scripts/check_workflows.py .
 git diff --check
+```
+
+Maintainers who have the system Skill Creator installed may also run its validator as an **optional maintainer-local** check. Point a configurable environment variable at that installation instead of publishing a machine-specific home path:
+
+```bash
+export SKILL_CREATOR_QUICK_VALIDATE=/absolute/path/to/quick_validate.py
+python3 "$SKILL_CREATOR_QUICK_VALIDATE" .
 ```
 
 A local pass covers the checked source tree and locally built static artifact only. It does not prove GitHub Actions, deployment, live routing, image approval, or release publication.

@@ -14,6 +14,7 @@ CI_COMMANDS = (
     "python3 -m unittest discover -s tests -v",
     "python3 -m compileall -q scripts tests",
     "python3 scripts/check_skill_structure.py .",
+    "python3 scripts/check_workflows.py .",
     "npm --prefix web ci",
     "npx --prefix web playwright install chromium",
     "npm --prefix web run typecheck",
@@ -21,6 +22,7 @@ CI_COMMANDS = (
     "node scripts/check-site-assets.mjs",
     "git diff --check",
 )
+FINAL_BUILD_COMMANDS = ("npm --prefix web run build:site",)
 
 
 def section(text: str, key: str) -> str:
@@ -36,9 +38,9 @@ def section(text: str, key: str) -> str:
     return "\n".join(lines[start + 1 : end])
 
 
-def literal_shell_blocks(text: str) -> list[str]:
+def literal_shell_entries(text: str) -> list[tuple[int, str]]:
     lines = text.splitlines()
-    blocks: list[str] = []
+    blocks: list[tuple[int, str]] = []
     index = 0
     while index < len(lines):
         match = re.match(r"^(\s*)run:\s*\|\s*$", lines[index])
@@ -57,8 +59,13 @@ def literal_shell_blocks(text: str) -> list[str]:
             index += 1
         nonempty = [len(line) - len(line.lstrip()) for line in captured if line.strip()]
         trim = min(nonempty) if nonempty else parent_indent + 2
-        blocks.append("\n".join(line[trim:] if line.strip() else "" for line in captured) + "\n")
+        block = "\n".join(line[trim:] if line.strip() else "" for line in captured) + "\n"
+        blocks.append((parent_indent, block))
     return blocks
+
+
+def literal_shell_blocks(text: str) -> list[str]:
+    return [block for _, block in literal_shell_entries(text)]
 
 
 def shell_errors(path: Path, text: str) -> list[str]:
@@ -78,13 +85,48 @@ def permission_values(text: str) -> set[str]:
     return {line.strip() for line in section(text, "permissions").splitlines() if line.strip()}
 
 
-def active_shell_lines(text: str) -> set[str]:
-    return {
-        line.strip()
-        for block in literal_shell_blocks(text)
-        for line in block.splitlines()
-        if line.strip() and not line.lstrip().startswith("#")
-    }
+def job_section(text: str, job: str) -> str:
+    lines = text.splitlines()
+    start = next((index for index, line in enumerate(lines) if line == f"  {job}:"), None)
+    if start is None:
+        return ""
+    end = len(lines)
+    for index in range(start + 1, len(lines)):
+        if re.match(r"^  [\w-]+:\s*$", lines[index]):
+            end = index
+            break
+        if lines[index] and not lines[index][0].isspace():
+            end = index
+            break
+    return "\n".join(lines[start + 1 : end])
+
+
+def step_blocks(job: str) -> list[str]:
+    lines = job.splitlines()
+    starts = [index for index, line in enumerate(lines) if re.match(r"^      -\s+", line)]
+    return ["\n".join(lines[start : starts[position + 1] if position + 1 < len(starts) else len(lines)])
+            for position, start in enumerate(starts)]
+
+
+def action_step_indexes(job: str, action: str) -> list[int]:
+    pattern = re.compile(rf"^(?:      - uses|        uses): {re.escape(action)}@[^\s#]+\s*$", re.MULTILINE)
+    return [index for index, step in enumerate(step_blocks(job)) if pattern.search(step)]
+
+
+def exact_run_step_indexes(job: str, commands: tuple[str, ...]) -> list[int]:
+    indexes: list[int] = []
+    for index, step in enumerate(step_blocks(job)):
+        entries = [(indent, block) for indent, block in literal_shell_entries(step) if indent == 8]
+        if len(entries) != 1:
+            continue
+        lines = tuple(line.strip() for line in entries[0][1].splitlines() if line.strip())
+        if lines == commands and not re.search(r"^        if:\s*", step, re.MULTILINE):
+            indexes.append(index)
+    return indexes
+
+
+def has_job_level_permissions(text: str) -> bool:
+    return bool(re.search(r"^[ \t]+permissions[ \t]*:", text, re.MULTILINE))
 
 
 def check_workflows(root: Path) -> list[str]:
@@ -102,27 +144,34 @@ def check_workflows(root: Path) -> list[str]:
 
     ci = texts["ci.yml"]
     pages = texts["pages.yml"]
-    ci_shell = active_shell_lines(ci)
-    pages_shell = active_shell_lines(pages)
     if permission_values(ci) != {"contents: read"}:
         errors.append("permissions: ordinary CI must grant only contents: read")
-    for command in CI_COMMANDS:
-        if command not in ci_shell:
-            errors.append(f"ordinary CI gate missing: {command}")
+    if has_job_level_permissions(ci):
+        errors.append("job-level permissions: ordinary CI must not override top-level permissions")
+    ci_job = job_section(ci, "verify")
+    if len(exact_run_step_indexes(ci_job, CI_COMMANDS)) != 1:
+        errors.append("ordinary CI gate: required commands must be one exact executable run step")
 
     triggers = section(pages, "on")
     trigger_keys = {
         match.group(1)
         for line in triggers.splitlines()
-        if (match := re.match(r"^  ([\w-]+):\s*$", line))
+        if (match := re.match(r"^  ([\w-]+):(?:\s+.*)?$", line))
     }
-    if trigger_keys != {"push", "workflow_dispatch"} or "      - main" not in triggers:
-        errors.append("main branch trigger: Pages must use only main push and workflow_dispatch")
+    malformed_trigger_lines = [
+        line for line in triggers.splitlines()
+        if line.startswith("  ") and not line.startswith("    ") and line.strip()
+        and not line.lstrip().startswith("#") and not re.match(r"^  [\w-]+:(?:\s+.*)?$", line)
+    ]
+    if trigger_keys != {"push", "workflow_dispatch"} or malformed_trigger_lines:
+        errors.append("Pages trigger allowlist: only main push and workflow_dispatch are permitted")
     branches = re.findall(r"^\s+-\s+([^\s#]+)\s*$", triggers, re.MULTILINE)
     if branches != ["main"]:
         errors.append("main branch trigger: Pages branch list must be exactly main")
     if permission_values(pages) != {"contents: read", "pages: write", "id-token: write"}:
         errors.append("permissions: Pages must grant contents read, pages write and id-token write only")
+    if has_job_level_permissions(pages):
+        errors.append("job-level permissions: Pages jobs must not override top-level permissions")
 
     concurrency = section(pages, "concurrency")
     if "  group: pages-${{ github.ref }}" not in concurrency:
@@ -134,29 +183,30 @@ def check_workflows(root: Path) -> list[str]:
     if not re.search(r"^  deploy:\s*$[\s\S]*?^    needs: build\s*$", pages, re.MULTILINE):
         errors.append("deployment dependency: deploy must need build")
 
-    for command in CI_COMMANDS:
-        if command not in pages_shell:
-            errors.append(f"Pages build gate missing: {command}")
-    for action in ("actions/configure-pages@", "actions/upload-pages-artifact@", "actions/deploy-pages@"):
-        if action not in pages:
-            errors.append(f"Pages action missing: {action}")
+    build_job = job_section(pages, "build")
+    deploy_job = job_section(pages, "deploy")
+    gate_steps = exact_run_step_indexes(build_job, CI_COMMANDS)
+    if len(gate_steps) != 1:
+        errors.append("Pages build gate: required commands must be one exact executable run step")
+    configure_steps = action_step_indexes(build_job, "actions/configure-pages")
+    if len(configure_steps) != 1:
+        errors.append("configure-pages step: require one uncommented action in the build job")
+    upload_steps = action_step_indexes(build_job, "actions/upload-pages-artifact")
+    if len(upload_steps) != 1:
+        errors.append("upload-pages step: require one uncommented action in the build job")
+    deploy_steps = action_step_indexes(deploy_job, "actions/deploy-pages")
+    if len(deploy_steps) != 1:
+        errors.append("deploy-pages step: require one uncommented action in the deploy job")
 
-    upload_matches = list(re.finditer(r"^\s*- uses: actions/upload-pages-artifact@[^\n]+$", pages, re.MULTILINE))
-    if len(upload_matches) != 1 or not re.search(
-        r"- uses: actions/upload-pages-artifact@[^\n]+\n\s+with:\n\s+path: dist/site\s*$",
-        pages,
-        re.MULTILINE,
-    ):
+    build_steps = step_blocks(build_job)
+    upload_step = build_steps[upload_steps[0]] if len(upload_steps) == 1 else ""
+    if not re.search(r"^          path: dist/site\s*$", upload_step, re.MULTILINE):
         errors.append("upload path: Pages artifact must be exactly dist/site")
-    if upload_matches:
-        before_upload = pages[: upload_matches[0].start()]
-        previous_step = before_upload.rsplit("\n      - ", 1)[-1]
-        if "run: |" not in previous_step or "npm --prefix web run build:site" not in previous_step:
-            errors.append("final rebuild: final pre-upload step must rebuild dist/site")
-        test_position = before_upload.find("npm --prefix web run test:site")
-        build_position = before_upload.rfind("npm --prefix web run build:site")
-        if test_position < 0 or build_position < test_position:
-            errors.append("final rebuild: clean build must run after site tests")
+    final_build_steps = exact_run_step_indexes(build_job, FINAL_BUILD_COMMANDS)
+    if (len(upload_steps) != 1 or len(final_build_steps) != 1
+            or final_build_steps[0] + 1 != upload_steps[0]
+            or not gate_steps or gate_steps[0] >= final_build_steps[0]):
+        errors.append("final rebuild: exact clean build step must follow tests immediately before upload")
     if re.search(r"\bCNAME\b|custom[-_ ]?domain", pages, re.IGNORECASE):
         errors.append("custom domain mutation: Pages workflow must not write CNAME or a custom domain")
     if re.search(r"^\s+enablement:\s*true\s*$", pages, re.MULTILINE):

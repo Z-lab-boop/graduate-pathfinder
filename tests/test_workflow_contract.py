@@ -14,6 +14,7 @@ name: CI
 on:
   push:
   pull_request:
+
 permissions:
   contents: read
 jobs:
@@ -29,6 +30,7 @@ jobs:
           python3 -m unittest discover -s tests -v
           python3 -m compileall -q scripts tests
           python3 scripts/check_skill_structure.py .
+          python3 scripts/check_workflows.py .
           npm --prefix web ci
           npx --prefix web playwright install chromium
           npm --prefix web run typecheck
@@ -44,6 +46,7 @@ on:
     branches:
       - main
   workflow_dispatch:
+
 permissions:
   contents: read
   pages: write
@@ -63,6 +66,7 @@ jobs:
           python3 -m unittest discover -s tests -v
           python3 -m compileall -q scripts tests
           python3 scripts/check_skill_structure.py .
+          python3 scripts/check_workflows.py .
           npm --prefix web ci
           npx --prefix web playwright install chromium
           npm --prefix web run typecheck
@@ -158,6 +162,85 @@ class WorkflowContractTests(unittest.TestCase):
             "      - uses: actions/configure-pages@v5\n        with:\n          enablement: true\n",
         ))
         self.assert_contract_failure(result, "Pages enablement")
+
+    def test_rejects_required_commands_hidden_by_shell_structure(self) -> None:
+        mutations = {
+            "heredoc": CI.replace(
+                "        run: |\n          python3 -m unittest",
+                "        run: |\n          cat <<'CONTRACT_ONLY'\n          python3 -m unittest",
+            ).replace("          git diff --check\n", "          git diff --check\n          CONTRACT_ONLY\n"),
+            "control flow": CI.replace(
+                "        run: |\n          python3 -m unittest",
+                "        run: |\n          if false; then\n          python3 -m unittest",
+            ).replace("          git diff --check\n", "          git diff --check\n          fi\n"),
+            "redirection": CI.replace(
+                "          npm --prefix web run typecheck\n",
+                "          npm --prefix web run typecheck > /dev/null\n",
+            ),
+        }
+        for label, mutation in mutations.items():
+            with self.subTest(label=label):
+                self.assert_contract_failure(self.run_check(ci=mutation), "ordinary CI gate")
+
+    def test_rejects_final_rebuild_hidden_by_shell_structure(self) -> None:
+        mutations = {
+            "heredoc": PAGES.replace(
+                "        run: |\n          npm --prefix web run build:site\n",
+                "        run: |\n          cat <<'CONTRACT_ONLY'\n          npm --prefix web run build:site\n          CONTRACT_ONLY\n",
+            ),
+            "control flow": PAGES.replace(
+                "        run: |\n          npm --prefix web run build:site\n",
+                "        run: |\n          if false; then\n          npm --prefix web run build:site\n          fi\n",
+            ),
+            "redirection": PAGES.replace(
+                "          npm --prefix web run build:site\n",
+                "          npm --prefix web run build:site > /dev/null\n",
+            ),
+        }
+        for label, mutation in mutations.items():
+            with self.subTest(label=label):
+                self.assert_contract_failure(self.run_check(pages=mutation), "final rebuild")
+
+    def test_rejects_ci_job_level_permissions_override(self) -> None:
+        result = self.run_check(ci=CI.replace(
+            "  verify:\n",
+            "  verify:\n    permissions: write-all\n",
+        ))
+        self.assert_contract_failure(result, "job-level permissions")
+
+    def test_rejects_pages_job_level_permissions_override(self) -> None:
+        result = self.run_check(pages=PAGES.replace(
+            "  build:\n",
+            "  build:\n    permissions:\n      contents: write\n",
+        ))
+        self.assert_contract_failure(result, "job-level permissions")
+
+    def test_rejects_inline_extra_pages_trigger(self) -> None:
+        result = self.run_check(pages=PAGES.replace(
+            "  workflow_dispatch:\n",
+            "  workflow_dispatch:\n  schedule: {cron: '0 0 * * *'}\n",
+        ))
+        self.assert_contract_failure(result, "Pages trigger allowlist")
+
+    def test_rejects_configure_action_present_only_in_comment(self) -> None:
+        result = self.run_check(pages=PAGES.replace(
+            "      - uses: actions/configure-pages@v5\n",
+            "      # actions/configure-pages@v5\n",
+        ))
+        self.assert_contract_failure(result, "configure-pages step")
+
+    def test_rejects_deploy_action_present_only_in_comment(self) -> None:
+        result = self.run_check(pages=PAGES.replace(
+            "        uses: actions/deploy-pages@v4\n",
+            "        # actions/deploy-pages@v4\n",
+        ))
+        self.assert_contract_failure(result, "deploy-pages step")
+
+    def test_public_release_gates_do_not_publish_a_machine_home_path(self) -> None:
+        text = (REPO_ROOT / "docs" / "public-site-release-gates.md").read_text(encoding="utf-8")
+        self.assertNotIn("/Users/", text)
+        self.assertIn("optional maintainer-local", text)
+        self.assertIn("SKILL_CREATOR_QUICK_VALIDATE", text)
 
 
 if __name__ == "__main__":

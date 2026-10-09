@@ -65,6 +65,16 @@ class SkillStructureCheckTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("description must be nonempty", result.stderr)
 
+    def test_rejects_malformed_top_level_frontmatter_line(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.make_skill(
+                Path(directory),
+                "---\nname: graduate-pathfinder\ndescription: Present.\nthis is not yaml\n---\n",
+            )
+            result = self.run_check(root)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("malformed top-level line", result.stderr)
+
     def test_rejects_missing_required_path(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = self.make_skill(Path(directory))

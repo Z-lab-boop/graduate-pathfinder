@@ -31,10 +31,16 @@ def parse_frontmatter(path: Path) -> tuple[dict[str, str], list[str]]:
     values: dict[str, str] = {}
     body = lines[1:end]
     for index, line in enumerate(body):
-        if not line.strip() or line[:1].isspace() or ":" not in line:
+        if not line.strip() or line.lstrip().startswith("#") or line[:1].isspace():
+            continue
+        if ":" not in line:
+            errors.append(f"frontmatter malformed top-level line: {line.strip()}")
             continue
         key, value = line.split(":", 1)
         key = key.strip()
+        if not key:
+            errors.append(f"frontmatter malformed top-level line: {line.strip()}")
+            continue
         value = value.strip().strip("'\"")
         if value in {"|", "|-", "|+", ">", ">-", ">+"}:
             continuation: list[str] = []
