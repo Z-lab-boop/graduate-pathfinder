@@ -132,6 +132,28 @@ class WorkflowContractTests(unittest.TestCase):
         result = self.run_check(pages=PAGES.replace("    if: github.ref == 'refs/heads/main'\n", ""))
         self.assert_contract_failure(result, "main guard")
 
+    def test_rejects_conditioned_deploy_job(self) -> None:
+        for value in ("false", "'false'", '"false"', "${{ false }}", "true", "always()", ""):
+            for key in ("if", "if "):
+                with self.subTest(key=key, value=value):
+                    pages = PAGES.replace("    needs: build\n", f"    needs: build\n    {key}: {value}\n")
+                    self.assert_contract_failure(self.run_check(pages=pages), "deploy job condition")
+
+    def test_rejects_quoted_or_escaped_deploy_job_condition_keys(self) -> None:
+        for key in ('"if"', "'if'", '"\\u0069f"', '"\\x69f"', '? "\\u0069f"\n    '):
+            with self.subTest(key=key):
+                pages = PAGES.replace("  deploy:\n", f"  deploy:\n    {key}: false\n")
+                self.assert_contract_failure(self.run_check(pages=pages), "quoted or escaped structural key")
+
+    def test_requires_main_guard_on_build_job_only(self) -> None:
+        guard = "    if: github.ref == 'refs/heads/main'\n"
+        pages = PAGES.replace(guard, "").replace("  deploy:\n", "  deploy:\n" + guard)
+        self.assert_contract_failure(self.run_check(pages=pages), "main guard")
+
+    def test_rejects_additional_build_job_condition(self) -> None:
+        pages = PAGES.replace("  build:\n", "  build:\n    if: false\n")
+        self.assert_contract_failure(self.run_check(pages=pages), "main guard")
+
     def test_rejects_wrong_upload_path(self) -> None:
         result = self.run_check(pages=PAGES.replace("          path: dist/site\n", "          path: dist\n"))
         self.assert_contract_failure(result, "upload path")

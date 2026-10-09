@@ -245,13 +245,16 @@ def check_workflows(root: Path) -> list[str]:
         errors.append("ref-scoped concurrency: group must be pages-${{ github.ref }}")
     if "  cancel-in-progress: true" not in concurrency:
         errors.append("ref-scoped concurrency: cancellation must be enabled")
-    if "    if: github.ref == 'refs/heads/main'" not in pages:
-        errors.append("main guard: build job must require refs/heads/main")
     if not re.search(r"^  deploy:\s*$[\s\S]*?^    needs: build\s*$", pages, re.MULTILINE):
         errors.append("deployment dependency: deploy must need build")
 
     build_job = job_section(pages, "build")
     deploy_job = job_section(pages, "deploy")
+    job_condition = re.compile(r"^    if[ \t]*:.*$", re.MULTILINE)
+    if job_condition.findall(build_job) != ["    if: github.ref == 'refs/heads/main'"]:
+        errors.append("main guard: build job must have only the exact refs/heads/main condition")
+    if job_condition.search(deploy_job):
+        errors.append("deploy job condition: deploy must not have any job-level if condition")
     gate_steps = exact_run_step_indexes(build_job, CI_COMMANDS)
     if len(gate_steps) != 1:
         errors.append("Pages build gate: required commands must be one exact executable run step")
