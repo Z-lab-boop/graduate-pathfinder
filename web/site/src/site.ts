@@ -1,7 +1,8 @@
 import { copy, LANGUAGE_KEY, type Language } from "./i18n.js";
+import { homeCopy, initHome } from "./home.js";
 
 export function applyLanguage(language: Language): void {
-  const dictionary = copy[language];
+  const dictionary = { ...copy[language], ...homeCopy[language] };
   document.documentElement.lang = language;
   document.querySelectorAll<HTMLElement>("[data-i18n]").forEach((element) => {
     const value = dictionary[element.dataset.i18n ?? ""];
@@ -10,6 +11,10 @@ export function applyLanguage(language: Language): void {
   document.querySelectorAll<HTMLElement>("[data-i18n-label]").forEach((element) => {
     const value = dictionary[element.dataset.i18nLabel ?? ""];
     if (value !== undefined) element.setAttribute("aria-label", value);
+  });
+  document.querySelectorAll<HTMLImageElement>("[data-i18n-alt]").forEach((element) => {
+    const value = dictionary[element.dataset.i18nAlt ?? ""];
+    if (value !== undefined) element.alt = value;
   });
   const page = document.body.dataset.page;
   if (page && dictionary[`${page}.title`]) document.title = dictionary[`${page}.title`];
@@ -26,6 +31,7 @@ export function initSite(): void {
     // English static content remains usable when browser storage is unavailable.
   }
   applyLanguage(language);
+  initHome();
   document.querySelector<HTMLButtonElement>("[data-language-switch]")?.addEventListener("click", () => {
     language = language === "en" ? "zh-CN" : "en";
     applyLanguage(language);

@@ -19,18 +19,95 @@
     </nav>
     <button class="language-switch" type="button" data-language-switch data-i18n="language.switch">切换到中文</button>
   </header>
-  <main id="content" class="shell" tabindex="-1">
-    <p class="eyebrow" data-i18n="site.eyebrow">Admissions Evidence Atlas</p>
-    <h1 data-i18n="home.heading">Every application claim needs a source.</h1>
-    <p class="intro" data-i18n="home.intro">A local-first Codex Skill for Chinese graduate admissions decisions. Review materials, compare targets, and keep evidence, unknowns and conflicts visible.</p>
-    <div class="actions">
-      <a class="primary-action" href="./explore.html" data-i18n="home.explore">Explore the synthetic case</a>
-      <a href="./docs.html#install" data-i18n="home.install">Install the Skill</a>
-    </div>
-    <section class="archive-note" aria-labelledby="journey-heading">
-      <h2 id="journey-heading" data-i18n="home.workflow.heading">An evidence-led application journey</h2>
-      <p class="workflow" data-i18n="home.workflow">Profile → Materials → Targets → History → Outlook</p>
-      <p data-i18n="home.boundary">Review evidence locally. Keep eligibility, material readiness, fit and confidence separate. An ordinal outlook does not guarantee admission.</p>
+  <main id="content" class="shell atlas-home" tabindex="-1">
+    <section class="atlas-hero" aria-labelledby="home-heading">
+      <div class="hero-copy">
+        <p class="eyebrow" data-i18n="site.eyebrow">Admissions Evidence Atlas</p>
+        <h1 id="home-heading" data-i18n="home.heading">Every application claim needs a source.</h1>
+        <p class="intro" data-i18n="home.intro">A local-first Codex Skill for Chinese graduate admissions decisions. Review materials, compare targets, and keep evidence, unknowns and conflicts visible.</p>
+        <div class="actions">
+          <a class="primary-action" href="./explore.html" data-i18n="home.explore">Explore the synthetic case</a>
+          <a class="install-action" href="./docs.html#install" data-i18n="home.install">Install the Skill</a>
+        </div>
+        <p class="hero-note" data-i18n="home.hero.note">A clearer decision begins with a traceable claim.</p>
+      </div>
+      <figure class="hero-art">
+        <div class="art-frame">
+          <p class="folio" data-i18n="home.folio">Field guide / 01</p>
+          <img src="./assets/generated/admissions-atlas-hero.png" width="1536" height="1024" fetchpriority="high" alt="Concept artwork: blank application folders, translucent timeline strips and plain brass tools on a dark archival desk." data-i18n-alt="home.hero.alt">
+          <span class="registration" aria-hidden="true">+</span>
+        </div>
+        <figcaption><span class="concept-label" data-i18n="home.concept">Concept artwork</span><span data-i18n="home.hero.caption">An imagined admissions archive. Generated imagery; no real documents or institution.</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="journey-section" aria-labelledby="journey-heading">
+      <div class="section-heading"><p class="section-number" aria-hidden="true">01 / 05</p><div><h2 id="journey-heading" data-i18n="home.workflow.heading">From a profile to a considered outlook.</h2><p data-i18n="home.journey.intro">Five stages. One evidence trail. Follow what is known, what is missing, and what needs another look.</p></div></div>
+      <div class="journey-layout">
+        <ol class="journey-index" data-journey aria-label="Application journey" data-i18n-label="home.journey.label">
+          <li><a href="#profile" data-stage-link aria-current="step"><span aria-hidden="true">01</span><span data-i18n="home.profile">Profile</span></a></li>
+          <li><a href="#materials" data-stage-link><span aria-hidden="true">02</span><span data-i18n="home.materials">Materials</span></a></li>
+          <li><a href="#targets" data-stage-link><span aria-hidden="true">03</span><span data-i18n="home.targets">Targets</span></a></li>
+          <li><a href="#history" data-stage-link><span aria-hidden="true">04</span><span data-i18n="home.history">History</span></a></li>
+          <li><a href="#outlook" data-stage-link><span aria-hidden="true">05</span><span data-i18n="home.outlook">Outlook</span></a></li>
+        </ol>
+        <div class="journey-stages">
+          <section id="profile" data-stage data-active="true" aria-labelledby="profile-heading">
+            <p class="stage-number" aria-hidden="true">01</p><div><h3 id="profile-heading" data-i18n="home.profile">Profile</h3><h4 data-i18n="home.profile.question">Start with the right context.</h4><p data-i18n="home.profile.body">Name the intake year, applicant route and academic background. A requirement only matters when it applies to your case.</p><p class="stage-note" data-i18n="home.profile.note">Context before comparison</p></div>
+          </section>
+          <section id="materials" data-stage aria-labelledby="materials-heading">
+            <p class="stage-number" aria-hidden="true">02</p><div><h3 id="materials-heading" data-i18n="home.materials">Materials</h3><h4 data-i18n="home.materials.question">Read beyond the checklist.</h4><p data-i18n="home.materials.body">Review resumes, transcripts and recommendation drafts. Keep extraction uncertainty, missing signatures and target-specific gaps visible.</p><p class="stage-note" data-i18n="home.materials.note">A file exists ≠ a material is ready</p></div>
+          </section>
+          <section id="targets" data-stage aria-labelledby="targets-heading">
+            <p class="stage-number" aria-hidden="true">03</p><div><h3 id="targets-heading" data-i18n="home.targets">Targets</h3><h4 data-i18n="home.targets.question">Compare claims, not reputations.</h4><p data-i18n="home.targets.body">Separate eligibility, fit, material readiness and evidence confidence for each target. Keep every requirement connected to its source.</p><p class="stage-note" data-i18n="home.targets.note">One target, several independent dimensions</p></div>
+          </section>
+          <section id="history" data-stage aria-labelledby="history-heading">
+            <p class="stage-number" aria-hidden="true">04</p><div><h3 id="history-heading" data-i18n="home.history">History</h3><h4 data-i18n="home.history.question">Give every count a scope.</h4><p data-i18n="home.history.body">Read previous-cycle interview timelines and stage counts with their year, route, numerator and denominator. Incompatible scopes stay unresolved.</p><p class="stage-note" data-i18n="home.history.note">Past cohort ratios are not personal probabilities</p></div>
+          </section>
+          <section id="outlook" data-stage aria-labelledby="outlook-heading">
+            <p class="stage-number" aria-hidden="true">05</p><div><h3 id="outlook-heading" data-i18n="home.outlook">Outlook</h3><h4 data-i18n="home.outlook.question">Make uncertainty part of the decision.</h4><p data-i18n="home.outlook.body">Bring the evidence together into an ordinal outlook. Surface the next review step alongside missing and conflicting information.</p><p class="stage-note" data-i18n="home.outlook.note">Decision support, with no admission guarantee</p></div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <aside class="evidence-legend" aria-labelledby="legend-heading">
+      <div><h2 id="legend-heading" data-i18n="home.legend.heading">Read the evidence state</h2><p data-i18n="home.legend.body">Status follows the claim. Unknowns remain visible until evidence resolves them.</p></div>
+      <ul class="state-list">
+        <li class="state-confirmed"><span aria-hidden="true">●</span><span data-i18n="home.confirmed">Confirmed</span></li>
+        <li class="state-missing"><span aria-hidden="true">□</span><span data-i18n="home.missing">Missing</span></li>
+        <li class="state-conflicted"><span aria-hidden="true">◆</span><span data-i18n="home.conflicted">Conflicted</span></li>
+        <li class="state-review"><span aria-hidden="true">△</span><span data-i18n="home.review">Review required</span></li>
+      </ul>
+    </aside>
+
+    <section class="product-preview" aria-labelledby="preview-heading">
+      <div class="preview-intro"><p class="synthetic-label" data-i18n="home.preview.label">Synthetic product walkthrough</p><h2 id="preview-heading" data-i18n="home.preview.heading">See how a claim travels.</h2><p data-i18n="home.preview.intro">A fictional example of the review flow, rendered as product UI. All records below are invented.</p></div>
+      <div class="evidence-flow">
+        <p class="flow-bar" data-i18n="home.preview.case">FICTIONAL CASE / MATERIAL REVIEW</p>
+        <ol class="flow-steps">
+          <li><p class="flow-label" data-i18n="home.preview.source.label">Source claim</p><h3 data-i18n="home.preview.source">Target requires a signed recommendation.</h3><p data-i18n="home.preview.source.note">Fictional requirement · target-specific</p><span class="flow-state state-confirmed"><span aria-hidden="true">●</span><span data-i18n="home.confirmed">Confirmed</span></span></li>
+          <li><p class="flow-label" data-i18n="home.preview.document.label">Material check</p><h3 data-i18n="home.preview.document">Recommendation draft</h3><p data-i18n="home.preview.document.note">Signature absent in the fictional draft.</p><span class="flow-state state-missing"><span aria-hidden="true">□</span><span data-i18n="home.missing">Missing</span></span></li>
+          <li><p class="flow-label" data-i18n="home.preview.action.label">Next review step</p><h3 data-i18n="home.preview.action">Confirm signature requirements.</h3><p data-i18n="home.preview.action.note">Guidance only · applicant reviews locally</p><span class="flow-state state-review"><span aria-hidden="true">△</span><span data-i18n="home.review">Review required</span></span></li>
+        </ol>
+        <p class="flow-boundary" data-i18n="home.preview.boundary">A visible gap stays open. It is not silently converted into readiness.</p>
+      </div>
+      <a class="preview-link" href="./explore.html" data-i18n="home.explore">Explore the synthetic case</a>
+    </section>
+
+    <section class="archive-gallery" aria-labelledby="art-heading">
+      <div class="section-heading"><p class="section-number" aria-hidden="true" data-i18n="home.art.folio">Field notes</p><div><h2 id="art-heading" data-i18n="home.art.heading">Materials in context. Routes in perspective.</h2><p data-i18n="home.art.intro">The archive is a visual metaphor. Your actual materials and decisions stay in your local workflow.</p></div></div>
+      <div class="archive-spread">
+        <figure class="materials-art"><img src="./assets/generated/materials-review.png" width="1448" height="1086" loading="lazy" alt="Concept artwork: blank envelope, anonymous document layers, geometric checklist and teal and cinnabar tabs." data-i18n-alt="home.materials.alt"><figcaption><span class="concept-label" data-i18n="home.concept">Concept artwork</span><span data-i18n="home.materials.caption">Anonymous paper layers and a blank envelope. Generated concept; not applicant evidence.</span></figcaption></figure>
+        <figure class="campus-art"><img src="./assets/generated/campus-route.png" width="1672" height="941" loading="lazy" alt="Concept artwork: a fictional architectural corridor with branching bands of light, no people or institutional signs." data-i18n-alt="home.campus.alt"><figcaption><span class="concept-label" data-i18n="home.concept">Concept artwork</span><span data-i18n="home.campus.caption">Light traces possible routes through an imagined campus. Generated concept; not a real university.</span></figcaption></figure>
+      </div>
+    </section>
+
+    <section class="privacy-strip" aria-labelledby="privacy-heading">
+      <p class="eyebrow" data-i18n="home.privacy.strip">No uploads · no admission guarantees</p>
+      <h2 id="privacy-heading" data-i18n="home.privacy.heading">Your materials stay with you.</h2>
+      <p data-i18n="home.privacy.body">Use the Skill in your local Codex workspace. This public site explains the workflow using fictional examples; it accepts no applicant documents and has no tracking.</p>
+      <a href="./docs.html#privacy" data-i18n="home.privacy.link">Read the evidence &amp; privacy boundaries</a>
     </section>
   </main>
   <footer class="site-footer">
