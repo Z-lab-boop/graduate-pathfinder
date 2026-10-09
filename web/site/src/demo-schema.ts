@@ -110,6 +110,15 @@ export function parseDemo(input: unknown): Demo {
     const scopesMatch = numerator.target_id === denominator.target_id && scopeFields.every(field => numeratorScope[field] === denominatorScope[field]);
     const target = ref(result.targets, numerator.target_id) as DemoTarget;
     if (numerator.stage !== "final_admitted" || denominator.stage !== "confirmed_attended" || (metric.state === "matched") !== scopesMatch || (scopesMatch && (numeratorScope.admission_round !== target.round || denominator.value === 0 || numerator.value > denominator.value || [numerator, denominator].some(count => (ref(result.evidence, count.evidence_id) as DemoEvidence).status !== "confirmed")))) fail();
+    if (metric.state === "matched") {
+      const sameScopeCounts = result.counts.filter(count => {
+        const scope = ref(result.scopes, count.scope_id) as DemoScope;
+        return scopeFields.every(field => scope[field] === numeratorScope[field]);
+      });
+      if (["final_admitted", "confirmed_attended"].some(stage => sameScopeCounts.filter(count => count.stage === stage).length !== 1)) {
+        throw new Error("ambiguous_stage_count");
+      }
+    }
   }
   for (const target of result.targets) {
     if (result.outlooks.filter(item => item.target_id === target.id).length !== 1 || !result.requirements.some(item => item.target_id === target.id)) fail();

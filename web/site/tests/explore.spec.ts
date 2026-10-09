@@ -85,6 +85,24 @@ test("demo schema rejects v0.1 portfolio groups and unsupported historical ratio
   expect(accepted).toEqual([]);
 });
 
+for (const stage of ["final_admitted", "confirmed_attended"]) for (const identical of [false, true]) {
+  test(`demo schema refuses ambiguous_stage_count for duplicate ${stage}, identical values ${identical}`, async ({ page }) => {
+    await page.goto("/explore.html");
+    const result = await page.evaluate(async ({ stage, identical }) => {
+      const path = "./assets/demo-schema.js";
+      const { parseDemo } = await import(path);
+      const original = await (await fetch("./data/demo.json")).json();
+      parseDemo(original);
+      const extra = original.counts.find((count: any) => count.id === "count-applied");
+      const selected = original.counts.find((count: any) => count.stage === stage && count.scope_id === extra.scope_id);
+      extra.stage = stage;
+      if (identical) extra.value = selected.value;
+      try { parseDemo(original); return "accepted"; } catch (error) { return (error as Error).message; }
+    }, { stage, identical });
+    expect(result).toBe("ambiguous_stage_count");
+  });
+}
+
 test("demo schema fixed corpus rejects review canaries in every display field", async ({ page }) => {
   await page.goto("/explore.html");
   const accepted = await page.evaluate(async (canaries) => {
