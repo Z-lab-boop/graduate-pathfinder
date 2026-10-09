@@ -20,11 +20,15 @@
     <button class="language-switch" type="button" data-language-switch data-i18n="language.switch">切换到中文</button>
   </header>
   <main id="content" class="shell" tabindex="-1">
-    <p class="synthetic-label" data-i18n="explore.label">Synthetic walkthrough / 合成演示</p>
+    <p class="synthetic-label walkthrough-stamp"><span>Synthetic walkthrough</span><span aria-hidden="true"> / </span><span>合成演示</span></p>
     <h1 data-i18n="explore.heading">Follow the evidence.</h1>
     <p class="intro" data-i18n="explore.intro">This walkthrough uses fictional applicant and institution data to explain the local review workflow.</p>
     <p data-i18n="explore.boundary">Materials, targets, previous-cycle counts and outlook are reviewed separately. Historical cohort ratios are not a personal admission probability.</p>
     <div class="actions"><a href="./docs.html" data-i18n="explore.docs">Read the local workflow</a></div>
+    <section id="walkthrough" aria-label="Synthetic admissions case" aria-busy="true">
+      <p>Loading fictional evidence…</p>
+      <noscript><p>The interactive case needs JavaScript. Read the local workflow above for the evidence and privacy boundaries.</p></noscript>
+    </section>
   </main>
   <footer class="site-footer">
     <div class="shell">

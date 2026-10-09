@@ -1,5 +1,6 @@
 import { copy, LANGUAGE_KEY, type Language } from "./i18n.js";
 import { homeCopy, initHome } from "./home.js";
+import { initExplore } from "./explore.js";
 
 export function applyLanguage(language: Language): void {
   const dictionary = { ...copy[language], ...homeCopy[language] };
@@ -20,6 +21,7 @@ export function applyLanguage(language: Language): void {
   if (page && dictionary[`${page}.title`]) document.title = dictionary[`${page}.title`];
   const description = document.querySelector<HTMLMetaElement>('meta[name="description"]');
   if (description && page && dictionary[`${page}.description`]) description.content = dictionary[`${page}.description`];
+  document.dispatchEvent(new CustomEvent("site:language", { detail: language }));
 }
 
 export function initSite(): void {
@@ -32,6 +34,7 @@ export function initSite(): void {
   }
   applyLanguage(language);
   initHome();
+  void initExplore();
   document.querySelector<HTMLButtonElement>("[data-language-switch]")?.addEventListener("click", () => {
     language = language === "en" ? "zh-CN" : "en";
     applyLanguage(language);
