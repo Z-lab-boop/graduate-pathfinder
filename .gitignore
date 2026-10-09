@@ -18,5 +18,5 @@ private-cases/
 /web/node_modules/
 /web/test-results/
 /web/playwright-report/
-/dist/site/
+/dist/
 /docs/assets/.capture-*/

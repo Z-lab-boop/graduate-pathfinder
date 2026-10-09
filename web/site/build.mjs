@@ -22,12 +22,12 @@ async function emit(path, contents) {
   await writeFile(destination, contents);
 }
 
-async function copyTree(from, to) {
+async function copyTree(from, to, includeFile = () => true) {
   const info = await lstat(from);
   if (info.isSymbolicLink()) throw new Error(`Symbolic links are not permitted in site sources: ${from}`);
   if (info.isDirectory()) {
-    for (const entry of await readdir(from)) await copyTree(resolve(from, entry), `${to}/${entry}`);
-  } else if (info.isFile()) {
+    for (const entry of await readdir(from)) await copyTree(resolve(from, entry), `${to}/${entry}`, includeFile);
+  } else if (info.isFile() && includeFile(from)) {
     await emit(to, await readFile(from));
   }
 }
@@ -57,9 +57,12 @@ for (const page of ["index.html", "explore.html", "docs.html"]) {
   await copyTree(resolve(source, page), page);
 }
 await copyTree(resolve(source, "src/site.css"), "assets/site.css");
-for (const directory of ["data", "assets"]) {
+for (const [directory, includeFile] of [
+  ["data", path => path.endsWith(".json")],
+  ["assets", path => /\.(?:png|webp|svg)$/.test(path)]
+]) {
   try {
-    await copyTree(resolve(source, directory), directory);
+    await copyTree(resolve(source, directory), directory, includeFile);
   } catch (error) {
     if (error.code !== "ENOENT") throw error;
   }

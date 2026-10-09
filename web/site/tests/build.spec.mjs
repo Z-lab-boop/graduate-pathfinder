@@ -35,3 +35,16 @@ test("build rejects an escaping TypeScript import without emitting outside dist/
     await rm(fixture, { recursive: true, force: true });
   }
 });
+
+test("build emits only public static artifact types", async () => {
+  const result = spawnSync(process.execPath, [join(repository, "web/site/build.mjs")], {
+    cwd: repository,
+    encoding: "utf8"
+  });
+  expect(result.error).toBeUndefined();
+  expect(result.status).toBe(0);
+  const entries = await readdir(join(repository, "dist/site"), { recursive: true, withFileTypes: true });
+  const files = entries.filter(entry => entry.isFile()).map(entry => join(entry.parentPath, entry.name));
+  expect(files.some(file => file.endsWith("assets/generated/README.md"))).toBe(false);
+  expect(files.filter(file => !/\.(?:html|css|js|json|png|webp|svg)$/.test(file))).toEqual([]);
+});
