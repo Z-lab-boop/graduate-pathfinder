@@ -1,4 +1,4 @@
-import { parseDemo, type Demo, type DemoEvidence, type DemoRequirement, type EvidenceStatus } from "./demo-schema.js";
+import { parseDemo, type CountStage, type Demo, type DemoEvidence, type DemoRequirement, type EvidenceStatus } from "./demo-schema.js";
 
 const chinese: Record<string, string> = {
   "Fictional institutions only": "以下院校均为虚构", "Select a fictional target": "选择虚构目标", "Synthetic admissions case": "合成招生案例",
@@ -12,10 +12,11 @@ const chinese: Record<string, string> = {
   "Resume extraction was reviewed in this fictional case.": "本虚构案例已复核简历提取结果。", "Transcript fields were reviewed in this fictional case.": "本虚构案例已复核成绩单字段。", "The recommendation is a draft and lacks a signature.": "推荐信仍为草稿，缺少签字。", "Two fictional certificate dates disagree.": "两份虚构证书日期存在冲突。", "The project certificate extraction is unreadable.": "项目证明提取结果无法读取。", "The ranking denominator needs manual review.": "排名分母需要人工复核。", "Counts share one fictional intake, route and unit scope.": "人数属于同一虚构入学年、路径与单位口径。", "Attendance belongs to a different fictional route scope.": "参加人数属于另一虚构申请路径口径。",
   "Fictional material review sheet": "虚构材料复核表", "Fictional recommendation checklist": "虚构推荐信清单", "Fictional conflict register": "虚构冲突记录", "Fictional extraction review": "虚构提取复核", "Fictional cycle register": "虚构周期记录", "Fictional alternate cycle register": "虚构其他路径记录",
   "Target comparison": "目标比较", "Choose a target to update every view.": "选择目标以同步更新各视图。", "Admission outlook": "录取展望", "Eligibility": "资格", "Material readiness": "材料就绪度", "Competitive tier": "竞争序数档位", "Fit": "适配", "Evidence confidence": "证据信心", "Independent dimensions · no combined score": "独立维度 · 不合成为总分",
-  "eligible": "符合", "blocked": "受阻", "ready": "就绪", "repairable": "可修复", "reach": "冲刺", "core": "主申", "safety": "保守", "insufficient": "证据不足", "high": "高", "medium": "中", "low": "低",
+  "eligible": "符合", "blocked": "受阻", "ready": "就绪", "repairable": "可修复", "strong": "强", "competitive": "有竞争力", "borderline": "临界", "weak": "弱", "evidence_insufficient": "证据不足", "insufficient": "证据不足", "high": "高", "medium": "中", "low": "低",
   "Unsigned draft blocks material readiness.": "未签字草稿阻碍材料就绪。", "Certificate conflict limits evidence confidence.": "证书冲突限制证据信心。", "Ranking denominator needs review.": "排名分母需要复核。", "Unreadable evidence leaves a required gate unresolved.": "无法读取的证据使必要门槛尚未解决。",
-  "Past cohort description · not personal probability": "历史群体描述 · 非个人录取概率", "Scoped stage counts": "按口径区分的阶段人数", "Timeline": "时间线", "Scope": "口径", "Numerator": "分子", "Denominator": "分母", "Refused: stage scopes do not match": "拒绝计算：阶段口径不匹配", "No previous-cycle evidence for this fictional target.": "此虚构目标没有上年度证据。", "Applied": "申请", "Interviewed": "面试", "Attended": "参加", "Admitted": "录取",
-  "Fictional announcement": "虚构公告", "Fictional interviews": "虚构面试", "Fictional cohort recorded": "虚构群体记录", "Admitted among interviewed": "面试群体中的录取人数", "Admitted among alternate-route attendees": "其他路径参加群体中的录取人数", "northlake-data-summer-2025": "北湖-数据-夏令营-2025", "northlake-data-alternate-2025": "北湖-数据-其他路径-2025",
+  "Current competitive evidence is missing.": "缺少本年度竞争证据。", "Comparable history and current competitive evidence are missing.": "缺少可比历史与本年度竞争证据。",
+  "Past cohort description · not personal probability": "历史群体描述 · 非个人录取概率", "Scoped stage counts": "按口径区分的阶段人数", "Timeline": "时间线", "Scope": "口径", "Numerator": "分子", "Denominator": "分母", "Refused: stage scopes do not match": "拒绝计算：阶段口径不匹配", "No previous-cycle evidence for this fictional target.": "此虚构目标没有上年度证据。", "Reported applicants": "报告的申请人数", "Confirmed attended": "确认参加人数", "Final admitted": "最终录取人数", "Announced quota": "公布名额", "Listed shortlist": "名单人数", "Deduplicated shortlist": "去重名单人数", "Excellent campers": "优秀营员人数", "Pre admit": "预录取人数", "Waitlist": "候补人数",
+  "Fictional announcement": "虚构公告", "Fictional interviews": "虚构面试", "Fictional cohort recorded": "虚构群体记录", "Final admitted among confirmed attendees": "确认参加群体中的最终录取人数", "Final admitted among alternate-route confirmed attendees": "其他路径确认参加群体中的最终录取人数", "synthetic-data-methods": "合成-数据方法", "final_admitted / confirmed_attended": "最终录取人数 / 确认参加人数",
   "Guidance only": "仅供指导", "Close preview": "关闭预览", "This preview changes no material or evidence.": "此预览不会修改材料或证据。", "Review the draft with its fictional author and check the signature field locally.": "在本地与虚构作者复核草稿，并检查签字字段。", "Recheck the fictional source image and record unresolved extraction fields locally.": "重新核对虚构源图，在本地记录未解决的提取字段。",
   "Walkthrough unavailable": "演示暂不可用", "The committed fictional case could not be validated. No partial results are shown.": "已提交的虚构案例未能通过校验，未显示部分结果。", "Read the expected behavior": "阅读预期行为", "Close the preview to change the case language.": "关闭预览后可切换案例语言。"
 };
@@ -23,7 +24,8 @@ const statusLabels: Record<EvidenceStatus, string> = { confirmed: "Confirmed", m
 const dimensions = [["eligibility", "Eligibility"], ["material_readiness", "Material readiness"], ["competitive_tier", "Competitive tier"], ["fit", "Fit"], ["confidence", "Evidence confidence"]] as const;
 const tabs = ["Materials", "Targets", "Previous cycle", "Outlook"];
 const targetOrder = ["target-northlake", "target-meridian", "target-harborline"];
-const stages = ["applied", "interviewed", "attended", "admitted"];
+const stages: CountStage[] = ["announced_quota", "reported_applicants", "listed_shortlist", "deduplicated_shortlist", "confirmed_attended", "excellent_campers", "pre_admit", "waitlist", "final_admitted"];
+const stageLabels: Record<CountStage, string> = { announced_quota: "Announced quota", reported_applicants: "Reported applicants", listed_shortlist: "Listed shortlist", deduplicated_shortlist: "Deduplicated shortlist", confirmed_attended: "Confirmed attended", excellent_campers: "Excellent campers", pre_admit: "Pre admit", waitlist: "Waitlist", final_admitted: "Final admitted" };
 
 function element<K extends keyof HTMLElementTagNameMap>(tag: K, text?: string, className?: string): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
@@ -54,6 +56,10 @@ export async function initExplore(): Promise<void> {
   const evidence = (identifier: string) => data!.evidence.find(item => item.id === identifier)!;
   const visible = (identifier: string) => filters.has(evidence(identifier).status);
   const targetName = (identifier: string) => { const target = data!.targets.find(item => item.id === identifier)!; return `${tr(target.institution)} · ${tr(target.unit)}`; };
+  const scopeDescription = (identifier: string) => {
+    const scope = data!.scopes.find(item => item.id === identifier)!;
+    return [String(scope.admission_year), scope.institution, scope.unit, scope.program_code, scope.degree_type, scope.research_track, scope.admission_round].map(tr).join(" · ");
+  };
   function navigationKeys(container: HTMLElement, selector: string, vertical = false): void {
     container.addEventListener("keydown", event => {
       if (!["ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
@@ -189,13 +195,13 @@ export async function initExplore(): Promise<void> {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg"); svg.setAttribute("viewBox", "0 0 480 140"); svg.setAttribute("aria-hidden", "true"); svg.classList.add("stage-diagram");
     const list = element("ul", undefined, "stage-equivalents");
     for (const [index, count] of counts.entries()) {
-      const label = `${tr(count.stage[0].toUpperCase() + count.stage.slice(1))} · ${count.value}`;
+      const label = `${tr(stageLabels[count.stage])} · ${count.value}`;
       const group = document.createElementNS(svg.namespaceURI, "g");
       const rect = document.createElementNS(svg.namespaceURI, "rect"); rect.setAttribute("x", String(index * 120 + 12)); rect.setAttribute("y", String(100 - count.value)); rect.setAttribute("width", "85"); rect.setAttribute("height", String(count.value));
       const text = document.createElementNS(svg.namespaceURI, "text"); text.setAttribute("x", String(index * 120 + 12)); text.setAttribute("y", "125"); text.textContent = String(count.value);
       group.append(rect, text); group.addEventListener("click", () => inspect(count.evidence_id)); svg.append(group);
       const item = element("li"); item.dataset.record = count.id;
-      item.append(button(label, count.id, () => inspect(count.evidence_id)), element("p", `${tr("Scope")}: ${tr(count.scope_id)}`)); list.append(item);
+      item.append(button(label, count.id, () => inspect(count.evidence_id)), element("p", `${tr("Scope")}: ${scopeDescription(count.scope_id)}`)); list.append(item);
     }
     panel.append(svg, list);
     for (const metric of data!.metrics) {
@@ -203,7 +209,7 @@ export async function initExplore(): Promise<void> {
       const denominator = data!.counts.find(item => item.id === metric.denominator_id)!;
       if (numerator.target_id !== targetId || !visible(numerator.evidence_id) || !visible(denominator.evidence_id)) continue;
       const record = element("section", undefined, "history-metric"); record.dataset.record = metric.id;
-      record.append(element("h3", tr(metric.label)), element("p", `${tr("Numerator")}: ${numerator.value} · ${tr(numerator.scope_id)}`), element("p", `${tr("Denominator")}: ${denominator.value} · ${tr(denominator.scope_id)}`));
+      record.append(element("h3", tr(metric.label)), element("p", tr("final_admitted / confirmed_attended")), element("p", `${tr("Numerator")}: ${numerator.value} · ${scopeDescription(numerator.scope_id)}`), element("p", `${tr("Denominator")}: ${denominator.value} · ${scopeDescription(denominator.scope_id)}`));
       record.append(element("p", metric.state === "matched" ? `${numerator.value} / ${denominator.value} = ${Math.round(numerator.value / denominator.value * 100)}%` : tr("Refused: stage scopes do not match"), metric.state === "matched" ? "metric-result" : "metric-refused"));
       panel.append(record);
     }

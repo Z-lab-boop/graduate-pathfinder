@@ -40,20 +40,24 @@
     {"id":"event-interview","target_id":"target-northlake","date":"2025-07-08","label":"Fictional interviews","evidence_id":"evidence-cycle"},
     {"id":"event-result","target_id":"target-northlake","date":"2025-07-20","label":"Fictional cohort recorded","evidence_id":"evidence-cycle"}
   ],
+  "scopes": [
+    {"id":"northlake-data-summer-2025","admission_year":2025,"institution":"Northlake Institute","unit":"Data Systems","program_code":"synthetic-data-methods","degree_type":"academic","research_track":"Data Methods","admission_round":"summer-camp"},
+    {"id":"northlake-data-alternate-2025","admission_year":2025,"institution":"Northlake Institute","unit":"Data Systems","program_code":"synthetic-data-methods","degree_type":"academic","research_track":"Data Methods","admission_round":"pre-recommendation"}
+  ],
   "counts": [
-    {"id":"count-applied","target_id":"target-northlake","stage":"applied","value":80,"scope_id":"northlake-data-summer-2025","evidence_id":"evidence-cycle"},
-    {"id":"count-interviewed","target_id":"target-northlake","stage":"interviewed","value":24,"scope_id":"northlake-data-summer-2025","evidence_id":"evidence-cycle"},
-    {"id":"count-attended","target_id":"target-northlake","stage":"attended","value":18,"scope_id":"northlake-data-alternate-2025","evidence_id":"evidence-other-cycle"},
-    {"id":"count-admitted","target_id":"target-northlake","stage":"admitted","value":12,"scope_id":"northlake-data-summer-2025","evidence_id":"evidence-cycle"}
+    {"id":"count-applied","target_id":"target-northlake","stage":"reported_applicants","value":80,"scope_id":"northlake-data-summer-2025","evidence_id":"evidence-cycle"},
+    {"id":"count-confirmed-attended","target_id":"target-northlake","stage":"confirmed_attended","value":24,"scope_id":"northlake-data-summer-2025","evidence_id":"evidence-cycle"},
+    {"id":"count-alternate-attended","target_id":"target-northlake","stage":"confirmed_attended","value":18,"scope_id":"northlake-data-alternate-2025","evidence_id":"evidence-other-cycle"},
+    {"id":"count-final-admitted","target_id":"target-northlake","stage":"final_admitted","value":12,"scope_id":"northlake-data-summer-2025","evidence_id":"evidence-cycle"}
   ],
   "metrics": [
-    {"id":"metric-matched","label":"Admitted among interviewed","numerator_id":"count-admitted","denominator_id":"count-interviewed","state":"matched"},
-    {"id":"metric-refused","label":"Admitted among alternate-route attendees","numerator_id":"count-admitted","denominator_id":"count-attended","state":"refused"}
+    {"id":"metric-matched","label":"Final admitted among confirmed attendees","numerator_id":"count-final-admitted","denominator_id":"count-confirmed-attended","state":"matched"},
+    {"id":"metric-refused","label":"Final admitted among alternate-route confirmed attendees","numerator_id":"count-final-admitted","denominator_id":"count-alternate-attended","state":"refused"}
   ],
   "outlooks": [
-    {"target_id":"target-northlake","eligibility":"eligible","material_readiness":"repairable","competitive_tier":"reach","fit":"high","confidence":"medium","reasons":["Unsigned draft blocks material readiness.","Certificate conflict limits evidence confidence."]},
-    {"target_id":"target-meridian","eligibility":"insufficient","material_readiness":"repairable","competitive_tier":"core","fit":"medium","confidence":"low","reasons":["Ranking denominator needs review.","Unsigned draft blocks material readiness."]},
-    {"target_id":"target-harborline","eligibility":"blocked","material_readiness":"blocked","competitive_tier":"insufficient","fit":"medium","confidence":"low","reasons":["Unreadable evidence leaves a required gate unresolved."]}
+    {"target_id":"target-northlake","eligibility":"eligible","material_readiness":"repairable","competitive_tier":"evidence_insufficient","fit":"high","confidence":"medium","reasons":["Unsigned draft blocks material readiness.","Certificate conflict limits evidence confidence.","Current competitive evidence is missing."]},
+    {"target_id":"target-meridian","eligibility":"insufficient","material_readiness":"repairable","competitive_tier":"evidence_insufficient","fit":"medium","confidence":"low","reasons":["Ranking denominator needs review.","Unsigned draft blocks material readiness.","Comparable history and current competitive evidence are missing."]},
+    {"target_id":"target-harborline","eligibility":"blocked","material_readiness":"blocked","competitive_tier":"evidence_insufficient","fit":"medium","confidence":"low","reasons":["Unreadable evidence leaves a required gate unresolved.","Comparable history and current competitive evidence are missing."]}
   ],
   "fixes": [
     {"id":"fix-northlake-letter","requirement_id":"requirement-northlake-letter","guidance":"Review the draft with its fictional author and check the signature field locally."},
