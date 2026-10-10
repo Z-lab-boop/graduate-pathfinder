@@ -47,10 +47,21 @@ test("README documentation policy validates the repository", async () => {
   expect(await checkSiteAssets(path.resolve(".."))).toEqual([]);
 });
 
+test("repository landing README is Chinese-first with a complete English counterpart", async () => {
+  const chinese = await fs.readFile(path.resolve("../README.md"), "utf8");
+  expect(chinese).toContain('<h1 align="center">研途择校 · Graduate Pathfinder</h1>');
+  expect(chinese).toContain("循证据，辨路径，让不确定性保持可见。");
+  expect(chinese).toContain('href="README.en.md">English</a>');
+  const english = await fs.readFile(path.resolve("../README.en.md"), "utf8");
+  expect(english).toContain('<h1 align="center">Graduate Pathfinder · 研途择校</h1>');
+  expect(english).toContain("Trace evidence. Compare paths. Keep uncertainty visible.");
+  expect(english).toContain('href="README.md">中文</a>');
+});
+
 test("README and every site shell expose the project-owned visual identity", async ({ page }) => {
   const mark = "web/site/assets/generated/graduate-pathfinder-mark.png";
   const cards = ["admissions-atlas-card.webp", "materials-review-card.webp", "campus-route-card.webp"];
-  for (const readme of ["README.md", "README.zh-CN.md"]) {
+  for (const readme of ["README.md", "README.en.md", "README.zh-CN.md"]) {
     const text = await fs.readFile(path.resolve("..", readme), "utf8");
     expect(text).toContain(`<img src="${mark}"`);
     for (const card of cards) expect(text).toContain(`docs/assets/${card}`);
@@ -83,7 +94,7 @@ test("README documentation policy rejects broken asset, link, provenance and rel
     require("node:buffer").Buffer.from("89504e470d0a1a0a", "hex").copy(png);
     png.writeUInt32BE(1440, 16); png.writeUInt32BE(1000, 20);
     for (const name of images) await fs.writeFile(path.join(root, "docs/assets", name), png);
-    const baseline = "[English](README.md) [中文](README.zh-CN.md)\n" +
+    const baseline = "[English](README.en.md) [中文](README.md) [中文兼容](README.zh-CN.md)\n" +
       '<img src="web/site/assets/generated/graduate-pathfinder-mark.png" alt="Graduate Pathfinder project-owned compass and evidence-card mark">\n' +
       ["admissions-atlas-card", "materials-review-card", "campus-route-card"].map(name => `<img src="docs/assets/${name}.webp" alt="Original conceptual admissions artwork ${name}">`).join("\n") + "\n" +
       images.map(name => `![Synthetic product walkthrough ${name}](docs/assets/${name})`).join("\n") +
@@ -94,7 +105,7 @@ test("README documentation policy rejects broken asset, link, provenance and rel
     for (const card of ["admissions-atlas-card.webp", "materials-review-card.webp", "campus-route-card.webp"]) {
       await fs.copyFile(path.resolve("../docs/assets", card), path.join(root, "docs/assets", card));
     }
-    for (const name of ["README.md", "README.zh-CN.md"]) await fs.writeFile(path.join(root, name), baseline);
+    for (const name of ["README.md", "README.en.md", "README.zh-CN.md"]) await fs.writeFile(path.join(root, name), baseline);
     expect(await checkSiteAssets(root)).toEqual([]);
     const home = path.join(root, "docs/assets/site-home.png");
     await fs.unlink(home);

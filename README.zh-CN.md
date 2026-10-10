@@ -6,7 +6,7 @@
 
 <p align="center"><strong>循证据，辨路径，让不确定性保持可见。</strong><br>一个面向中国研究生招生决策的本地优先 Codex Skill。</p>
 
-<p align="center"><a href="README.md">English</a> · <a href="https://z-lab-boop.github.io/graduate-pathfinder/">公开站点</a> · <a href="https://z-lab-boop.github.io/graduate-pathfinder/explore.html">合成案例</a> · <a href="https://z-lab-boop.github.io/graduate-pathfinder/docs.html">文档</a></p>
+<p align="center"><a href="README.en.md">English</a> · <a href="README.md">中文主首页</a> · <a href="https://z-lab-boop.github.io/graduate-pathfinder/">公开站点</a> · <a href="https://z-lab-boop.github.io/graduate-pathfinder/explore.html">合成案例</a> · <a href="https://z-lab-boop.github.io/graduate-pathfinder/docs.html">文档</a></p>
 
 <p align="center"><code>本地优先</code> · <code>证据优先</code> · <code>English / 中文</code> · <code>v0.3</code></p>
 
