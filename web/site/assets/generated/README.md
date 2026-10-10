@@ -70,3 +70,15 @@ cwebp -lossless -exact -metadata all web/site/assets/generated/admissions-atlas-
 | `campus-route.webp` | 1,780,180 | `f2cf4809d6b830383f64c741bf68bd7393778d323f09be77a4cf4c2e53a6e5cb` |
 
 The original PNGs total **7,174,223 bytes (6.84 MiB)**; the WebPs total **4,843,406 bytes (4.62 MiB)**, saving **2,330,817 bytes (32.49%)** of artwork transfer in supported browsers. The hero alone saves **35.27%**. Secondary images retain lazy loading. Keeping originals plus derivatives increases repository/deployment storage by 4.62 MiB; this is an explicit provenance/fallback tradeoff. Chromium canvas RGBA SHA-256 comparison verifies exact decoded pixel equality and matching dimensions for all three pairs. The asset checker pins both original and derivative hashes.
+
+## README card derivatives
+
+The GitHub README visual atlas uses separate 640 px lossy WebP cards instead of downloading the 4.62 MiB site-delivery set at thumbnail size. They were generated locally from the approved PNG originals with `cwebp 1.6.0 -q 82 -resize 640 0`; no crop, overlay or regenerated content was introduced.
+
+| README card | Dimensions | Bytes | SHA-256 |
+| --- | --- | ---: | --- |
+| `docs/assets/admissions-atlas-card.webp` | 640 × 427 | 29,260 | `ba453e971a9829d5f3e069104c845d132cd15ffc80f80cab693d2f57939e7b24` |
+| `docs/assets/materials-review-card.webp` | 640 × 480 | 34,414 | `0274eabd8d0fcbd8a3e3763619ae4ca8e0bd9389ced13eb7e214d2f33e582f32` |
+| `docs/assets/campus-route-card.webp` | 640 × 361 | 41,042 | `e9b264741aed2cf4fc12836e5f5a8a74d876ae08a2d2453b4d4da30293ab998c` |
+
+The three README cards total **104,716 bytes**, 97.84% smaller than loading the full-size lossless WebPs. The asset checker pins every card's byte count, RIFF/WEBP signature and SHA-256 hash.

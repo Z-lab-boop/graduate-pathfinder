@@ -22,7 +22,7 @@ Three visual metaphors introduce the product journey. They are original generate
 
 | Evidence atlas | Material review | Route mapping |
 | :---: | :---: | :---: |
-| <img src="web/site/assets/generated/admissions-atlas-hero.webp" alt="Blank archival folders connected by a scoped evidence timeline" width="320"> | <img src="web/site/assets/generated/materials-review.webp" alt="Anonymous material layers with evidence tabs and an unlettered seal" width="320"> | <img src="web/site/assets/generated/campus-route.webp" alt="Fictional architectural passage crossed by several possible routes" width="320"> |
+| <img src="docs/assets/admissions-atlas-card.webp" alt="Blank archival folders connected by a scoped evidence timeline" width="320"> | <img src="docs/assets/materials-review-card.webp" alt="Anonymous material layers with evidence tabs and an unlettered seal" width="320"> | <img src="docs/assets/campus-route-card.webp" alt="Fictional architectural passage crossed by several possible routes" width="320"> |
 | Trace every claim back to a source. | Review readiness, gaps and conflicts separately. | Compare routes without turning history into a promise. |
 
 ## Product boundaries

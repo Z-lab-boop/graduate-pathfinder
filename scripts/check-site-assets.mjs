@@ -4,11 +4,15 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const images = ["site-home.png", "site-explore.png", "site-docs.png"];
-const conceptCards = ["admissions-atlas-hero.webp", "materials-review.webp", "campus-route.webp"];
 const base = "https://z-lab-boop.github.io/graduate-pathfinder/";
 const brand = {
   source: ["docs/assets/graduate-pathfinder-mark-source.png", 1254, 1254, "3609a18dffff700fd34e04960a134f5342327bfacb16cb418f85e9c22390ce62"],
   delivery: ["web/site/assets/generated/graduate-pathfinder-mark.png", 512, 512, "8d51a1811f6a5a7cf59e7720cfab396c2846402480f6158a089dd91cb165d216"]
+};
+const readmeCards = {
+  "docs/assets/admissions-atlas-card.webp": [29_260, "ba453e971a9829d5f3e069104c845d132cd15ffc80f80cab693d2f57939e7b24"],
+  "docs/assets/materials-review-card.webp": [34_414, "0274eabd8d0fcbd8a3e3763619ae4ca8e0bd9389ced13eb7e214d2f33e582f32"],
+  "docs/assets/campus-route-card.webp": [41_042, "e9b264741aed2cf4fc12836e5f5a8a74d876ae08a2d2453b4d4da30293ab998c"]
 };
 const artwork = {
   "admissions-atlas-hero.png": [1536, 1024, "e626a33f3bc1f3ab7b48e57ace625aab27ffa3af781226a82ab863f49f2a658d"],
@@ -45,6 +49,10 @@ export async function checkSiteAssets(root) {
     png(bytes, name, width, height);
     if (bytes && createHash("sha256").update(bytes).digest("hex") !== hash) errors.push(`brand provenance mismatch: ${name}`);
   }
+  for (const [name, [size, hash]] of Object.entries(readmeCards)) {
+    const bytes = await read(name);
+    if (bytes && (bytes.length !== size || bytes.toString("ascii", 0, 4) !== "RIFF" || bytes.toString("ascii", 8, 12) !== "WEBP" || createHash("sha256").update(bytes).digest("hex") !== hash)) errors.push(`README card provenance mismatch: ${name}`);
+  }
   for (const name of ["README.md", "README.zh-CN.md"]) {
     const text = (await read(name))?.toString() ?? "";
     const counterpart = name === "README.md" ? "README.zh-CN.md" : "README.md";
@@ -55,7 +63,7 @@ export async function checkSiteAssets(root) {
       if (!reference) errors.push(`missing README image reference: ${name}/${image}`);
       else if (reference[1].trim().length < 12) errors.push(`missing meaningful alt text: ${name}/${image}`);
     }
-    for (const path of [brand.delivery[0], ...conceptCards.map(image => `web/site/assets/generated/${image}`)]) {
+    for (const path of [brand.delivery[0], ...Object.keys(readmeCards)]) {
       const tag = [...text.matchAll(/<img\s+[^>]*>/g)].find(match => match[0].includes(`src="${path}"`));
       if (!tag) errors.push(`missing branded README visual: ${name}/${path}`);
       else if (!/\balt="[^"]{12,}"/.test(tag[0])) errors.push(`missing meaningful branded visual alt text: ${name}/${path}`);
@@ -70,6 +78,7 @@ export async function checkSiteAssets(root) {
   const provenance = (await read("web/site/assets/generated/README.md"))?.toString() ?? "";
   if (!provenance.includes("Concept artwork") || !provenance.includes("image_gen.imagegen")) errors.push("missing generated-art provenance semantics");
   for (const [, , , hash] of Object.values(brand)) if (!provenance.includes(hash)) errors.push(`missing brand provenance hash: ${hash}`);
+  for (const [, hash] of Object.values(readmeCards)) if (!provenance.includes(hash)) errors.push(`missing README card provenance hash: ${hash}`);
   for (const [name, [width, height, hash]] of Object.entries(artwork)) {
     const bytes = await read(`web/site/assets/generated/${name}`);
     png(bytes, name, width, height);
@@ -96,6 +105,7 @@ export async function checkSiteAssets(root) {
       const expression = new RegExp(`^${normalized.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*\*/g, "\u0000").replace(/\*/g, "[^/]*").replace(/\?/g, ".").replace(/\u0000/g, ".*")}(?:/.*)?$`);
       const documentationAssets = [
         ...images.map(name => `docs/assets/${name}`), brand.source[0], brand.delivery[0],
+        ...Object.keys(readmeCards),
         ...Object.keys(artwork).map(name => `web/site/assets/generated/${name}`),
         ...Object.keys(derivatives).map(name => `web/site/assets/generated/${name}`)
       ];

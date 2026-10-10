@@ -49,19 +49,27 @@ test("README documentation policy validates the repository", async () => {
 
 test("README and every site shell expose the project-owned visual identity", async ({ page }) => {
   const mark = "web/site/assets/generated/graduate-pathfinder-mark.png";
+  const cards = ["admissions-atlas-card.webp", "materials-review-card.webp", "campus-route-card.webp"];
   for (const readme of ["README.md", "README.zh-CN.md"]) {
     const text = await fs.readFile(path.resolve("..", readme), "utf8");
     expect(text).toContain(`<img src="${mark}"`);
-    for (const artwork of ["admissions-atlas-hero", "materials-review", "campus-route"]) {
-      expect(text).toContain(`web/site/assets/generated/${artwork}.webp`);
-    }
+    for (const card of cards) expect(text).toContain(`docs/assets/${card}`);
   }
   for (const route of ["/graduate-pathfinder/", "/graduate-pathfinder/explore.html", "/graduate-pathfinder/docs.html"]) {
     await page.goto(route);
-    await expect(page.locator('link[rel="icon"]')).toHaveAttribute("href", "./assets/generated/graduate-pathfinder-mark.png");
+    const favicon = page.locator('link[rel="icon"]');
+    await expect(favicon).toHaveAttribute("href", "./assets/generated/graduate-pathfinder-mark.png");
+    expect(await page.evaluate(async () => (await fetch((document.querySelector('link[rel="icon"]') as HTMLLinkElement).href)).status)).toBe(200);
     const logo = page.locator("a.brand img.brand-mark");
     await expect(logo).toBeVisible();
     await expect(logo).toHaveAttribute("src", "./assets/generated/graduate-pathfinder-mark.png");
+    expect(await logo.evaluate((image: HTMLImageElement) => [image.complete, image.naturalWidth, image.naturalHeight])).toEqual([true, 512, 512]);
+    expect(await logo.evaluate((image: HTMLImageElement) => {
+      const canvas = document.createElement("canvas"); canvas.width = image.naturalWidth; canvas.height = image.naturalHeight;
+      const context = canvas.getContext("2d")!; context.drawImage(image, 0, 0);
+      const alpha = context.getImageData(0, 0, canvas.width, canvas.height).data.filter((_value, index) => index % 4 === 3);
+      return { transparent: alpha.some(value => value < 255), visible: alpha.some(value => value > 0) };
+    })).toEqual({ transparent: true, visible: true });
   }
 });
 
@@ -77,12 +85,15 @@ test("README documentation policy rejects broken asset, link, provenance and rel
     for (const name of images) await fs.writeFile(path.join(root, "docs/assets", name), png);
     const baseline = "[English](README.md) [中文](README.zh-CN.md)\n" +
       '<img src="web/site/assets/generated/graduate-pathfinder-mark.png" alt="Graduate Pathfinder project-owned compass and evidence-card mark">\n' +
-      ["admissions-atlas-hero", "materials-review", "campus-route"].map(name => `<img src="web/site/assets/generated/${name}.webp" alt="Original conceptual admissions artwork ${name}">`).join("\n") + "\n" +
+      ["admissions-atlas-card", "materials-review-card", "campus-route-card"].map(name => `<img src="docs/assets/${name}.webp" alt="Original conceptual admissions artwork ${name}">`).join("\n") + "\n" +
       images.map(name => `![Synthetic product walkthrough ${name}](docs/assets/${name})`).join("\n") +
       "\n[Home](https://z-lab-boop.github.io/graduate-pathfinder/) [Explore](https://z-lab-boop.github.io/graduate-pathfinder/explore.html) [Docs](https://z-lab-boop.github.io/graduate-pathfinder/docs.html) [Install](https://z-lab-boop.github.io/graduate-pathfinder/docs.html#install) [Release](https://z-lab-boop.github.io/graduate-pathfinder/docs.html#source)";
     // The policy also checks actual artwork hashes; copy the approved provenance corpus.
     await fs.cp(path.resolve("site/assets/generated"), path.join(root, "web/site/assets/generated"), { recursive: true });
     await fs.copyFile(path.resolve("../docs/assets/graduate-pathfinder-mark-source.png"), path.join(root, "docs/assets/graduate-pathfinder-mark-source.png"));
+    for (const card of ["admissions-atlas-card.webp", "materials-review-card.webp", "campus-route-card.webp"]) {
+      await fs.copyFile(path.resolve("../docs/assets", card), path.join(root, "docs/assets", card));
+    }
     for (const name of ["README.md", "README.zh-CN.md"]) await fs.writeFile(path.join(root, name), baseline);
     expect(await checkSiteAssets(root)).toEqual([]);
     const home = path.join(root, "docs/assets/site-home.png");
@@ -103,6 +114,16 @@ test("README documentation policy rejects broken asset, link, provenance and rel
       await fs.writeFile(path.join(root, "README.md"), mutation);
       expect((await checkSiteAssets(root)).join("\n")).toContain(expected);
     }
+    await fs.writeFile(path.join(root, "README.md"), baseline);
+    const mark = path.join(root, "web/site/assets/generated/graduate-pathfinder-mark.png");
+    const approvedMark = await fs.readFile(mark);
+    await fs.unlink(mark);
+    expect((await checkSiteAssets(root)).join("\n")).toContain("missing");
+    await fs.writeFile(mark, require("node:buffer").Buffer.concat([approvedMark, require("node:buffer").Buffer.from("changed")]));
+    expect((await checkSiteAssets(root)).join("\n")).toContain("brand provenance");
+    await fs.writeFile(mark, approvedMark);
+    await fs.writeFile(path.join(root, "README.md"), baseline.replace("Graduate Pathfinder project-owned compass and evidence-card mark", ""));
+    expect((await checkSiteAssets(root)).join("\n")).toContain("branded visual alt text");
     await fs.writeFile(path.join(root, "README.md"), baseline);
     await fs.writeFile(path.join(root, "release-allowlist.json"), JSON.stringify(["docs/assets/**"]));
     expect((await checkSiteAssets(root)).join("\n")).toContain("release");

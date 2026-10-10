@@ -22,7 +22,7 @@
 
 | 证据图谱 | 材料复核 | 路线比较 |
 | :---: | :---: | :---: |
-| <img src="web/site/assets/generated/admissions-atlas-hero.webp" alt="空白档案夹通过明确口径的证据时间线相连" width="320"> | <img src="web/site/assets/generated/materials-review.webp" alt="匿名材料分层、证据标签与无文字印章" width="320"> | <img src="web/site/assets/generated/campus-route.webp" alt="虚构建筑廊道中延伸出多条可选路线" width="320"> |
+| <img src="docs/assets/admissions-atlas-card.webp" alt="空白档案夹通过明确口径的证据时间线相连" width="320"> | <img src="docs/assets/materials-review-card.webp" alt="匿名材料分层、证据标签与无文字印章" width="320"> | <img src="docs/assets/campus-route-card.webp" alt="虚构建筑廊道中延伸出多条可选路线" width="320"> |
 | 每个结论都回溯到来源。 | 分开复核就绪度、缺口与冲突。 | 比较不同路径，不把历史数据写成承诺。 |
 
 ## 产品边界
