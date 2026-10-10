@@ -1,0 +1,67 @@
+{
+  "synthetic": true,
+  "materials": [
+    {"id":"material-resume","label":"Anonymous resume","kind":"resume","extraction":"reviewed","evidence":"confirmed"},
+    {"id":"material-transcript","label":"Course transcript","kind":"transcript","extraction":"reviewed","evidence":"confirmed"},
+    {"id":"material-recommendation","label":"Unsigned letter draft","kind":"recommendation","extraction":"partial","evidence":"missing"},
+    {"id":"material-language","label":"Language certificate","kind":"certificate","extraction":"partial","evidence":"conflicted"},
+    {"id":"material-project","label":"Project certificate","kind":"certificate","extraction":"unreadable","evidence":"review_required"},
+    {"id":"material-ranking","label":"Ranking supplement","kind":"transcript","extraction":"partial","evidence":"review_required"}
+  ],
+  "targets": [
+    {"id":"target-northlake","institution":"Northlake Institute","unit":"Data Systems","program":"Data Methods","degree":"academic","round":"summer-camp"},
+    {"id":"target-meridian","institution":"Meridian Technical College","unit":"Intelligent Systems","program":"Interactive Engineering","degree":"professional","round":"pre-recommendation"},
+    {"id":"target-harborline","institution":"Harborline Academy","unit":"Human-Centered Computing","program":"Design Computing","degree":"academic","round":"september"}
+  ],
+  "requirements": [
+    {"id":"requirement-northlake-resume","target_id":"target-northlake","material_id":"material-resume","label":"Reviewed resume required","evidence_id":"evidence-resume"},
+    {"id":"requirement-northlake-letter","target_id":"target-northlake","material_id":"material-recommendation","label":"Signed recommendation required","evidence_id":"evidence-letter"},
+    {"id":"requirement-northlake-language","target_id":"target-northlake","material_id":"material-language","label":"Resolve certificate date conflict","evidence_id":"evidence-language"},
+    {"id":"requirement-northlake-project","target_id":"target-northlake","material_id":"material-project","label":"Review unreadable project evidence","evidence_id":"evidence-project"},
+    {"id":"requirement-meridian-resume","target_id":"target-meridian","material_id":"material-resume","label":"Reviewed resume required","evidence_id":"evidence-resume"},
+    {"id":"requirement-meridian-letter","target_id":"target-meridian","material_id":"material-recommendation","label":"Signed recommendation required","evidence_id":"evidence-letter"},
+    {"id":"requirement-meridian-language","target_id":"target-meridian","material_id":"material-language","label":"Resolve certificate date conflict","evidence_id":"evidence-language"},
+    {"id":"requirement-meridian-ranking","target_id":"target-meridian","material_id":"material-ranking","label":"Review ranking supplement","evidence_id":"evidence-ranking"},
+    {"id":"requirement-harborline-transcript","target_id":"target-harborline","material_id":"material-transcript","label":"Reviewed transcript required","evidence_id":"evidence-transcript"},
+    {"id":"requirement-harborline-project","target_id":"target-harborline","material_id":"material-project","label":"Review unreadable project evidence","evidence_id":"evidence-project"}
+  ],
+  "evidence": [
+    {"id":"evidence-resume","claim":"Resume extraction was reviewed in this fictional case.","source":"Fictional material review sheet","tier":"synthetic_note","status":"confirmed"},
+    {"id":"evidence-transcript","claim":"Transcript fields were reviewed in this fictional case.","source":"Fictional material review sheet","tier":"synthetic_note","status":"confirmed"},
+    {"id":"evidence-letter","claim":"The recommendation is a draft and lacks a signature.","source":"Fictional recommendation checklist","tier":"synthetic_note","status":"missing"},
+    {"id":"evidence-language","claim":"Two fictional certificate dates disagree.","source":"Fictional conflict register","tier":"synthetic_note","status":"conflicted"},
+    {"id":"evidence-project","claim":"The project certificate extraction is unreadable.","source":"Fictional extraction review","tier":"synthetic_note","status":"review_required"},
+    {"id":"evidence-ranking","claim":"The ranking denominator needs manual review.","source":"Fictional extraction review","tier":"synthetic_note","status":"review_required"},
+    {"id":"evidence-cycle","claim":"Counts share one fictional intake, route and unit scope.","source":"Fictional cycle register","tier":"synthetic_primary","status":"confirmed"},
+    {"id":"evidence-other-cycle","claim":"Attendance belongs to a different fictional route scope.","source":"Fictional alternate cycle register","tier":"synthetic_primary","status":"confirmed"}
+  ],
+  "events": [
+    {"id":"event-announcement","target_id":"target-northlake","date":"2025-06-02","label":"Fictional announcement","evidence_id":"evidence-cycle"},
+    {"id":"event-interview","target_id":"target-northlake","date":"2025-07-08","label":"Fictional interviews","evidence_id":"evidence-cycle"},
+    {"id":"event-result","target_id":"target-northlake","date":"2025-07-20","label":"Fictional cohort recorded","evidence_id":"evidence-cycle"}
+  ],
+  "scopes": [
+    {"id":"northlake-data-summer-2025","admission_year":2025,"institution":"Northlake Institute","unit":"Data Systems","program_code":"synthetic-data-methods","degree_type":"academic","research_track":"Data Methods","admission_round":"summer-camp"},
+    {"id":"northlake-data-alternate-2025","admission_year":2025,"institution":"Northlake Institute","unit":"Data Systems","program_code":"synthetic-data-methods","degree_type":"academic","research_track":"Data Methods","admission_round":"pre-recommendation"}
+  ],
+  "counts": [
+    {"id":"count-applied","target_id":"target-northlake","stage":"reported_applicants","value":80,"scope_id":"northlake-data-summer-2025","evidence_id":"evidence-cycle"},
+    {"id":"count-confirmed-attended","target_id":"target-northlake","stage":"confirmed_attended","value":24,"scope_id":"northlake-data-summer-2025","evidence_id":"evidence-cycle"},
+    {"id":"count-alternate-attended","target_id":"target-northlake","stage":"confirmed_attended","value":18,"scope_id":"northlake-data-alternate-2025","evidence_id":"evidence-other-cycle"},
+    {"id":"count-final-admitted","target_id":"target-northlake","stage":"final_admitted","value":12,"scope_id":"northlake-data-summer-2025","evidence_id":"evidence-cycle"}
+  ],
+  "metrics": [
+    {"id":"metric-matched","label":"Final admitted among confirmed attendees","numerator_id":"count-final-admitted","denominator_id":"count-confirmed-attended","state":"matched"},
+    {"id":"metric-refused","label":"Final admitted among alternate-route confirmed attendees","numerator_id":"count-final-admitted","denominator_id":"count-alternate-attended","state":"refused"}
+  ],
+  "outlooks": [
+    {"target_id":"target-northlake","eligibility":"eligible","material_readiness":"repairable","competitive_tier":"evidence_insufficient","fit":"high","confidence":"medium","reasons":["Unsigned draft blocks material readiness.","Certificate conflict limits evidence confidence.","Current competitive evidence is missing."]},
+    {"target_id":"target-meridian","eligibility":"insufficient","material_readiness":"repairable","competitive_tier":"evidence_insufficient","fit":"medium","confidence":"low","reasons":["Ranking denominator needs review.","Unsigned draft blocks material readiness.","Comparable history and current competitive evidence are missing."]},
+    {"target_id":"target-harborline","eligibility":"blocked","material_readiness":"blocked","competitive_tier":"evidence_insufficient","fit":"medium","confidence":"low","reasons":["Unreadable evidence leaves a required gate unresolved.","Comparable history and current competitive evidence are missing."]}
+  ],
+  "fixes": [
+    {"id":"fix-northlake-letter","requirement_id":"requirement-northlake-letter","guidance":"Review the draft with its fictional author and check the signature field locally."},
+    {"id":"fix-meridian-letter","requirement_id":"requirement-meridian-letter","guidance":"Review the draft with its fictional author and check the signature field locally."},
+    {"id":"fix-harborline-project","requirement_id":"requirement-harborline-project","guidance":"Recheck the fictional source image and record unresolved extraction fields locally."}
+  ]
+}

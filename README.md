@@ -1,33 +1,56 @@
-# 研途择校·Graduate Pathfinder
+<p align="center">
+  <img src="web/site/assets/generated/graduate-pathfinder-mark.png" width="168" alt="Graduate Pathfinder logo: a compass star rising from layered evidence cards along a vermilion route">
+</p>
 
-一个面向中国研究生招生决策的 Codex Skill：把保研、考研和申请材料复核中的官方证据、未知项、冲突与计算结果分开呈现。
+<h1 align="center">Graduate Pathfinder · 研途择校</h1>
 
-## 产品边界
+<p align="center"><strong>Trace evidence. Compare paths. Keep uncertainty visible.</strong><br>A local-first Codex Skill for Chinese graduate admissions decisions.</p>
 
-本项目是本地优先的决策支持工具，不是招生官方系统，也不内置“全国完整院校数据库”。它要求按具体入学年份和目标身份核验实时官方证据；数据缺失、过期或冲突时，结论保持 `unknown`、`conflicted` 或 `evidence_insufficient`。
+<p align="center"><a href="README.zh-CN.md">中文完整版</a> · <a href="https://z-lab-boop.github.io/graduate-pathfinder/">Public site</a> · <a href="https://z-lab-boop.github.io/graduate-pathfinder/explore.html">Synthetic Explore</a> · <a href="https://z-lab-boop.github.io/graduate-pathfinder/docs.html">Docs</a></p>
 
-它不会：
+<p align="center"><code>local-first</code> · <code>evidence-first</code> · <code>English / 中文</code> · <code>v0.3</code></p>
 
-- 代投、登录报名系统、发送消息、联系导师或接受录取；
-- 认证材料真伪，修改原始文件，或把简历陈述自动升级为已验证事实；
-- 承诺录取，或在没有合法、可比、已评估的个体级数据和可用模型时输出个人录取概率。
+![Graduate Pathfinder Home with evidence-first guidance and clearly labeled conceptual admissions artwork](docs/assets/site-home.png)
 
-## 支持范围
+[Installation](https://z-lab-boop.github.io/graduate-pathfinder/docs.html#install) · [Release status](https://z-lab-boop.github.io/graduate-pathfinder/docs.html#source)
 
-| 版本 | 模式 | 主要能力 |
+The public site is a synthetic walkthrough with fictional applicants and institutions. It accepts no uploads, has no tracking, and offers no personal admission probability or guarantee. Concept artwork is labeled separately from synthetic product screenshots. No tagged binary release is published; install the complete source repository. Website assets and screenshots are documentation, not release binaries. These links identify the intended Pages routes; local verification does not establish live deployment.
+
+## Visual atlas
+
+Three visual metaphors introduce the product journey. They are original generated artwork—not applicant evidence, real documents or identifiable institutions.
+
+| Evidence atlas | Material review | Route mapping |
+| :---: | :---: | :---: |
+| <img src="docs/assets/admissions-atlas-card.webp" alt="Blank archival folders connected by a scoped evidence timeline" width="320"> | <img src="docs/assets/materials-review-card.webp" alt="Anonymous material layers with evidence tabs and an unlettered seal" width="320"> | <img src="docs/assets/campus-route-card.webp" alt="Fictional architectural passage crossed by several possible routes" width="320"> |
+| Trace every claim back to a source. | Review readiness, gaps and conflicts separately. | Compare routes without turning history into a promise. |
+
+## Product boundaries
+
+This is decision support, not an official admissions system or a complete nationwide school database. Check current official evidence for the exact intake year and target identity. Missing, stale or conflicting evidence stays `unknown`, `conflicted` or `evidence_insufficient`.
+
+The Skill does not:
+
+- submit applications, log in to admissions systems, send messages, contact supervisors or accept offers;
+- authenticate materials, edit originals, or silently promote resume statements to verified facts;
+- promise admission or output personal admission probabilities without lawful, comparable, evaluated individual-level data and a usable model.
+
+## Capabilities
+
+| Version | Route | Capabilities |
 | --- | --- | --- |
-| v0.1 | 保研 | 机会筛选、目标对比、投递组合、截止日期与日程冲突 |
-| v0.2 | 考研 | 科目门、分数情景、分层线语义、风险带和 shortlist |
-| v0.3 | 材料与展望 | 本地材料清单与复核、上年度时间/阶段人数重建、可比口径比率、序数竞争档位与证据信心 |
+| v0.1 | Baoyan (recommendation route) | Opportunity screening, target comparison, application portfolios, deadlines and schedule conflicts |
+| v0.2 | Kaoyan (exam route) | Subject gates, score scenarios, distinct threshold meanings, risk bands and shortlists |
+| v0.3 | Materials and outlook | Local material inventories and review, scoped previous-cycle timelines/counts, comparable cohort ratios, ordinal competition and evidence confidence |
 
-保研与考研的门槛、分组和报告契约始终分开。对混合请求，Skill 先确定当前路径和入学年份，再加载所需参考文档。
+Baoyan and kaoyan gates, groupings and reporting contracts remain separate. For mixed requests, the Skill first establishes the route and intake year, then loads the relevant references.
 
-## 安装
+## Install
 
-1. 从本页 **Code** 菜单复制 HTTPS 地址，将仓库克隆到任意本地目录。
-2. 将该目录链接到 Codex 的 skill 目录；若目标已存在，先检查，不要覆盖。
+1. Copy the HTTPS URL from this repository’s **Code** menu and clone into a local directory.
+2. Link the complete directory into Codex’s skills directory. Inspect an existing destination before proceeding; do not overwrite it.
 
-macOS/Linux 示例（在仓库根目录执行）：
+On macOS/Linux, run from the repository root:
 
 ```bash
 set -eu
@@ -44,9 +67,11 @@ else
 fi
 ```
 
-也可将仓库完整复制到 `$CODEX_HOME/skills/graduate-pathfinder`。不要只复制 `SKILL.md`；流程依赖 `references/`、`scripts/` 和 `agents/`。
+Alternatively, copy the complete repository to `$CODEX_HOME/skills/graduate-pathfinder` (default `$HOME/.codex/skills/graduate-pathfinder`). Include `SKILL.md`, `references/`, `scripts/` and `agents/`; do not copy just the entry file.
 
-## 使用示例
+## Usage examples
+
+Paste one of these original Chinese prompts into Codex and adapt the facts to your case.
 
 ```text
 使用 $graduate-pathfinder，我是计算机专业前 5%，做一份 2027 保研投递组合。
@@ -60,49 +85,64 @@ fi
 使用 $graduate-pathfinder，我会提供简历、成绩单和推荐信草稿。请复核这个保研目标的材料，整理上一可比年度的面试时间和各阶段人数，再给出序数竞争档位和不确定性。
 ```
 
-在用到当前规则、截止日期、往年名单或人数时，应允许 Codex 浏览并优先核对官方来源。无浏览能力时，Skill 只依据用户提供的官方材料和本地案例工作，并保留证据缺口。
+Allow Codex to browse and prioritize official sources for current rules, deadlines, historical lists and counts. Without browsing, use user-provided official materials and local cases, retain evidence gaps, and stop judgments that depend on unavailable facts.
 
-## 本地案例与隐私
+## Local cases and privacy
 
-- 普通初筛可仅在对话中返回结果。只在用户要求持久化或文件交付时建立案例。
-- 案例必须位于已安装的 skill 目录之外；默认为当前工作目录下的 `graduate-pathfinder-cases/<anonymous-label>/`。
-- 原始材料保持在用户选定的本地位置。清单记录路径、哈希和抽取状态，不会因建清单而复制或改写原文件。
-- 个人证件号、学号、电话、私人邮箱、签名和家庭住址不应进入公开仓库、Issue 或可分享报告。自动脱敏后仍需人工复核。
-- 公开仓库只含虚构测试数据，不包含真实申请者案例或从限制来源复制的数据集。
+- Quick screening can stay in chat; create cases only when persistence or file delivery is requested.
+- Keep cases outside the installed Skill, normally at `graduate-pathfinder-cases/<anonymous-label>/` in the working directory.
+- Originals stay at user-selected local paths. A manifest records paths, hashes and extraction states without copying or rewriting the files.
+- Keep identity/student numbers, phone numbers, private email addresses, signatures and home addresses out of public repositories, Issues and shareable reports. Manually review automated redaction before sharing.
+- The public repository contains fictional test data, not real applicant cases or datasets copied from restricted sources.
 
-## 输出
+## Deliverables
 
-深度择校可交付 `profile.json`、`candidates.json`、`evidence.json`、`candidate-matrix.csv`、`report.md` 和可选的 `deadlines.ics`。刷新模式另交付 `changes.md`。
+In-depth target selection can produce `profile.json`, `candidates.json`, `evidence.json`, `candidate-matrix.csv`, `report.md` and optional `deadlines.ics`. Refresh mode also produces `changes.md`.
 
-v0.3 材料复核/展望要求公开安全的五件套：
+v0.3 material review/outlook uses five public-safe deliverables:
 
-- `material-audit.md`：分目标的完整性、条件缺口与冲突；
-- `applicant-claims.json`：规范化学术事实及其证据状态；
-- `historical-cycle.json`：明确口径的时间线、阶段人数、计算与拒算原因；
-- `admission-outlook.md`：独立的资格、材料就绪度、竞争档位、适配和证据信心；
-- `privacy-review.md`：脱敏检测范围、可能误脱敏和人工复核状态。
+- `material-audit.md`: target-specific completeness, condition gaps and conflicts;
+- `applicant-claims.json`: normalized academic claims and their evidence states;
+- `historical-cycle.json`: scoped timelines, stage counts, calculations and refusal reasons;
+- `admission-outlook.md`: separate eligibility, material readiness, competition, fit and evidence confidence;
+- `privacy-review.md`: redaction scope, possible over-redaction and human-review status.
 
-`materials-manifest.json`、材料需求、完整证据审计和原函数返回值仅作本地复核输入/中间件，不是默认公开交付物。
+`materials-manifest.json`, material requirements, full evidence audits and raw function results remain local inputs/intermediates, not default public deliverables. Public-safe outputs still require redaction and human privacy review before sharing.
 
-## 历史比率不是个人概率
+## Historical ratios are not personal probabilities
 
-`final_admitted / confirmed_attended` 等历史阶段比率只能在年份、院校、院系、专业代码、学位类型、方向和招生轮次完全一致且分母可核验时计算。它们是对对应历史范围的描述，不是当前申请者的录取概率。竞争档位是透明的序数判断，与保研投递分组、考研风险带分开，不保证录取。
+Compute historical stage ratios such as `final_admitted / confirmed_attended` only with matching year, institution, unit, program code, degree type, track and round, and a verified denominator. These describe a past cohort, not the current applicant’s probability. Competition is a transparent ordinal judgment, separate from baoyan portfolio groups and kaoyan risk bands; no tier guarantees admission.
 
-## 验证
+## Synthetic product views
 
-在仓库根目录运行：
+These browser captures show fictional data and the local installation guide. Concept artwork is a visual metaphor, not applicant evidence or a real institution.
+
+![Synthetic Explore material review showing fictional targets, evidence filters and open material gaps](docs/assets/site-explore.png)
+
+![Graduate Pathfinder Docs showing version boundaries and navigation to complete-Skill installation and privacy guidance](docs/assets/site-docs.png)
+
+## Verification
+
+From the repository root:
 
 ```bash
 python3 -m unittest discover -s tests -v
 python3 /path/to/skill-creator/scripts/quick_validate.py .
 python3 -m compileall -q scripts tests
+npm --prefix web ci
+npm --prefix web run typecheck
+npm --prefix web run test:site
+npm --prefix web run capture:site
+node scripts/check-site-assets.mjs
 git diff --check
 ```
 
-这些自动验证检查结构、决策逻辑和合成行为；它们不验证真实材料的真伪，也不证明实时招生数据已全国覆盖或当前完整。
+Install Playwright Chromium if your environment lacks it: `npm --prefix web exec playwright install chromium`. Captures use an owned dynamic localhost child server, English, a 1440×1000 viewport, device scale 1 and reduced motion. Each image is the top viewport, not a full-page record; Explore starts at Northlake / Materials with all evidence filters enabled. Compare SHA-256 hashes after two same-platform runs. See [capture policy and artwork audit](docs/assets/README.md).
 
-## 研究基础与许可
+These automated checks cover structure, decision logic and synthetic behavior. They neither authenticate real materials nor establish current nationwide admissions coverage. Live Pages and hosted CI acceptance require separate verification after deployment.
 
-开源项目调研、蒸馏的通用机制与复用状态见 [references/research-basis.md](references/research-basis.md)。本仓库不默认复制其代码或数据；引入任何第三方文件前须另做文件级许可和归属审计。
+## Research basis and license
 
-本项目以 [MIT License](LICENSE) 发布。
+See [research basis](references/research-basis.md) for surveyed projects, distilled general mechanisms and reuse status. Their code and data are not copied by default; audit file-level licensing and attribution before introducing third-party material.
+
+Released under the [MIT License](LICENSE).

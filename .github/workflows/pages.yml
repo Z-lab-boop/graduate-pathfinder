@@ -1,0 +1,61 @@
+name: Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: actions/configure-pages@v5
+      - name: Verify Skill and public site
+        run: |
+          python3 -m unittest discover -s tests -v
+          python3 -m compileall -q scripts tests
+          python3 scripts/check_skill_structure.py .
+          python3 scripts/check_workflows.py .
+          npm --prefix web ci
+          npx --prefix web playwright install chromium
+          npm --prefix web run typecheck
+          npm --prefix web run test:site
+          node scripts/check-site-assets.mjs
+          git diff --check
+      - name: Rebuild clean Pages artifact
+        run: |
+          npm --prefix web run build:site
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
