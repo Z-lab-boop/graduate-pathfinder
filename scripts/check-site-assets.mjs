@@ -53,9 +53,13 @@ export async function checkSiteAssets(root) {
     const bytes = await read(name);
     if (bytes && (bytes.length !== size || bytes.toString("ascii", 0, 4) !== "RIFF" || bytes.toString("ascii", 8, 12) !== "WEBP" || createHash("sha256").update(bytes).digest("hex") !== hash)) errors.push(`README card provenance mismatch: ${name}`);
   }
-  for (const name of ["README.md", "README.zh-CN.md"]) {
+  const readmes = {
+    "README.md": "README.en.md",
+    "README.en.md": "README.md",
+    "README.zh-CN.md": "README.md"
+  };
+  for (const [name, counterpart] of Object.entries(readmes)) {
     const text = (await read(name))?.toString() ?? "";
-    const counterpart = name === "README.md" ? "README.zh-CN.md" : "README.md";
     const hasLink = target => text.includes(`](${target})`) || text.includes(`href="${target}"`);
     if (!hasLink(counterpart)) errors.push(`missing language counterpart: ${name}`);
     for (const image of images) {
