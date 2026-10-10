@@ -6,6 +6,7 @@ export function initHome(): void {
   const stages = Array.from(document.querySelectorAll<HTMLElement>("[data-stage]"));
   const ids = new Set(stages.map((stage) => stage.id));
   let current = ids.has(location.hash.slice(1)) ? location.hash.slice(1) : "profile";
+  let fragmentTarget: string | null = ids.has(location.hash.slice(1)) ? current : null;
   const select = (id: string, history: "push" | "replace" | "none" = "none", scroll = false) => {
     if (!ids.has(id)) return;
     current = id;
@@ -28,7 +29,12 @@ export function initHome(): void {
       select(link.hash.slice(1), "push", true);
     });
   });
-  const fromFragment = () => select(location.hash.slice(1), "none", true);
+  const fromFragment = () => {
+    const id = location.hash.slice(1);
+    if (!ids.has(id)) return;
+    fragmentTarget = id;
+    select(id, "none", true);
+  };
   window.addEventListener("hashchange", fromFragment);
   window.addEventListener("popstate", fromFragment);
   select(current);
@@ -41,6 +47,9 @@ export function initHome(): void {
     const maximum = Math.max(...ratios.values());
     if (maximum <= 0) return;
     const tied = stages.filter((stage) => Math.abs((ratios.get(stage.id) ?? 0) - maximum) < 0.001);
+    // Fragment navigation owns the selection until its programmatic scroll settles.
+    if (fragmentTarget && !tied.some((stage) => stage.id === fragmentTarget)) return;
+    fragmentTarget = null;
     // Preserve the current stage on a tie instead of snapping to the first entry.
     if (!tied.some((stage) => stage.id === current)) select(tied[0].id, "replace");
   };

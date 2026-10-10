@@ -76,6 +76,36 @@ test("home journey follows fragments and browser history", async ({ page }) => {
   await expect(page.getByRole("link", { name: "History", exact: true })).toHaveAttribute("aria-current", "step");
 });
 
+test("browser history ignores stale visibility until the fragment stage settles", async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as any).atlasObservers = [];
+    window.IntersectionObserver = class {
+      callback: IntersectionObserverCallback;
+      constructor(callback: IntersectionObserverCallback) { this.callback = callback; (window as any).atlasObservers.push(this); }
+      observe() {} unobserve() {} disconnect() {} takeRecords() { return []; }
+      root = null; rootMargin = ""; scrollMargin = ""; thresholds = [];
+    };
+  });
+  await page.goto("/#history");
+  await page.getByRole("link", { name: "Outlook", exact: true }).click();
+  await page.goBack();
+  await expect(page).toHaveURL(/#history$/);
+  await page.evaluate(() => {
+    const observer = (window as any).atlasObservers[0];
+    observer.callback([{ target: document.getElementById("outlook"), intersectionRatio: 1, isIntersecting: true }], observer);
+  });
+  await expect(page.getByRole("link", { name: "History", exact: true })).toHaveAttribute("aria-current", "step");
+  await page.evaluate(() => {
+    const observer = (window as any).atlasObservers[0];
+    observer.callback([{ target: document.getElementById("history"), intersectionRatio: 1, isIntersecting: true }], observer);
+    observer.callback([
+      { target: document.getElementById("history"), intersectionRatio: 0, isIntersecting: false },
+      { target: document.getElementById("outlook"), intersectionRatio: 1, isIntersecting: true }
+    ], observer);
+  });
+  await expect(page.getByRole("link", { name: "Outlook", exact: true })).toHaveAttribute("aria-current", "step");
+});
+
 test("Home images load at the repository subpath", async ({ page }) => {
   await page.goto("/graduate-pathfinder/");
   await expect(page.locator("main img")).toHaveCount(3);
