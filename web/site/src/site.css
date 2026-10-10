@@ -25,7 +25,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .shell { width: min(100% - 2.5rem, 76rem); margin-inline: auto; }
 .skip-link { display: inline-block; margin: 0.7rem 1.25rem; font-size: 0.85rem; }
 .site-header { display: flex; align-items: center; flex-wrap: wrap; gap: 1.25rem; padding-block: 1.2rem; border-block: 1px solid var(--ink); }
-.brand { font-family: Georgia, "Songti SC", serif; font-size: 1.4rem; font-weight: 700; text-decoration: none; }
+.brand { display: inline-flex; align-items: center; gap: 0.7rem; font-family: Georgia, "Songti SC", serif; font-size: 1.4rem; font-weight: 700; text-decoration: none; }
+.brand-mark { width: 2.75rem; height: 2.75rem; object-fit: contain; filter: drop-shadow(0 0.22rem 0.3rem rgb(14 31 54 / 0.16)); }
 nav { display: flex; flex-wrap: wrap; gap: 1.3rem; margin-inline-start: auto; }
 nav a { padding: 0.35rem 0; text-decoration: none; }
 nav a[aria-current="page"] { border-bottom: 2px solid var(--cinnabar); }

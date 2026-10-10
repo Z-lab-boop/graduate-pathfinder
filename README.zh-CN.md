@@ -1,14 +1,29 @@
-# 研途择校 · Graduate Pathfinder
+<p align="center">
+  <img src="web/site/assets/generated/graduate-pathfinder-mark.png" width="168" alt="研途择校标志：指南针星从层叠证据卡片上升起，朱砂路线通向目标点">
+</p>
 
-一个面向中国研究生招生决策的本地优先 Codex Skill：复核材料、比较目标，并将官方证据、未知项、冲突与计算结果分开呈现。
+<h1 align="center">研途择校 · Graduate Pathfinder</h1>
 
-[English](README.md)
+<p align="center"><strong>循证据，辨路径，让不确定性保持可见。</strong><br>一个面向中国研究生招生决策的本地优先 Codex Skill。</p>
+
+<p align="center"><a href="README.md">English</a> · <a href="https://z-lab-boop.github.io/graduate-pathfinder/">公开站点</a> · <a href="https://z-lab-boop.github.io/graduate-pathfinder/explore.html">合成案例</a> · <a href="https://z-lab-boop.github.io/graduate-pathfinder/docs.html">文档</a></p>
+
+<p align="center"><code>本地优先</code> · <code>证据优先</code> · <code>English / 中文</code> · <code>v0.3</code></p>
 
 ![Graduate Pathfinder 首页：证据优先的产品说明与明确标注的招生档案概念艺术](docs/assets/site-home.png)
 
-[公开站点](https://z-lab-boop.github.io/graduate-pathfinder/) · [合成案例演示](https://z-lab-boop.github.io/graduate-pathfinder/explore.html) · [文档](https://z-lab-boop.github.io/graduate-pathfinder/docs.html) · [安装说明](https://z-lab-boop.github.io/graduate-pathfinder/docs.html#install) · [发布状态](https://z-lab-boop.github.io/graduate-pathfinder/docs.html#source)
+[安装说明](https://z-lab-boop.github.io/graduate-pathfinder/docs.html#install) · [发布状态](https://z-lab-boop.github.io/graduate-pathfinder/docs.html#source)
 
 公开站点仅演示虚构申请者与虚构院校，不接收上传、不追踪用户，不提供个人录取概率或录取保证。概念艺术与合成产品截图分别标注。目前未发布带二进制附件的标签版本，请安装完整源码仓库；网站资源与截图属于文档，不是二进制发布物。以上链接是预定 Pages 路由，本地核验不证明站点已上线。
+
+## 视觉图谱
+
+三张原创概念艺术分别表现产品旅程中的证据、材料和路线。它们不是申请者证据、真实材料或可识别院校图像。
+
+| 证据图谱 | 材料复核 | 路线比较 |
+| :---: | :---: | :---: |
+| <img src="web/site/assets/generated/admissions-atlas-hero.webp" alt="空白档案夹通过明确口径的证据时间线相连" width="320"> | <img src="web/site/assets/generated/materials-review.webp" alt="匿名材料分层、证据标签与无文字印章" width="320"> | <img src="web/site/assets/generated/campus-route.webp" alt="虚构建筑廊道中延伸出多条可选路线" width="320"> |
+| 每个结论都回溯到来源。 | 分开复核就绪度、缺口与冲突。 | 比较不同路径，不把历史数据写成承诺。 |
 
 ## 产品边界
 

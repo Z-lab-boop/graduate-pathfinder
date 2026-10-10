@@ -4,7 +4,12 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const images = ["site-home.png", "site-explore.png", "site-docs.png"];
+const conceptCards = ["admissions-atlas-hero.webp", "materials-review.webp", "campus-route.webp"];
 const base = "https://z-lab-boop.github.io/graduate-pathfinder/";
+const brand = {
+  source: ["docs/assets/graduate-pathfinder-mark-source.png", 1254, 1254, "3609a18dffff700fd34e04960a134f5342327bfacb16cb418f85e9c22390ce62"],
+  delivery: ["web/site/assets/generated/graduate-pathfinder-mark.png", 512, 512, "8d51a1811f6a5a7cf59e7720cfab396c2846402480f6158a089dd91cb165d216"]
+};
 const artwork = {
   "admissions-atlas-hero.png": [1536, 1024, "e626a33f3bc1f3ab7b48e57ace625aab27ffa3af781226a82ab863f49f2a658d"],
   "materials-review.png": [1448, 1086, "bd8c3fd171d3e72b8f330ebe872f5682bef52b78a2a8a1a9e20d779d95c1809b"],
@@ -35,17 +40,28 @@ export async function checkSiteAssets(root) {
     if (bytes.readUInt32BE(16) !== width || bytes.readUInt32BE(20) !== height) errors.push(`wrong dimensions: ${file}`);
   };
   for (const name of images) png(await read(`docs/assets/${name}`), name, 1440, 1000, true);
+  for (const [name, width, height, hash] of Object.values(brand)) {
+    const bytes = await read(name);
+    png(bytes, name, width, height);
+    if (bytes && createHash("sha256").update(bytes).digest("hex") !== hash) errors.push(`brand provenance mismatch: ${name}`);
+  }
   for (const name of ["README.md", "README.zh-CN.md"]) {
     const text = (await read(name))?.toString() ?? "";
     const counterpart = name === "README.md" ? "README.zh-CN.md" : "README.md";
-    if (!text.includes(`](${counterpart})`)) errors.push(`missing language counterpart: ${name}`);
+    const hasLink = target => text.includes(`](${target})`) || text.includes(`href="${target}"`);
+    if (!hasLink(counterpart)) errors.push(`missing language counterpart: ${name}`);
     for (const image of images) {
       const reference = [...text.matchAll(/!\[([^\]]*)\]\(([^)]+)\)/g)].find(match => match[2] === `docs/assets/${image}`);
       if (!reference) errors.push(`missing README image reference: ${name}/${image}`);
       else if (reference[1].trim().length < 12) errors.push(`missing meaningful alt text: ${name}/${image}`);
     }
+    for (const path of [brand.delivery[0], ...conceptCards.map(image => `web/site/assets/generated/${image}`)]) {
+      const tag = [...text.matchAll(/<img\s+[^>]*>/g)].find(match => match[0].includes(`src="${path}"`));
+      if (!tag) errors.push(`missing branded README visual: ${name}/${path}`);
+      else if (!/\balt="[^"]{12,}"/.test(tag[0])) errors.push(`missing meaningful branded visual alt text: ${name}/${path}`);
+    }
     for (const suffix of ["", "explore.html", "docs.html", "docs.html#install", "docs.html#source"]) {
-      if (!text.includes(`](${base}${suffix})`)) errors.push(`missing exact Pages link: ${name}/${suffix}`);
+      if (!hasLink(base + suffix)) errors.push(`missing exact Pages link: ${name}/${suffix}`);
     }
     const urls = text.match(/https?:\/\/[^\s)<>"']+/g) ?? [];
     for (const url of urls) if (url.includes("github.io") && !["", "explore.html", "docs.html", "docs.html#install", "docs.html#source"].some(suffix => url === base + suffix)) errors.push(`stale Pages URL: ${name}`);
@@ -53,6 +69,7 @@ export async function checkSiteAssets(root) {
   }
   const provenance = (await read("web/site/assets/generated/README.md"))?.toString() ?? "";
   if (!provenance.includes("Concept artwork") || !provenance.includes("image_gen.imagegen")) errors.push("missing generated-art provenance semantics");
+  for (const [, , , hash] of Object.values(brand)) if (!provenance.includes(hash)) errors.push(`missing brand provenance hash: ${hash}`);
   for (const [name, [width, height, hash]] of Object.entries(artwork)) {
     const bytes = await read(`web/site/assets/generated/${name}`);
     png(bytes, name, width, height);
@@ -77,7 +94,12 @@ export async function checkSiteAssets(root) {
       const normalized = token.replace(/^\.\//, "").replace(/\/$/, "/**");
       if (!["docs", "docs/assets", "web/site/assets"].includes(normalized) && !normalized.includes("/") && !normalized.includes("*")) continue;
       const expression = new RegExp(`^${normalized.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*\*/g, "\u0000").replace(/\*/g, "[^/]*").replace(/\?/g, ".").replace(/\u0000/g, ".*")}(?:/.*)?$`);
-      if (images.some(name => expression.test(`docs/assets/${name}`)) || expression.test("web/site/assets/generated/admissions-atlas-hero.png")) { errors.push(`documentation assets included in binary release allowlist: ${file}`); break; }
+      const documentationAssets = [
+        ...images.map(name => `docs/assets/${name}`), brand.source[0], brand.delivery[0],
+        ...Object.keys(artwork).map(name => `web/site/assets/generated/${name}`),
+        ...Object.keys(derivatives).map(name => `web/site/assets/generated/${name}`)
+      ];
+      if (documentationAssets.some(asset => expression.test(asset))) { errors.push(`documentation assets included in binary release allowlist: ${file}`); break; }
     }
   }
   return errors;

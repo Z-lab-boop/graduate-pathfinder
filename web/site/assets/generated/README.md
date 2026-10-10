@@ -10,6 +10,21 @@ Tool: built-in `image_gen.imagegen` (no CLI/API fallback). Generation date: **20
 | `materials-review.png` | 1448 × 1086 (4:3) | `bd8c3fd171d3e72b8f330ebe872f5682bef52b78a2a8a1a9e20d779d95c1809b` |
 | `campus-route.png` | 1672 × 941 (approximately 16:9) | `f8677b7dcf871792029a48305320a48e5b5546e09b1f0beb412503ddfd2fa831` |
 
+## Brand mark
+
+The project-owned mark combines a north-star compass, three layered evidence cards and a vermilion route. It is an original generated symbol rather than a university crest, institutional seal or third-party logo. The transparent source is retained outside the Pages artifact; the 512 px derivative is used by the bilingual READMEs, site navigation and favicon.
+
+| Asset | Dimensions | SHA-256 |
+| --- | --- | --- |
+| `docs/assets/graduate-pathfinder-mark-source.png` | 1254 × 1254 | `3609a18dffff700fd34e04960a134f5342327bfacb16cb418f85e9c22390ce62` |
+| `web/site/assets/generated/graduate-pathfinder-mark.png` | 512 × 512 | `8d51a1811f6a5a7cf59e7720cfab396c2846402480f6158a089dd91cb165d216` |
+
+Prompt used with the built-in `image_gen.imagegen` tool:
+
+> Create a distinctive symbol-only logo for Graduate Pathfinder, an evidence-first Chinese graduate admissions decision-support tool. Combine a precise north-star/compass point with three subtly layered archival evidence cards and one restrained route line ending in a small seal-like dot. Clean vector-friendly editorial mark, centered square composition, midnight indigo, warm archival ivory, muted vermilion and restrained antique brass. Genuinely transparent background; no letters, Chinese characters, numbers, watermark, recognizable school emblem, graduation cap, laurel wreath, human figure or photographic scene.
+
+Accepted output identifier: `exec-67fae8f0-150c-422e-b317-8a33f191aaf4`. Original-pixel inspection found no text, watermark, person or recognizable institution. The 512 px derivative was produced locally with `sips -Z 512`; alpha transparency is retained. The mark remains readable as a 44 px navigation symbol, though the source is retained for larger README use and future non-destructive derivatives.
+
 ## Prompts and inspection
 
 ### admissions-atlas-hero.png

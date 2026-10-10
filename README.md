@@ -1,14 +1,29 @@
-# Graduate Pathfinder · 研途择校
+<p align="center">
+  <img src="web/site/assets/generated/graduate-pathfinder-mark.png" width="168" alt="Graduate Pathfinder logo: a compass star rising from layered evidence cards along a vermilion route">
+</p>
 
-A local-first Codex Skill for Chinese graduate admissions decisions. Review materials, compare targets, and keep official evidence, unknowns, conflicts and calculations separate.
+<h1 align="center">Graduate Pathfinder · 研途择校</h1>
 
-[中文完整版](README.zh-CN.md)
+<p align="center"><strong>Trace evidence. Compare paths. Keep uncertainty visible.</strong><br>A local-first Codex Skill for Chinese graduate admissions decisions.</p>
+
+<p align="center"><a href="README.zh-CN.md">中文完整版</a> · <a href="https://z-lab-boop.github.io/graduate-pathfinder/">Public site</a> · <a href="https://z-lab-boop.github.io/graduate-pathfinder/explore.html">Synthetic Explore</a> · <a href="https://z-lab-boop.github.io/graduate-pathfinder/docs.html">Docs</a></p>
+
+<p align="center"><code>local-first</code> · <code>evidence-first</code> · <code>English / 中文</code> · <code>v0.3</code></p>
 
 ![Graduate Pathfinder Home with evidence-first guidance and clearly labeled conceptual admissions artwork](docs/assets/site-home.png)
 
-[Public site](https://z-lab-boop.github.io/graduate-pathfinder/) · [Explore the synthetic case](https://z-lab-boop.github.io/graduate-pathfinder/explore.html) · [Docs](https://z-lab-boop.github.io/graduate-pathfinder/docs.html) · [Installation](https://z-lab-boop.github.io/graduate-pathfinder/docs.html#install) · [Release status](https://z-lab-boop.github.io/graduate-pathfinder/docs.html#source)
+[Installation](https://z-lab-boop.github.io/graduate-pathfinder/docs.html#install) · [Release status](https://z-lab-boop.github.io/graduate-pathfinder/docs.html#source)
 
 The public site is a synthetic walkthrough with fictional applicants and institutions. It accepts no uploads, has no tracking, and offers no personal admission probability or guarantee. Concept artwork is labeled separately from synthetic product screenshots. No tagged binary release is published; install the complete source repository. Website assets and screenshots are documentation, not release binaries. These links identify the intended Pages routes; local verification does not establish live deployment.
+
+## Visual atlas
+
+Three visual metaphors introduce the product journey. They are original generated artwork—not applicant evidence, real documents or identifiable institutions.
+
+| Evidence atlas | Material review | Route mapping |
+| :---: | :---: | :---: |
+| <img src="web/site/assets/generated/admissions-atlas-hero.webp" alt="Blank archival folders connected by a scoped evidence timeline" width="320"> | <img src="web/site/assets/generated/materials-review.webp" alt="Anonymous material layers with evidence tabs and an unlettered seal" width="320"> | <img src="web/site/assets/generated/campus-route.webp" alt="Fictional architectural passage crossed by several possible routes" width="320"> |
+| Trace every claim back to a source. | Review readiness, gaps and conflicts separately. | Compare routes without turning history into a promise. |
 
 ## Product boundaries
 

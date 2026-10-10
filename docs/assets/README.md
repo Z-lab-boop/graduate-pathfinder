@@ -1,6 +1,6 @@
 # Public site documentation captures
 
-`site-home.png`, `site-explore.png` and `site-docs.png` are browser-generated product screenshots, separate from the labeled conceptual artwork under `web/site/assets/generated/`. Explore contains committed fictional data only. No real applicant, institution, material or admissions outcome is represented.
+`site-home.png`, `site-explore.png` and `site-docs.png` are browser-generated product screenshots, separate from the labeled conceptual artwork under `web/site/assets/generated/`. Explore contains committed fictional data only. No real applicant, institution, material or admissions outcome is represented. `graduate-pathfinder-mark-source.png` is the transparent 1254 px source for the project-owned compass/evidence-card brand mark; its generation prompt, inspection and derivative hash are recorded in the [artwork audit](../../web/site/assets/generated/README.md).
 
 Regenerate from the repository root with `npm --prefix web run capture:site`. The command builds the site, forks exactly `web/site/capture-server.mjs` with private Node IPC, binds port 0 on 127.0.0.1, and validates the owned child PID, canonical root, host and dynamic port before Chromium launches. No fixed/foreign HTTP listener can signal readiness. Root/bind errors, timeout, early exit and invalid IPC reject capture. The owned child is always terminated, including browser/page failures.
 
